@@ -64,6 +64,22 @@ export async function saveSauna(formData: FormData) {
         })
     }
 
+    // Link any assets that were uploaded during this session
+    const assetIdsJson = formData.get('assetIds') as string
+    if (assetIdsJson) {
+        try {
+            const assetIds = JSON.parse(assetIdsJson) as string[]
+            if (assetIds.length > 0) {
+                await prisma.mediaAsset.updateMany({
+                    where: { id: { in: assetIds } },
+                    data: { saunaId: id }
+                })
+            }
+        } catch (e) {
+            console.error('Failed to link assets', e)
+        }
+    }
+
     revalidatePath('/admin/badstuer')
     revalidatePath('/')
     revalidatePath(`/badstue/${data.slug}`)

@@ -9,7 +9,7 @@ export async function POST(request: Request) {
         const { saunaId, kind, filename, mimeType, fileSize } = body;
 
         // Validation
-        if (!saunaId || !kind || !mimeType) {
+        if (!kind || !mimeType) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
         const asset = await prisma.mediaAsset.create({
             data: {
-                saunaId,
+                saunaId: saunaId || null,
                 kind,
                 mimeType,
                 sizeBytes: fileSize || 0,

@@ -118,7 +118,7 @@ model MediaAsset {
   creatorId          String?
   createdAt          DateTime   @default(now())
   creator            AdminUser? @relation(fields: [creatorId], references: [id])
-  sauna              Sauna      @relation(fields: [saunaId], references: [id], onDelete: Cascade)
+  sauna              Sauna?     @relation(fields: [saunaId], references: [id], onDelete: Cascade)
 }
 
 model AnalyticsSession {

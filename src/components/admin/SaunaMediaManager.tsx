@@ -146,6 +146,7 @@ export function SaunaMediaManager({ saunaId, initialAssets = [] }: SaunaMediaMan
         <div className={styles.container}>
             {/* Hidden fields for form submission */}
             <input type="hidden" name="imageUrl" value={primaryAsset?.url || ''} />
+            <input type="hidden" name="assetIds" value={JSON.stringify(assets.map(a => a.id))} />
             <input type="hidden" name="gallery" value={JSON.stringify(galleryAssets.map(a => a.url))} />
 
             {/* Primary Image */}
