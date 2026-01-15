@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String       @id @default(cuid())
+  username     String       @unique
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  mediaAssets  MediaAsset[]
+}
+
+model Sauna {
+  id                           String        @id @default(cuid())
+  slug                         String        @unique
+  name                         String
+  location                     String
+  shortDescription             String
+  description                  String
+  imageUrl                     String?
+  gallery                      String?
+  address                      String?
+  mapEmbedUrl                  String?
+  facilities                   String?
+  capacityDropin               Int           @default(0)
+  capacityPrivat               Int           @default(0)
+  bookingUrlDropin             String?
+  bookingUrlPrivat             String?
+  status                       String        @default("active")
+  sorting                      Int           @default(0)
+  driftStatus                  String        @default("open")
+  stengeArsak                  String?
+  stengtFra                    DateTime?
+  stengtTil                    DateTime?
+  kundeMelding                 String?
+  flexibleHours                Boolean       @default(false)
+  hoursMessage                 String?
+  updatedAt                    DateTime      @updatedAt
+  createdAt                    DateTime      @default(now())
+  bookingAvailabilityUrlDropin String?
+  bookingAvailabilityUrlPrivat String?
+  availabilityData             String?
+  previousAvailabilityData     String?
+  lastScrapedAt                DateTime?
+  mediaAssets                  MediaAsset[]
+  openingHours                 OpeningHour[]
+  priceItems                   PriceItem[]
+}
+
+model OpeningHour {
+  id        String    @id @default(cuid())
+  saunaId   String
+  type      String    @default("weekly")
+  weekday   Int?
+  date      DateTime?
+  opens     String?
+  closes    String?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  sauna     Sauna     @relation(fields: [saunaId], references: [id], onDelete: Cascade)
+}
+
+model PriceItem {
+  id          String  @id @default(cuid())
+  saunaId     String?
+  name        String
+  category    String?
+  price       Float
+  currency    String  @default("NOK")
+  description String?
+  active      Boolean @default(true)
+  sorting     Int     @default(0)
+  sauna       Sauna?  @relation(fields: [saunaId], references: [id], onDelete: Cascade)
+}
+
+model SiteSetting {
+  key         String  @id
+  value       String
+  description String?
+}
+
+model Subscription {
+  id                 String   @id @default(cuid())
+  name               String
+  price              Float
+  currency           String   @default("NOK")
+  period             String
+  features           String
+  description        String?
+  sorting            Int      @default(0)
+  active             Boolean  @default(true)
+  binding            Boolean  @default(false)
+  bindingDescription String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  paymentUrl         String?
+}
+
+model MediaAsset {
+  id                 String     @id @default(cuid())
+  saunaId            String
+  kind               String
+  storageKeyOriginal String
+  storageKeyLarge    String
+  storageKeyThumb    String
+  mimeType           String
+  sizeBytes          Int
+  width              Int
+  height             Int
+  orderIndex         Int        @default(0)
+  altText            String?
+  status             String     @default("pending")
+  creatorId          String?
+  createdAt          DateTime   @default(now())
+  creator            AdminUser? @relation(fields: [creatorId], references: [id])
+  sauna              Sauna      @relation(fields: [saunaId], references: [id], onDelete: Cascade)
+}
+
+model AnalyticsSession {
+  id           String           @id @default(cuid())
+  startTime    DateTime         @default(now())
+  endTime      DateTime?
+  duration     Int?             // total duration in seconds
+  deviceType   String?
+  browser      String?
+  os           String?
+  referrer     String?
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  events       AnalyticsEvent[]
+  createdAt    DateTime         @default(now())
+
+  @@index([startTime])
+}
+
+model AnalyticsEvent {
+  id        String           @id @default(cuid())
+  sessionId String
+  type      String           // "pageview", "event"
+  eventName String?          // name for general events
+  path      String?          // URL path
+  payload   String?          // JSON string
+  timestamp DateTime         @default(now())
+  session   AnalyticsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([type, timestamp])
+  @@index([path])
+}
