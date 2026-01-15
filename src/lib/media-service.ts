@@ -1,9 +1,8 @@
 import sharp from 'sharp';
-import path from 'path';
-import fs from 'fs/promises';
 import { nanoid } from 'nanoid';
+import { supabaseAdmin } from './supabase';
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads/saunas');
+const BUCKET_NAME = 'images';
 
 export interface ProcessedMedia {
     original: string;
@@ -16,31 +15,34 @@ export interface ProcessedMedia {
 }
 
 /**
- * Ensures the upload directory exists.
+ * Uploads a file buffer to Supabase Storage.
  */
-async function ensureUploadDir() {
-    try {
-        await fs.access(UPLOAD_DIR);
-    } catch {
-        await fs.mkdir(UPLOAD_DIR, { recursive: true });
+async function uploadToSupabase(buffer: Buffer, path: string, mimeType: string) {
+    const { error } = await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .upload(path, buffer, {
+            contentType: mimeType,
+            upsert: true,
+            cacheControl: '3600'
+        });
+
+    if (error) {
+        throw new Error(`Supabase upload failed: ${error.message}`);
     }
+
+    const { data } = supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(path);
+
+    return data.publicUrl;
 }
 
 /**
- * Processes an uploaded image into multiple variants.
- * @param buffer The image buffer.
- * @param originalName Original filename to derive extension.
- * @returns Metadata about the processed variants.
+ * Processes an uploaded image into multiple variants and uploads to Supabase.
  */
 export async function processImage(buffer: Buffer, originalName: string): Promise<ProcessedMedia> {
-    await ensureUploadDir();
-
     const id = nanoid();
-    const ext = '.webp'; // We convert everything to webp for optimization
-
-    const originalKey = `${id}-original${ext}`;
-    const largeKey = `${id}-large${ext}`;
-    const thumbKey = `${id}-thumb${ext}`;
+    const ext = '.webp'; // We convert everything to webp
 
     const image = sharp(buffer);
     const metadata = await image.metadata();
@@ -49,27 +51,32 @@ export async function processImage(buffer: Buffer, originalName: string): Promis
         throw new Error('Invalid image metadata');
     }
 
-    // Original (converted to WebP)
-    await image
+    // 1. Prepare buffers
+    const originalBuffer = await image
         .webp({ quality: 90 })
-        .toFile(path.join(UPLOAD_DIR, originalKey));
+        .toBuffer();
 
-    // Large (max 2000px)
-    await image
+    const largeBuffer = await image
         .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
-        .toFile(path.join(UPLOAD_DIR, largeKey));
+        .toBuffer();
 
-    // Thumb (400px)
-    await image
+    const thumbBuffer = await image
         .resize(400, 400, { fit: 'cover' })
         .webp({ quality: 80 })
-        .toFile(path.join(UPLOAD_DIR, thumbKey));
+        .toBuffer();
+
+    // 2. Upload to Supabase (Parallel)
+    const [originalUrl, largeUrl, thumbUrl] = await Promise.all([
+        uploadToSupabase(originalBuffer, `saunas/${id}-original${ext}`, 'image/webp'),
+        uploadToSupabase(largeBuffer, `saunas/${id}-large${ext}`, 'image/webp'),
+        uploadToSupabase(thumbBuffer, `saunas/${id}-thumb${ext}`, 'image/webp')
+    ]);
 
     return {
-        original: `/uploads/saunas/${originalKey}`,
-        large: `/uploads/saunas/${largeKey}`,
-        thumb: `/uploads/saunas/${thumbKey}`,
+        original: originalUrl,
+        large: largeUrl,
+        thumb: thumbUrl,
         width: metadata.width,
         height: metadata.height,
         sizeBytes: buffer.length,
@@ -78,18 +85,30 @@ export async function processImage(buffer: Buffer, originalName: string): Promis
 }
 
 /**
- * Deletes media files from disk.
+ * Deletes media files from Supabase Storage.
+ * Expects full URLs.
  */
-export async function deleteMediaFiles(keys: string[]) {
-    for (const key of keys) {
-        if (!key) continue;
-
-        // Convert public URL back to absolute path
-        const filePath = path.join(process.cwd(), 'public', key);
+export async function deleteMediaFiles(urls: string[]) {
+    // Extract paths from URLs
+    // URL format: https://[project].supabase.co/storage/v1/object/public/[bucket]/[path]
+    // We need just [path]
+    const paths = urls.map(url => {
         try {
-            await fs.unlink(filePath);
-        } catch (error) {
-            console.error(`Failed to delete file: ${filePath}`, error);
+            const urlObj = new URL(url);
+            const pathParts = urlObj.pathname.split(`/${BUCKET_NAME}/`);
+            return pathParts[1] || ''; // Returns e.g. "saunas/id-original.webp"
+        } catch {
+            return '';
         }
+    }).filter(Boolean);
+
+    if (paths.length === 0) return;
+
+    const { error } = await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .remove(paths);
+
+    if (error) {
+        console.error('Failed to delete files from Supabase:', error);
     }
 }
