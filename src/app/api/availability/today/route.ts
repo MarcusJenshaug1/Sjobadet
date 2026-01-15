@@ -11,9 +11,8 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        // Use raw SQL to bypass out-of-date Prisma client if necessary
-        const saunas = await prisma.$queryRaw`SELECT * FROM Sauna WHERE id = ${saunaId} LIMIT 1` as any[];
-        const sauna = saunas[0];
+        // Use standard Prisma query
+        const sauna = await prisma.sauna.findUnique({ where: { id: saunaId } });
 
         if (!sauna) {
             return NextResponse.json({ error: 'Sauna not found' }, { status: 404 });
@@ -44,21 +43,22 @@ export async function GET(req: NextRequest) {
                     ]);
 
                     const result = {
-                        dropin,
-                        privat,
+                        dropin: dropin || [],
+                        privat: privat || [],
                         timestamp: new Date().toISOString(),
                     };
 
                     const resultJson = JSON.stringify(result);
 
-                    // Update DB with raw SQL to ensure it works even if client isn't updated
-                    await prisma.$executeRaw`
-                        UPDATE Sauna 
-                        SET previousAvailabilityData = ${availabilityData}, 
-                            availabilityData = ${resultJson}, 
-                            lastScrapedAt = ${new Date().toISOString()}
-                        WHERE id = ${saunaId}
-                    `;
+                    // Update DB 
+                    await prisma.sauna.update({
+                        where: { id: saunaId },
+                        data: {
+                            previousAvailabilityData: availabilityData,
+                            availabilityData: resultJson,
+                            lastScrapedAt: new Date().toISOString()
+                        }
+                    });
 
                     console.log(`[Availability] Background refresh complete for ${saunaId}`);
                 } catch (err) {

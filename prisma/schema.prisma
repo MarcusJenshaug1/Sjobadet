@@ -103,7 +103,7 @@ model Subscription {
 
 model MediaAsset {
   id                 String     @id @default(cuid())
-  saunaId            String
+  saunaId            String?
   kind               String
   storageKeyOriginal String
   storageKeyLarge    String
