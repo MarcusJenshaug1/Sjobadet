@@ -36,9 +36,11 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
 
         browser = await puppeteer.launch({
             args: [...chromium.args, '--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox'],
+            // @ts-ignore
             defaultViewport: chromium.defaultViewport,
             executablePath: executablePath,
             headless: true,
+            // @ts-ignore
             ignoreHTTPSErrors: true,
         });
 

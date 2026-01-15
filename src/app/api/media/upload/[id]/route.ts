@@ -28,7 +28,7 @@ export async function PUT(
         const buffer = Buffer.from(arrayBuffer);
 
         // Process image (Original, Large, Thumb)
-        const folderName = asset.sauna.slug || 'misc';
+        const folderName = asset.sauna?.slug || 'misc';
         const processed = await processImage(buffer, id, folderName);
 
         // Update DB record
