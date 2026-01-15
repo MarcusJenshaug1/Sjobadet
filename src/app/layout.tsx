@@ -35,7 +35,7 @@ export default async function RootLayout({
     <html lang="no" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
       <body className={`${inter.className} ${outfit.className}`}>
         <TrackingProvider isAdmin={isAdmin}>
-          <AlertBar />
+          {/* <AlertBar /> */}
           {children}
         </TrackingProvider>
       </body>
