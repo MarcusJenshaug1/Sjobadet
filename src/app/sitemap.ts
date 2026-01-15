@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         });
 
         const saunaRoutes = saunas.map((sauna: any) => ({
-            url: `${baseUrl}/badstue/${sauna.slug}`,
+            url: `${baseUrl}/home/${sauna.slug}`,
             lastModified: sauna.updatedAt,
             changeFrequency: 'weekly' as const,
             priority: 0.9,

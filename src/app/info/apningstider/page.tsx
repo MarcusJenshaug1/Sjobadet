@@ -90,7 +90,7 @@ export default async function OpeningHoursPage() {
                             </div>
 
                             <div className={styles.cardFooter}>
-                                <Link href={`/badstue/${sauna.slug}`} className={styles.ctaLink}>
+                                <Link href={`/home/${sauna.slug}`} className={styles.ctaLink}>
                                     Gå til booking
                                     <ArrowRight size={16} />
                                 </Link>

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import styles from '@/app/badstue/[slug]/SaunaDetail.module.css';
+import styles from '@/app/home/[slug]/SaunaDetail.module.css';
 import { ExternalLink } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/tracking';
 

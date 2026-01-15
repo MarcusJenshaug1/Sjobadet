@@ -61,7 +61,7 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                 <p className={styles.description}>{sauna.shortDescription}</p>
 
                 <div className={styles.actions}>
-                    <Button href={`/badstue/${sauna.slug}`} variant="outline" fullWidth>
+                    <Button href={`/home/${sauna.slug}`} variant="outline" fullWidth>
                         Se badstuen
                     </Button>
 
