@@ -29,21 +29,23 @@ export async function DELETE(
         await prisma.mediaAsset.delete({ where: { id } });
 
         // Update Sauna record for compatibility
-        if (kind === 'PRIMARY') {
-            await prisma.sauna.update({
-                where: { id: saunaId },
-                data: { imageUrl: null }
-            });
-        } else {
-            const remainingGallery = await prisma.mediaAsset.findMany({
-                where: { saunaId, kind: 'GALLERY', status: 'confirmed' },
-                orderBy: { orderIndex: 'asc' }
-            });
-            const urls = remainingGallery.map(a => a.storageKeyLarge);
-            await prisma.sauna.update({
-                where: { id: saunaId },
-                data: { gallery: JSON.stringify(urls) }
-            });
+        if (saunaId) {
+            if (kind === 'PRIMARY') {
+                await prisma.sauna.update({
+                    where: { id: saunaId },
+                    data: { imageUrl: null }
+                });
+            } else {
+                const remainingGallery = await prisma.mediaAsset.findMany({
+                    where: { saunaId, kind: 'GALLERY', status: 'confirmed' },
+                    orderBy: { orderIndex: 'asc' }
+                });
+                const urls = remainingGallery.map(a => a.storageKeyLarge);
+                await prisma.sauna.update({
+                    where: { id: saunaId },
+                    data: { gallery: JSON.stringify(urls) }
+                });
+            }
         }
 
         return NextResponse.json({ success: true });
