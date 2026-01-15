@@ -58,6 +58,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                             alt={sauna.name}
                             fill
                             priority
+                            quality={90}
                             style={{ objectFit: 'cover' }}
                             sizes="100vw"
                         />

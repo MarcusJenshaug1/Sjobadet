@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
                 await tx.sauna.update({
                     where: { id: saunaId },
-                    data: { imageUrl: confirmedAsset.storageKeyLarge } // Use large for hero
+                    data: { imageUrl: confirmedAsset.storageKeyOriginal } // Use original for hero to ensure max quality
                 });
             }
 
