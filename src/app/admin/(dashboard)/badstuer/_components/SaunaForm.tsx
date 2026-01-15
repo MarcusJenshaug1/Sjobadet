@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/Button'
+import { SubmitButton } from './SubmitButton'
 import { saveSauna } from '../actions'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import dynamic from 'next/dynamic'
@@ -140,7 +141,7 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                 </div>
             </div>
 
-            <Button type="submit" size="lg">Lagre Badstue</Button>
+            <SubmitButton size="lg">Lagre Badstue</SubmitButton>
         </form>
     )
 }
