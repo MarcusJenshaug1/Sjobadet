@@ -1,0 +1,182 @@
+.main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem;
+}
+
+.title {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: #64748b;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 4rem;
+    line-height: 1.6;
+}
+
+.saunaGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+}
+
+@media (min-width: 768px) {
+    .saunaGrid {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
+}
+
+.saunaCard {
+    background-color: white;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.saunaCard:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.cardHeader {
+    padding: 2rem;
+    background: linear-gradient(to bottom right, #f8fafc, #ffffff);
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.saunaName {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    text-transform: uppercase;
+}
+
+.badgeClosed {
+    background-color: #fee2e2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+}
+
+.cardContent {
+    padding: 2rem;
+    flex-grow: 1;
+}
+
+.summarySection {
+    margin-bottom: 2rem;
+}
+
+.summaryLabel {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.smartHours {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alertBox {
+    background-color: #fff7ed;
+    border: 1px solid #ffedd5;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    color: #9a3412;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.detailsSection h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 1.5rem;
+}
+
+.hoursTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.hoursRow {
+    border-bottom: 1px solid #f8fafc;
+}
+
+.hoursRow:last-child {
+    border-bottom: none;
+}
+
+.dayCell {
+    padding: 0.75rem 0;
+    font-weight: 500;
+    color: #475569;
+}
+
+.timeCell {
+    padding: 0.75rem 0;
+    text-align: right;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.closedText {
+    color: #cbd5e1;
+    font-style: italic;
+}
+
+.cardFooter {
+    padding: 1.5rem 2rem;
+    background-color: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    text-align: center;
+}
+
+.ctaLink {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.ctaLink:hover {
+    text-decoration: underline;
+}

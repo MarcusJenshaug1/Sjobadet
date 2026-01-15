@@ -1,0 +1,43 @@
+import { Meta, ColorPalette, ColorItem } from '@storybook/blocks';
+
+<Meta title="Foundations/Colors" />
+
+# Colors
+
+Dette er fargepaletten for Sjøbadet. Vi bruker CSS-variabler for å sikre konsistens på tvers av hele applikasjonen.
+
+<ColorPalette>
+  <ColorItem
+    title="Brand: Havgrønn"
+    subtitle="Primary brand colors"
+    colors={{ 
+      '--primary': '#719898', 
+      '--primary-hover': '#5a7d7d',
+      '--primary-foreground': '#FFFFFF' 
+    }}
+  />
+  <ColorItem
+    title="Core: Gradients & Surfaces"
+    subtitle="Essential UI colors"
+    colors={{ 
+      '--background': '#FFFFFF', 
+      '--foreground': '#3C3C3C' 
+    }}
+  />
+  <ColorItem
+    title="Secondary / Muted"
+    subtitle="Backgrounds and soft text"
+    colors={{ 
+      '--secondary': '#F0F4F4', 
+      '--secondary-foreground': '#3C3C3C' 
+    }}
+  />
+  <ColorItem
+    title="Neutral / Borders"
+    subtitle="Dividers and inputs"
+    colors={{ 
+      '--border': '#E0E0E0', 
+      '--input': '#E0E0E0' 
+    }}
+  />
+</ColorPalette>

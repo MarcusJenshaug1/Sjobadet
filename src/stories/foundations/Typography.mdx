@@ -1,0 +1,37 @@
+import { Meta, Typeset } from '@storybook/blocks';
+
+<Meta title="Foundations/Typography" />
+
+# Typography Scale
+
+Vi bruker **Inter** som hovedfont for en moderne og lesbar brukeropplevelse.
+
+**Font:** Inter, sans-serif  
+**Weights:** 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
+
+<Typeset
+  fontSizes={[
+    '48px',
+    '40px',
+    '32px',
+    '28px',
+    '24px',
+    '20px',
+    '18px',
+    '16px',
+    '14px',
+  ]}
+  fontWeight={600}
+  sampleText="Sjøbadet - Badstukultur for alle"
+  fontFamily='var(--font-inter), sans-serif'
+/>
+
+## Semantic Usage
+
+| Level | Size | Weight | Line Height |
+| :--- | :--- | :--- | :--- |
+| **Page Title** | 3rem (48px) | 700 | 1.2 |
+| **H1** | 2.5rem (40px) | 600 | 1.2 |
+| **H2** | 2rem (32px) | 600 | 1.2 |
+| **H3** | 1.75rem (28px) | 600 | 1.2 |
+| **Body** | 1rem (16px) | 400 | 1.6 |

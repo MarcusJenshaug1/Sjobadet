@@ -1,0 +1,110 @@
+[
+    {
+        "id": "tonsberg-theia",
+        "name": "Theia",
+        "location": "Tønsberg Brygge",
+        "slug": "theia-tonsberg",
+        "shortDescription": "Ungdommelig glød og energi på Tønsberg Brygge.",
+        "description": "Alt begynte med Theia - Navnet betyr gudinne. Hun kom til Tønsberg brygge med ungdommens glød og den ungdommelig energien er noe vi synes passer godt til det nye møtestedet på Tønsberg brygge. I hennes navn lever minnene, latteren og energien som fikk oss til å bygge videre. Elektrisk oppvarmet, alltid varm når du kommer.",
+        "imageUrl": "/images/placeholder_sauna.jpg",
+        "gallery": [],
+        "capacity": {
+            "dropin": 10,
+            "privat": 16
+        },
+        "bookingUrls": {
+            "dropin": "https://example.com/booking/dropin/theia",
+            "privat": "https://example.com/booking/privat/theia"
+        },
+        "address": "Nedre Langgate 44, 3126 Tønsberg",
+        "mapEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1064.123456!2d10.4!3d59.2!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zXyz!5e0!3m2!1sen!2sno!4v1234567890",
+        "facilities": [
+            "Dusj (varmt vann)",
+            "Dame- og herregarderobe",
+            "Elektrisk ovn",
+            "Toalett (offentlig, 150m)"
+        ],
+        "active": true
+    },
+    {
+        "id": "hjemseng-helia",
+        "name": "Helia",
+        "location": "Hjemseng Brygge",
+        "slug": "helia-hjemseng",
+        "shortDescription": "Pust dypt og finn ro i fellesskapet.",
+        "description": "Helia åpner dørene for alle som vil komme innom, puste dypt og finne ro i fellesskapet. En av søstrene på Hjemseng. Elektrisk oppvarmet.",
+        "imageUrl": "/images/placeholder_sauna.jpg",
+        "gallery": [],
+        "capacity": {
+            "dropin": 6,
+            "privat": 10
+        },
+        "bookingUrls": {
+            "dropin": "https://example.com/booking/dropin/helia",
+            "privat": "https://example.com/booking/privat/helia"
+        },
+        "address": "Hjemseng Brygge",
+        "mapEmbedUrl": "https://www.google.com/maps/embed?pb=...",
+        "facilities": [
+            "Kald utedusj",
+            "Fellesgarderobe",
+            "Elektrisk ovn",
+            "Toalett (ved kafé)",
+            "Gratis parkering"
+        ],
+        "active": true
+    },
+    {
+        "id": "hjemseng-lysa",
+        "name": "Lysa",
+        "location": "Hjemseng Brygge",
+        "slug": "lysa-hjemseng",
+        "shortDescription": "Privat og nære stunder.",
+        "description": "Lysa er mer privat - hun inviterer til nære stunder, der venner, familie og lag deler stillheten og varme bak lukkede dører. Den andre søsteren på Hjemseng.",
+        "imageUrl": "/images/placeholder_sauna.jpg",
+        "gallery": [],
+        "capacity": {
+            "dropin": 0,
+            "privat": 10
+        },
+        "bookingUrls": {
+            "dropin": "",
+            "privat": "https://example.com/booking/privat/lysa"
+        },
+        "address": "Hjemseng Brygge",
+        "mapEmbedUrl": "https://www.google.com/maps/embed?pb=...",
+        "facilities": [
+            "Kald utedusj",
+            "Fellesgarderobe",
+            "Elektrisk ovn",
+            "Toalett (ved kafé)",
+            "Gratis parkering"
+        ],
+        "active": true
+    },
+    {
+        "id": "nomia-mobil",
+        "name": "Nomia",
+        "location": "Mobil / Vandrende",
+        "slug": "nomia-mobil",
+        "shortDescription": "Den frie vandrende søsteren.",
+        "description": "Nomia bringer badstuvarmen dit folk møtes, uten røyk eller ved, bare stillhet, pust og elektrisk ro. Ta kontakt for leie.",
+        "imageUrl": "/images/placeholder_sauna.jpg",
+        "gallery": [],
+        "capacity": {
+            "dropin": 0,
+            "privat": 0
+        },
+        "bookingUrls": {
+            "dropin": "",
+            "privat": ""
+        },
+        "address": "Varierer",
+        "mapEmbedUrl": "",
+        "facilities": [
+            "Elektrisk ovn",
+            "Mobil enhet"
+        ],
+        "active": true
+    }
+]

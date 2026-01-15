@@ -1,0 +1,231 @@
+.main {
+    padding: 4rem 1rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    color: var(--primary);
+    text-align: center;
+}
+
+/* Accordion Styles */
+.accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 4rem;
+}
+
+.accordionItem {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: white;
+    transition: all 0.2s ease;
+}
+
+.accordionItem:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.accordionHeader {
+    width: 100%;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.accordionIcon {
+    color: var(--primary);
+    transition: transform 0.3s ease;
+}
+
+.accordionItemOpen .accordionIcon {
+    transform: rotate(180deg);
+}
+
+.accordionContent {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, padding 0.3s ease;
+    background-color: #f8fafc;
+}
+
+.accordionItemOpen .accordionContent {
+    max-height: 500px;
+    padding: 1.5rem;
+    padding-top: 0;
+    margin-top: -0.5rem;
+}
+
+.accordionContent p {
+    color: #475569;
+    line-height: 1.6;
+}
+
+/* Special Story Section */
+.storySection {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ffffff 100%);
+    padding: 3rem;
+    border-radius: 24px;
+    border: 1px solid #ccfbf1;
+    margin-top: 4rem;
+}
+
+.storyTitle {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #0f766e;
+    text-align: center;
+}
+
+.storySubsection {
+    margin-bottom: 2.5rem;
+}
+
+.storySubsection h3 {
+    font-size: 1.25rem;
+    color: #134e4a;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.storyText {
+    color: #334155;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+}
+
+.storyList {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .storyList {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.storyListItem {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+/* Rules Styles */
+.importantCard {
+    background-color: #fffbeb;
+    border: 2px solid #fcd34d;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.importantCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: #f59e0b;
+}
+
+.importantHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #92400e;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.importantList {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.importantListItem {
+    display: flex;
+    gap: 0.75rem;
+    color: #78350f;
+    line-height: 1.5;
+}
+
+.ruleGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .ruleGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.ruleCard {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ruleCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary);
+}
+
+.ruleHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.ruleTitle {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.ruleText {
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.highlight {
+    color: var(--primary);
+    font-weight: 600;
+}

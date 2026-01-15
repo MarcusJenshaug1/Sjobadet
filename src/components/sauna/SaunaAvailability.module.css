@@ -1,0 +1,267 @@
+.container {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+    .header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.titleWrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    background-color: #f0fdf4;
+    border: 1px solid #dcfce7;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+}
+
+.dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    background-color: #22c55e;
+    border-radius: 50%;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.dotRefreshing {
+    width: 0.375rem;
+    height: 0.375rem;
+    background-color: #3b82f6;
+    border-radius: 50%;
+    animation: refreshPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes refreshPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .5;
+    }
+}
+
+.badgeText {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: #15803d;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.updatedAt {
+    font-size: 0.6875rem;
+    color: #718096;
+    font-weight: 500;
+}
+
+.toggleButton {
+    padding: 0.375rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    border: 1px solid #e2e8f0;
+    background-color: #ffffff;
+    color: #718096;
+}
+
+.toggleButton:hover {
+    border-color: #cbd5e0;
+}
+
+.toggleActive {
+    background-color: #1a202c;
+    border-color: #1a202c;
+    color: #ffffff;
+}
+
+.nextSlot {
+    margin-bottom: 1rem;
+    background-color: #fffaf0;
+    border: 1px solid #feebc8;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nextDot {
+    width: 0.375rem;
+    height: 0.375rem;
+    background-color: #ed8936;
+    border-radius: 50%;
+}
+
+.nextText {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #9c4221;
+}
+
+.nextTime {
+    color: #7b341e;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.slotCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.slotCardClickable {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.slotCardClickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    filter: brightness(0.98);
+}
+
+.slotTime {
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.slotCapacity {
+    font-size: 0.625rem;
+    font-weight: 500;
+    margin-top: 0.125rem;
+}
+
+/* States */
+.stateFull {
+    background-color: #f7fafc;
+    border-color: #edf2f7;
+    opacity: 0.5;
+}
+
+.stateFull .slotTime,
+.stateFull .slotCapacity {
+    color: #a0aec0;
+}
+
+.stateFew {
+    background-color: #fffaf0;
+    border-color: #feebc8;
+}
+
+.stateFew:hover {
+    border-color: #fbd38d;
+}
+
+.stateFew .slotTime {
+    color: #c05621;
+}
+
+.stateFew .slotCapacity {
+    color: #9c4221;
+}
+
+.stateMany {
+    background-color: #f0fff4;
+    border-color: #c6f6d5;
+}
+
+.stateMany:hover {
+    border-color: #9ae6b4;
+}
+
+.stateMany .slotTime {
+    color: #276749;
+}
+
+.stateMany .slotCapacity {
+    color: #22543d;
+}
+
+.empty {
+    grid-column: 1 / -1;
+    padding: 1.5rem;
+    text-align: center;
+    background-color: #f7fafc;
+    border-radius: 1rem;
+    border: 1px dashed #e2e8f0;
+}
+
+.emptyText {
+    color: #a0aec0;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.footer {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.625rem;
+    color: #a0aec0;
+    font-style: italic;
+}

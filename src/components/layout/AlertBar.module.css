@@ -1,0 +1,7 @@
+.alertBar {
+    background-color: var(--primary);
+    color: white;
+    width: 100%;
+    z-index: 1001;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}

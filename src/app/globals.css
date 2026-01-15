@@ -1,0 +1,115 @@
+:root {
+  --background: #FFFFFF;
+  --foreground: #3C3C3C;
+
+  /* Primary: Havgrønn */
+  --primary: #719898;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #5a7d7d;
+
+  /* Secondary / Muted */
+  --secondary: #F0F4F4;
+  --secondary-foreground: #3C3C3C;
+
+  /* UI Elements */
+  --border: #E0E0E0;
+  --input: #E0E0E0;
+  --ring: #719898;
+
+  --radius: 0.5rem;
+  --max-width: 1200px;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  /* Offset for sticky header */
+}
+
+body {
+  max-width: 100vw;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), sans-serif;
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Typography Utilities */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.75rem;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Button Base */
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+/* Utilities */
+.section {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 3rem;
+  color: var(--primary);
+  font-size: 2.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.page-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 2.5rem;
+  color: var(--primary);
+  text-align: center;
+}
