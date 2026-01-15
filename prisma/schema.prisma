@@ -39,6 +39,7 @@ model Sauna {
   stengtTil                    DateTime?
   kundeMelding                 String?
   flexibleHours                Boolean       @default(false)
+  hasDropinAvailability        Boolean       @default(true)
   hoursMessage                 String?
   updatedAt                    DateTime      @updatedAt
   createdAt                    DateTime      @default(now())

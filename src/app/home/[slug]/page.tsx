@@ -11,6 +11,7 @@ import { SaunaGallery } from '@/components/sauna/SaunaGallery';
 import Image from 'next/image';
 import SaunaAvailability from '@/components/sauna/SaunaAvailability';
 import SaunaBookingOptions from '@/components/sauna/SaunaBookingOptions';
+import { getSession } from '@/lib/auth';
 
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -28,6 +29,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function SaunaDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
     const sauna = await getSaunaBySlug(slug);
+    const session = await getSession();
+    const isAdmin = !!session?.user;
 
     if (!sauna) {
         notFound();
@@ -180,6 +183,8 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                         bookingUrlDropin={sauna.bookingUrlDropin}
                                         bookingUrlPrivat={sauna.bookingUrlPrivat}
                                         capacityDropin={sauna.capacityDropin || 0}
+                                        isAdmin={isAdmin}
+                                        showAvailability={sauna.hasDropinAvailability}
                                     />
                                 </div>
                             )}

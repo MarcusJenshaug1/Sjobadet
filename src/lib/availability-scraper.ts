@@ -1,97 +1,157 @@
-import * as cheerio from 'cheerio';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium-min';
 
-export interface BookingSlot {
-    time: string; // HH:MM - HH:MM
-    startTime: string; // HH:MM
-    isAvailable: boolean;
-    isNext?: boolean;
-    isPassed?: boolean;
-    capacityText?: string;
+export interface ScrapedSlot {
+    from: string;
+    to: string;
+    availableSpots: number;
 }
 
-export interface AvailabilityData {
-    dropin: BookingSlot[];
-    privat: BookingSlot[];
-    timestamp: string;
+export interface AvailabilityResponse {
+    date: string | null;
+    slots: ScrapedSlot[];
 }
 
-export async function fetchAvailability(url: string): Promise<BookingSlot[]> {
-    // Strip trailing date like /2026-01-13
-    const cleanUrl = url.replace(/\/(\d{4}-\d{2}-\d{2})$/, '');
+export async function fetchAvailability(url: string): Promise<AvailabilityResponse> {
+    console.log(`[Scraper] Starting fetch for ${url}`);
 
-    console.log(`[Scraper] Starting fetch for: ${cleanUrl}`);
-
+    let browser = null;
     try {
-        // Standard Fetch (cheerio) - Safe for Vercel
-        const response = await fetch(cleanUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            },
-            next: { revalidate: 60 } // Cache for 60s
-        });
+        let executablePath = '';
 
-        if (!response.ok) {
-            console.error(`[Scraper] Failed to fetch URL: ${response.status}`);
-            return [];
+        try {
+            // @ts-ignore - chromium.executablePath() can fail locally
+            executablePath = await chromium.executablePath();
+        } catch (e) {
+            console.log('[Scraper] sparticuz/chromium-min failed, using local Chrome path');
         }
 
-        const html = await response.text();
-        const $ = cheerio.load(html);
+        // Local Windows fallback
+        if (!executablePath || executablePath.includes('node_modules')) {
+            // Common local paths for Windows
+            executablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+            // If not there, maybe Edge?
+            // executablePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+        }
 
-        // NOTE: Periode.no is often an SPA (Single Page App).
-        // Cheerio can only see the initial HTML. If data is loaded via JS/API,
-        // this will likely return 0 slots unless we reverse-engineer the API.
+        browser = await puppeteer.launch({
+            args: [...chromium.args, '--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox'],
+            defaultViewport: chromium.defaultViewport,
+            executablePath: executablePath,
+            headless: true,
+            ignoreHTTPSErrors: true,
+        });
 
-        // Try to find slots using the previous logic, adapted for static HTML if present
-        const slots: BookingSlot[] = [];
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        // Try to find label wrappers if they exist in static HTML
-        $('label.ant-radio-button-wrapper').each((_, el) => {
-            const text = $(el).text().trim();
-            const timeMatch = text.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+        page.on('console', msg => console.log('[Browser Console]:', msg.text()));
 
-            if (timeMatch) {
-                const time = timeMatch[0];
-                const startTime = timeMatch[1];
-                const availMatch = text.match(/(\d+)\s+Ledig[e]*\s+plass[er]*/i);
-                const availableCount = availMatch ? parseInt(availMatch[1], 10) : 0;
-
-                slots.push({
-                    time,
-                    startTime,
-                    isAvailable: availableCount > 0,
-                    capacityText: availMatch ? availMatch[0] : ''
-                });
+        await page.setRequestInterception(true);
+        page.on('request', (req) => {
+            if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
+                req.abort();
+            } else {
+                req.continue();
             }
         });
 
-        // ... Processing/Sorting logic same as before ...
-        if (slots.length === 0) {
-            console.log(`[Scraper] No slots found (likely SPA). Returning empty.`);
-            // In future: Implement direct API call here if endpoint is found
-            return [];
-        }
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
 
-        // Logic for next/passed (same as before)
-        const now = new Date();
-        const norwayTime = new Intl.DateTimeFormat('no-NO', {
-            timeZone: 'Europe/Oslo',
-            hour: '2-digit', minute: '2-digit', hour12: false
-        }).format(now);
-
-        let nextFound = false;
-        return slots.map(slot => {
-            const isPassed = slot.startTime < norwayTime;
-            let isNext = false;
-            if (!isPassed && !nextFound && slot.isAvailable) {
-                isNext = true;
-                nextFound = true;
-            }
-            return { ...slot, isPassed, isNext };
+        // Scroll
+        await page.evaluate(async () => {
+            await new Promise<void>((resolve) => {
+                let totalHeight = 0;
+                const distance = 100;
+                const timer = setInterval(() => {
+                    const scrollHeight = document.body.scrollHeight;
+                    window.scrollBy(0, distance);
+                    totalHeight += distance;
+                    if (totalHeight >= scrollHeight || totalHeight > 3000) {
+                        clearInterval(timer);
+                        resolve();
+                    }
+                }, 100);
+            });
         });
+
+        // Click Today
+        await page.evaluate(() => {
+            const todayNum = new Date().getDate().toString();
+            const elements = Array.from(document.querySelectorAll('div, span, button, td, a'));
+            const todayEl = elements.find(el => {
+                const text = (el as HTMLElement).innerText?.trim();
+                return text === todayNum && el.getBoundingClientRect().width < 60;
+            });
+            if (todayEl) (todayEl as HTMLElement).click();
+        });
+
+        await new Promise(r => setTimeout(r, 2000));
+
+        const scrapedData = await page.evaluate(() => {
+            const slots: any[] = [];
+            const timeRegex = /(\d{2}:\d{2})/;
+            const candidates = Array.from(document.querySelectorAll('*')).filter(el => {
+                const txt = (el as HTMLElement).innerText;
+                return txt && timeRegex.test(txt) && txt.length < 50;
+            });
+
+            candidates.forEach(el => {
+                const text = (el as HTMLElement).innerText;
+                const match = text.match(timeRegex);
+                if (match) {
+                    const fromTime = match[1];
+                    const [hours, minutes] = fromTime.split(':').map(Number);
+                    const toDate = new Date();
+                    toDate.setHours(hours + 1, minutes);
+                    const toTime = toDate.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+
+                    let current: HTMLElement | null = el as HTMLElement;
+                    let availableSpots = 0;
+                    let depth = 0;
+
+                    while (current && current !== document.body && depth < 5) {
+                        const txt = current.innerText || '';
+                        const lowerText = txt.toLowerCase();
+
+                        // Look for numerical capacity first
+                        const capMatch = txt.match(/(\d+)\s*(?:ledig|plass|stk|available)/i);
+                        if (capMatch) {
+                            availableSpots = parseInt(capMatch[1], 10);
+                            break;
+                        }
+
+                        // Look for "full" indicators
+                        if (lowerText.includes('fullt') || lowerText.includes('venteliste') || lowerText.includes('0 ledig')) {
+                            availableSpots = 0;
+                            break;
+                        }
+
+                        // Heuristic: If we hit a container with many slots, we've gone too far
+                        if (depth > 0) {
+                            const timesInContainer = (txt.match(/\d{2}:\d{2}/g) || []).length;
+                            if (timesInContainer > 10) break; // Increased threshold
+                        }
+
+                        current = current.parentElement;
+                        depth++;
+                    }
+
+                    if (!slots.find(s => s.from === fromTime)) {
+                        slots.push({ from: fromTime, to: toTime, availableSpots });
+                    }
+                }
+            });
+
+            return { date: null, slots: slots.sort((a, b) => a.from.localeCompare(b.from)) };
+        });
+
+        await browser.close();
+        return scrapedData as AvailabilityResponse;
 
     } catch (error) {
         console.error('[Scraper] Error:', error);
-        return [];
+        if (browser) await browser.close();
+        return { date: null, slots: [] };
     }
 }

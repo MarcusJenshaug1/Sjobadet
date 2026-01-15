@@ -1,82 +1,110 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { BookingSlot } from '@/lib/availability-scraper';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './SaunaAvailability.module.css';
 
+interface ScrapedSlot {
+    from: string;
+    to: string;
+    availableSpots: number;
+}
+
 interface AvailabilityResponse {
-    dropin: BookingSlot[];
-    privat: BookingSlot[];
-    timestamp: string;
+    date: string | null;
+    slots: ScrapedSlot[];
+    timestamp: string | null;
     isInitial?: boolean;
+}
+
+interface SaunaAvailabilityProps {
+    saunaId: string;
+    bookingUrlDropin?: string | null;
+    bookingUrlPrivat?: string | null;
+    capacityDropin: number;
+    isAdmin?: boolean;
+    showAvailability?: boolean;
 }
 
 export default function SaunaAvailability({
     saunaId,
+    bookingUrlDropin,
+    bookingUrlPrivat,
     capacityDropin = 10,
-    bookingUrlDropin
-}: {
-    saunaId: string;
-    bookingUrlDropin?: string | null;
-    bookingUrlPrivat?: string | null;
-    capacityDropin?: number;
-}) {
+    isAdmin = false,
+    showAvailability = true
+}: SaunaAvailabilityProps) {
     const [data, setData] = useState<AvailabilityResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(false);
     const [onlyAvailable, setOnlyAvailable] = useState(true);
+    const hasDataRef = useRef(false);
+
+    const fetchData = useCallback(async (force = false, silent = false) => {
+        if (!showAvailability) return;
+        if (!silent) setLoading(true);
+        if (silent) setRefreshing(true);
+
+        try {
+            const url = `/api/availability/today?saunaId=${saunaId}${force ? '&force=true' : ''}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Failed to fetch');
+            const json = await res.json();
+
+            if (json.isInitial && !hasDataRef.current) {
+                // Keep loading if first fetch only returns "initial" placeholder
+                setLoading(true);
+            } else {
+                const now = new Date();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+
+                const filteredSlots = (json.slots || []).filter((s: ScrapedSlot) => {
+                    const [h, m] = s.from.split(':').map(Number);
+                    const slotTime = h * 60 + m;
+                    return slotTime >= currentTime;
+                });
+
+                setData({ ...json, slots: filteredSlots });
+                hasDataRef.current = true;
+                setLoading(false);
+            }
+            setError(false);
+        } catch (err) {
+            console.error('Error fetching availability:', err);
+            if (!hasDataRef.current) setError(true);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [saunaId, showAvailability]); // Removed 'data' from dependencies
 
     useEffect(() => {
-        async function fetchData(isBackground = false) {
-            if (isBackground) setRefreshing(true);
-            try {
-                // Fetch from our local API which has instant DB-first logic
-                const res = await fetch(`/api/availability/today?saunaId=${saunaId}`);
-                if (!res.ok) throw new Error('Failed to fetch');
-                const json = await res.json();
+        if (!showAvailability) return;
 
-                // If it's the very first time (no data in DB yet), it might return isInitial: true
-                if (json.isInitial && !data) {
-                    setLoading(true);
-                } else {
-                    // Filter out past slots
-                    const filteredData: AvailabilityResponse = {
-                        ...json,
-                        dropin: (json.dropin || []).filter((s: BookingSlot) => !s.isPassed),
-                        privat: []
-                    };
-                    setData(filteredData);
-                    setLoading(false);
-                }
-                setError(false);
-            } catch (err) {
-                console.error('Error fetching availability:', err);
-                if (!data) setError(true);
-            } finally {
-                if (isBackground) setRefreshing(false);
-                // If we got isInitial, it means the background refresh just started.
-                // We should poll again sooner in that case.
-            }
-        }
+        // Reset state for new sauna
+        hasDataRef.current = false;
+        setData(null);
+        setError(false);
 
         fetchData();
 
-        // Refresh every 2 minutes to catch background updates without excessive spamming
-        const interval = setInterval(() => fetchData(true), 1000 * 60 * 2);
+        // Refresh every 10 minutes, but DON'T force a re-scrape (rely on server cache)
+        const interval = setInterval(() => fetchData(false, true), 1000 * 60 * 10);
         return () => clearInterval(interval);
-    }, [saunaId]);
+    }, [saunaId, showAvailability, fetchData]);
 
-    // Only show loading state if we have ABSOLUTELY no data to show
+    if (!showAvailability) {
+        return null;
+    }
+
     if (loading && !data && !error) {
         return (
             <div className={styles.container}>
                 <div style={{ padding: '0 0.5rem 1rem', textAlign: 'center' }}>
-                    <p style={{ fontSize: '0.75rem', color: '#718096', fontWeight: 'bold' }}>Henter ledighet for første gang...</p>
-                    <p style={{ fontSize: '0.625rem', color: '#a0aec0' }}>Dette kan ta 10-20 sekunder</p>
+                    <p style={{ fontSize: '0.75rem', color: '#718096', fontWeight: 'bold' }}>Henter ledighet...</p>
+                    <p style={{ fontSize: '0.625rem', color: '#a0aec0' }}>Dette kan ta litt tid første gang</p>
                 </div>
                 <div className={styles.grid}>
-                    {[1, 2, 3].map(i => (
+                    {[1, 2, 3, 4, 5, 6].map(i => (
                         <div key={i} className={styles.slotCard} style={{ backgroundColor: '#f7fafc', minHeight: '50px', animation: 'refreshPulse 2s infinite' }} />
                     ))}
                 </div>
@@ -86,18 +114,21 @@ export default function SaunaAvailability({
 
     if (error && !data) {
         return (
-            <div className={styles.container} style={{ borderColor: '#fed7d7', backgroundColor: '#fff5f5' }}>
-                <p style={{ fontSize: '0.75rem', color: '#c53030', fontWeight: 'bold', textAlign: 'center' }}>
-                    Kunne ikke hente ledighet.
-                </p>
+            <div className={styles.container}>
+                <div className={styles.error}>
+                    Klarte ikke hente ledighet.
+                    <button onClick={() => fetchData()} className={styles.retryButton}>Prøv igjen</button>
+                </div>
             </div>
         );
     }
 
-    // Default empty data if API returned isInitial but we want to show something
-    const currentData = data || { dropin: [], privat: [], timestamp: new Date().toISOString() };
-    const availableSlots = currentData.dropin.filter(s => onlyAvailable ? s.isAvailable : true);
-    const nextSlot = currentData.dropin.find(s => s.isNext && s.isAvailable);
+    // Filter available slots
+    const availableSlots = data?.slots.filter(s => !onlyAvailable || s.availableSpots > 0) || [];
+    const currentData = data || { date: null, slots: [], timestamp: null };
+
+    // Find next available slot
+    const nextSlot = currentData.slots.find(s => s.availableSpots > 0);
 
     return (
         <div className={styles.container}>
@@ -105,16 +136,39 @@ export default function SaunaAvailability({
                 <div>
                     <div className={styles.titleWrapper}>
                         <h3 className={styles.title}>Ledighet i dag</h3>
-                        <div className={styles.badge}>
+                        <div className={styles.badge} title="Denne hentes automatisk hvert 10. minutt">
                             <div className={refreshing ? styles.dotRefreshing : styles.dot} />
                             <span className={styles.badgeText}>
-                                {refreshing ? 'Oppdaterer...' : 'Sanntid'}
+                                {refreshing ? 'Henter...' : 'Live-status'}
                             </span>
                         </div>
                     </div>
-                    <p className={styles.updatedAt}>
-                        Oppdatert {new Date(currentData.timestamp).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {currentData.timestamp && (
+                            <p className={styles.updatedAt}>
+                                Oppdatert {new Date(currentData.timestamp).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                        )}
+                        {/* MIDLERTIDIG DEBUG KNAPP - KUN FOR ADMINS */}
+                        {isAdmin && (
+                            <button
+                                onClick={() => fetchData(true, true)}
+                                disabled={refreshing}
+                                title="Denne knappen er kun synlig for deg som er admin"
+                                style={{
+                                    fontSize: '10px',
+                                    padding: '2px 6px',
+                                    background: '#edf2f7',
+                                    border: '1px solid #cbd5e0',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    opacity: refreshing ? 0.5 : 1
+                                }}
+                            >
+                                {refreshing ? 'Henter...' : 'DEBUG: Force Scrape'}
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <button
                     onClick={() => setOnlyAvailable(!onlyAvailable)}
@@ -128,7 +182,7 @@ export default function SaunaAvailability({
                 <div className={styles.nextSlot}>
                     <div className={styles.nextDot} />
                     <span className={styles.nextText}>
-                        Neste ledige: <span className={styles.nextTime}>{nextSlot.startTime}</span>
+                        Neste ledige: <span className={styles.nextTime}>{nextSlot.from}</span>
                     </span>
                 </div>
             )}
@@ -149,31 +203,20 @@ export default function SaunaAvailability({
                     </div>
                 )}
             </div>
-
-            <p className={styles.footer}>
-                Hentes automatisk i bakgrunnen
-            </p>
         </div>
     );
 }
 
-function SlotCard({ slot, totalCapacity, baseBookingUrl }: { slot: BookingSlot, totalCapacity: number, baseBookingUrl?: string | null }) {
-    const isFull = !slot.isAvailable;
-    const capacityMatch = slot.capacityText?.match(/(\d+)/);
-    const availablePlaces = capacityMatch ? parseInt(capacityMatch[1], 10) : 0;
-
-    // Relative color coding
-    // GREEN (Many): > 70% available
-    // YELLOW (Few): 10% - 70% available
-    // RED (Full): < 10% or 0 places
+function SlotCard({ slot, totalCapacity, baseBookingUrl }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null }) {
+    const isFull = slot.availableSpots === 0;
+    const availablePlaces = slot.availableSpots;
 
     let stateClass = styles.stateMany;
     const availablePercentage = totalCapacity > 0 ? (availablePlaces / totalCapacity) : 0;
 
-    if (isFull || availablePlaces === 0) {
+    if (isFull) {
         stateClass = styles.stateFull;
     } else if (availablePercentage <= 0.7) {
-        // Less than or equal to 70% becomes yellow/few
         stateClass = styles.stateFew;
     }
 
@@ -182,16 +225,15 @@ function SlotCard({ slot, totalCapacity, baseBookingUrl }: { slot: BookingSlot, 
     if (baseBookingUrl && baseBookingUrl.includes('periode.no') && !isFull) {
         const now = new Date();
         const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
-        const timeStr = slot.startTime; // HH:MM
+        const timeStr = slot.from; // HH:MM
 
-        // Remove trailing slash if present on base URL
         const cleanBase = baseBookingUrl.endsWith('/') ? baseBookingUrl.slice(0, -1) : baseBookingUrl;
         bookingLink = `${cleanBase}/${dateStr}/${timeStr}`;
     }
 
     const cardContent = (
         <>
-            <span className={styles.slotTime}>{slot.startTime}</span>
+            <span className={styles.slotTime}>{slot.from}</span>
             <span className={styles.slotCapacity}>
                 {isFull ? 'Fullt' : `${availablePlaces} plasser`}
             </span>

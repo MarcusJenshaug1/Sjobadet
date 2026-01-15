@@ -23,34 +23,32 @@ export async function GET(req: NextRequest) {
         const previousAvailabilityData = sauna.previousAvailabilityData;
 
         const now = new Date();
-        const FIVE_MINUTES = 1000 * 60 * 5;
-        const isFresh = lastScrapedAt && (now.getTime() - new Date(lastScrapedAt).getTime() < FIVE_MINUTES);
+        const TEN_MINUTES = 1000 * 60 * 10;
+        const { searchParams } = new URL(req.url); // Use the same searchParams from earlier
+        const force = searchParams.get('force') === 'true';
+        const isFresh = !force && lastScrapedAt && (now.getTime() - new Date(lastScrapedAt).getTime() < TEN_MINUTES);
 
-        // If data is stale OR missing, trigger background refresh
+        // If data is stale OR missing OR forced, trigger background refresh
         if (!isFresh) {
             console.log(`[Availability] Data for ${saunaId} is stale or missing. Triggering background refresh.`);
 
             const refreshData = async () => {
                 try {
-                    const dropinUrl = sauna.bookingAvailabilityUrlDropin ||
-                        (sauna.bookingUrlDropin?.includes('periode.no') ? sauna.bookingUrlDropin : null);
-                    const privatUrl = sauna.bookingAvailabilityUrlPrivat ||
-                        (sauna.bookingUrlPrivat?.includes('periode.no') ? sauna.bookingUrlPrivat : null);
+                    const dropinUrl = sauna.bookingUrlDropin;
 
-                    const [dropin, privat] = await Promise.all([
-                        dropinUrl ? fetchAvailability(dropinUrl) : Promise.resolve([]),
-                        privatUrl ? fetchAvailability(privatUrl) : Promise.resolve([]),
-                    ]);
+                    // Fetch new structure { date, slots }
+                    const scrapeResult = dropinUrl && dropinUrl.includes('periode.no')
+                        ? await fetchAvailability(dropinUrl)
+                        : { date: null, slots: [] };
 
                     const result = {
-                        dropin: dropin || [],
-                        privat: privat || [],
+                        date: scrapeResult.date,
+                        slots: scrapeResult.slots,
                         timestamp: new Date().toISOString(),
                     };
 
                     const resultJson = JSON.stringify(result);
 
-                    // Update DB 
                     await prisma.sauna.update({
                         where: { id: saunaId },
                         data: {
@@ -77,12 +75,9 @@ export async function GET(req: NextRequest) {
         const resultData = currentData || fallbackData;
 
         if (!resultData) {
-            // Very first time, no data at all. We might have to wait or return empty.
-            // But background refresh is already running. We'll return empty for now
-            // and the frontend will poll again.
             return NextResponse.json({
-                dropin: [],
-                privat: [],
+                date: null,
+                slots: [],
                 timestamp: new Date().toISOString(),
                 isInitial: true
             });

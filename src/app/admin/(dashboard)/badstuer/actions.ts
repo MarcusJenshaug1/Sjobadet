@@ -35,6 +35,7 @@ export async function saveSauna(formData: FormData) {
 
         // Flexible hours
         flexibleHours: formData.get('flexibleHours') === 'on',
+        hasDropinAvailability: formData.get('hasDropinAvailability') === 'on',
         hoursMessage: formData.get('hoursMessage') as string,
 
         // Parse JSON fields from textareas (one per line)

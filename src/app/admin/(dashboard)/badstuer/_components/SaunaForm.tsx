@@ -97,13 +97,18 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                <LabelInput label="Booking URL Drop-in (Knapp på siden)" name="bookingUrlDropin" defaultValue={sauna?.bookingUrlDropin} />
-                <LabelInput label="Booking URL Privat (Knapp på siden)" name="bookingUrlPrivat" defaultValue={sauna?.bookingUrlPrivat} />
+                <LabelInput label="Booking URL (Drop-in)" name="bookingUrlDropin" defaultValue={sauna?.bookingUrlDropin} />
+                <LabelInput label="Booking URL (Privat)" name="bookingUrlPrivat" defaultValue={sauna?.bookingUrlPrivat} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                <LabelInput label="Ledighet-skraping URL Drop-in (Periode.no)" name="bookingAvailabilityUrlDropin" defaultValue={sauna?.bookingAvailabilityUrlDropin} />
-                <LabelInput label="Ledighet-skraping URL Privat (Periode.no)" name="bookingAvailabilityUrlPrivat" defaultValue={sauna?.bookingAvailabilityUrlPrivat} />
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid #dcfce7', borderRadius: '0.5rem', backgroundColor: '#f0fdf4' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                    <input type="checkbox" name="hasDropinAvailability" defaultChecked={sauna?.hasDropinAvailability ?? true} />
+                    Vis ledighet i dag (Drop-in timer)
+                </label>
+                <p style={{ fontSize: '0.8rem', color: '#166534', marginTop: '0.25rem' }}>
+                    Aktiver dette hvis badstuen har drop-in timer som skal hentes fra Periode.no
+                </p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
