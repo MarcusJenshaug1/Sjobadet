@@ -30,7 +30,7 @@ export function MediaItem({ asset, onDelete, onRetry, isPrimary, dragHandleProps
         <div className={styles.item}>
             {isPrimary && <div className={styles.primaryBadge}>HOVEDBILDE</div>}
 
-            {asset.url && asset.url !== 'pending' && (asset.url.startsWith('/') || asset.url.startsWith('blob:')) ? (
+            {asset.url && asset.url !== 'pending' && (asset.url.startsWith('/') || asset.url.startsWith('blob:') || asset.url.startsWith('http')) ? (
                 <Image
                     src={asset.url.trim()}
                     alt="Preview"

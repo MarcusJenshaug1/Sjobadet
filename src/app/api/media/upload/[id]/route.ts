@@ -11,7 +11,10 @@ export async function PUT(
         await requireAdmin();
         const { id } = await params;
 
-        const asset = await prisma.mediaAsset.findUnique({ where: { id } });
+        const asset = await prisma.mediaAsset.findUnique({
+            where: { id },
+            include: { sauna: { select: { slug: true } } }
+        });
         if (!asset) {
             return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
         }
@@ -25,7 +28,8 @@ export async function PUT(
         const buffer = Buffer.from(arrayBuffer);
 
         // Process image (Original, Large, Thumb)
-        const processed = await processImage(buffer, id);
+        const folderName = asset.sauna.slug || 'misc';
+        const processed = await processImage(buffer, id, folderName);
 
         // Update DB record
         const updatedAsset = await prisma.mediaAsset.update({

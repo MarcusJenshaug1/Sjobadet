@@ -16,7 +16,7 @@ export function SaunaMediaManager({ saunaId, initialAssets = [] }: SaunaMediaMan
         initialAssets
             .filter(a => {
                 const url = (a.storageKeyThumb || a.storageKeyLarge || '').trim();
-                return url && url !== 'pending' && (url.startsWith('/') || url.startsWith('blob:'));
+                return url && url !== 'pending' && (url.startsWith('/') || url.startsWith('blob:') || url.startsWith('http'));
             })
             .map(a => ({
                 id: a.id,

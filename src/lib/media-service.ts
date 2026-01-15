@@ -40,7 +40,7 @@ async function uploadToSupabase(buffer: Buffer, path: string, mimeType: string) 
 /**
  * Processes an uploaded image into multiple variants and uploads to Supabase.
  */
-export async function processImage(buffer: Buffer, originalName: string): Promise<ProcessedMedia> {
+export async function processImage(buffer: Buffer, originalName: string, folderName: string = 'misc'): Promise<ProcessedMedia> {
     const id = nanoid();
     const ext = '.webp'; // We convert everything to webp
 
@@ -67,10 +67,13 @@ export async function processImage(buffer: Buffer, originalName: string): Promis
         .toBuffer();
 
     // 2. Upload to Supabase (Parallel)
+    // Organized in folders: saunas/[slug]/[id]-[variant].webp
+    const basePath = `saunas/${folderName}/${id}`;
+
     const [originalUrl, largeUrl, thumbUrl] = await Promise.all([
-        uploadToSupabase(originalBuffer, `saunas/${id}-original${ext}`, 'image/webp'),
-        uploadToSupabase(largeBuffer, `saunas/${id}-large${ext}`, 'image/webp'),
-        uploadToSupabase(thumbBuffer, `saunas/${id}-thumb${ext}`, 'image/webp')
+        uploadToSupabase(originalBuffer, `${basePath}-original${ext}`, 'image/webp'),
+        uploadToSupabase(largeBuffer, `${basePath}-large${ext}`, 'image/webp'),
+        uploadToSupabase(thumbBuffer, `${basePath}-thumb${ext}`, 'image/webp')
     ]);
 
     return {
