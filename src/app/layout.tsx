@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { AlertBar } from '@/components/layout/AlertBar';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default async function RootLayout({
           {/* <AlertBar /> */}
           {children}
         </TrackingProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
