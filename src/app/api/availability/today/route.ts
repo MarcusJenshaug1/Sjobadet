@@ -24,7 +24,6 @@ export async function GET(req: NextRequest) {
 
         const now = new Date();
         const TEN_MINUTES = 1000 * 60 * 10;
-        const { searchParams } = new URL(req.url); // Use the same searchParams from earlier
         const force = searchParams.get('force') === 'true';
         const isFresh = !force && lastScrapedAt && (now.getTime() - new Date(lastScrapedAt).getTime() < TEN_MINUTES);
 

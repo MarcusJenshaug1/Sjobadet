@@ -126,6 +126,20 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                 bookingUrlPrivat={sauna.bookingUrlPrivat}
                             />
 
+                            {/* Real-time Availability (Mobile Only) */}
+                            {(sauna.bookingUrlDropin?.includes('periode.no') || sauna.bookingUrlPrivat?.includes('periode.no')) && (
+                                <div className={styles.mobileOnly} style={{ marginBottom: '2rem' }}>
+                                    <SaunaAvailability
+                                        saunaId={sauna.id}
+                                        bookingUrlDropin={sauna.bookingUrlDropin}
+                                        bookingUrlPrivat={sauna.bookingUrlPrivat}
+                                        capacityDropin={sauna.capacityDropin || 0}
+                                        isAdmin={isAdmin}
+                                        showAvailability={(sauna as any).hasDropinAvailability ?? true}
+                                    />
+                                </div>
+                            )}
+
                             {/* Description */}
                             <div className={styles.textSection}>
                                 <h2 className={styles.sectionTitle}>Om badstuen</h2>
@@ -177,14 +191,14 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                         <div className={styles.sidebar}>
                             {/* Real-time Availability (Desktop Sidebar) */}
                             {(sauna.bookingUrlDropin?.includes('periode.no') || sauna.bookingUrlPrivat?.includes('periode.no')) && (
-                                <div style={{ marginBottom: '1.5rem' }}>
+                                <div className={`${styles.sidebarCard} ${styles.desktopOnly}`} style={{ marginBottom: '1.5rem', padding: 0, border: 'none' }}>
                                     <SaunaAvailability
                                         saunaId={sauna.id}
                                         bookingUrlDropin={sauna.bookingUrlDropin}
                                         bookingUrlPrivat={sauna.bookingUrlPrivat}
                                         capacityDropin={sauna.capacityDropin || 0}
                                         isAdmin={isAdmin}
-                                        showAvailability={sauna.hasDropinAvailability}
+                                        showAvailability={(sauna as any).hasDropinAvailability ?? true}
                                     />
                                 </div>
                             )}

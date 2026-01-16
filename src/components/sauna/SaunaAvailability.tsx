@@ -41,7 +41,10 @@ export default function SaunaAvailability({
     const hasDataRef = useRef(false);
 
     const fetchData = useCallback(async (force = false, silent = false) => {
-        if (!showAvailability) return;
+        if (showAvailability === false) {
+            setLoading(false);
+            return;
+        }
         if (!silent) setLoading(true);
         if (silent) setRefreshing(true);
 
@@ -78,7 +81,10 @@ export default function SaunaAvailability({
     }, [saunaId, showAvailability]); // Removed 'data' from dependencies
 
     useEffect(() => {
-        if (!showAvailability) return;
+        if (showAvailability === false) {
+            setLoading(false);
+            return;
+        }
 
         // Reset state for new sauna
         hasDataRef.current = false;

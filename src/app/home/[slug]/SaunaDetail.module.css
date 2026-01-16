@@ -86,6 +86,24 @@
     }
 }
 
+.mobileOnly {
+    display: block;
+}
+
+.desktopOnly {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .mobileOnly {
+        display: none !important;
+    }
+
+    .desktopOnly {
+        display: block !important;
+    }
+}
+
 /* Left Column Styling */
 .sectionTitle {
     font-size: 1.5rem;
