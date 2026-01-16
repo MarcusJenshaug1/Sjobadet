@@ -1,4 +1,4 @@
-.galleryContainer {
+.gallerySection {
     background-color: white;
     padding: 2rem;
     border-radius: 12px;
@@ -12,56 +12,162 @@
     color: #1e293b;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
+.slideshowContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.imageWrapper {
+.mainImageWrapper {
     position: relative;
-    height: 150px;
-    border-radius: 0.5rem;
+    width: 100%;
+    padding-bottom: 60%;
+    /* Adjusted aspect ratio for main image */
+    border-radius: 1rem;
     overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.2s;
+    cursor: zoom-in;
+    background-color: #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.imageWrapper:hover {
+.mainImage {
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.mainImageWrapper:hover .mainImage {
     transform: scale(1.02);
 }
 
-.thumbnail {
-    width: 100%;
-    height: 100%;
+.imageOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.imageOverlay span {
+    color: white;
+    padding: 0.6rem 1.2rem;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.mainImageWrapper:hover .imageOverlay {
+    opacity: 1;
+}
+
+/* Slide Navigation */
+.slideNavPrev,
+.slideNavNext {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s;
+    z-index: 10;
+    color: #1e293b;
+}
+
+.slideNavPrev {
+    left: 1rem;
+}
+
+.slideNavNext {
+    right: 1rem;
+}
+
+.slideNavPrev:hover,
+.slideNavNext:hover {
+    background: white;
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Thumbnails */
+.thumbnailRow {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.thumbnailRow::-webkit-scrollbar {
+    height: 4px;
+}
+
+.thumbnailRow::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}
+
+.thumbnailWrapper {
+    position: relative;
+    flex: 0 0 100px;
+    height: 75px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    background: none;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.thumbnailWrapper:hover {
+    opacity: 0.8;
+}
+
+.thumbnailActive {
+    border-color: #719898;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.thumbnailImage {
     object-fit: cover;
-    transition: filter 0.2s;
 }
 
-.imageWrapper:hover .thumbnail {
-    filter: brightness(0.9);
-}
-
-/* Lightbox */
-.lightbox {
+/* Lightbox v2 */
+.lightboxOverlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 9999;
     padding: 2rem;
-    animation: fadeIn 0.2s ease-out;
+    cursor: zoom-out;
+    animation: fadeIn 0.3s ease-out;
 }
 
-.fullImageWrapper {
+.lightboxContent {
     position: relative;
-    width: 90%;
-    height: 80vh;
+    width: 100%;
+    height: 100%;
+    max-width: 90vw;
+    max-height: 85vh;
+    cursor: default;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -71,20 +177,104 @@
     object-fit: contain;
 }
 
-.closeButton {
-    position: absolute;
-    top: 2rem;
-    right: 2rem;
-    background: none;
+.closeButton,
+.lightboxNavLeft,
+.lightboxNavRight {
+    position: fixed;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
     color: white;
     cursor: pointer;
-    opacity: 0.8;
-    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    z-index: 10001;
 }
 
-.closeButton:hover {
-    opacity: 1;
+.closeButton {
+    top: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+}
+
+.lightboxNavLeft {
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 64px;
+    height: 64px;
+}
+
+.lightboxNavRight {
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 64px;
+    height: 64px;
+}
+
+.closeButton:hover,
+.lightboxNavLeft:hover,
+.lightboxNavRight:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.lightboxNavLeft:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+.lightboxNavRight:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+.imageCounter {
+    position: absolute;
+    bottom: -3.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+    padding: 0.4rem 1.2rem;
+    border-radius: 999px;
+}
+
+@media (max-width: 768px) {
+    .gallerySection {
+        padding: 1.5rem;
+    }
+
+    .mainImageWrapper {
+        padding-bottom: 75%;
+    }
+
+    .lightboxNavLeft,
+    .lightboxNavRight {
+        width: 48px;
+        height: 48px;
+        bottom: 3rem;
+        top: auto;
+        transform: none;
+    }
+
+    .lightboxNavLeft {
+        left: 25%;
+    }
+
+    .lightboxNavRight {
+        right: 25%;
+    }
+
+    .lightboxNavLeft:hover,
+    .lightboxNavRight:hover {
+        transform: scale(1.1);
+    }
 }
 
 @keyframes fadeIn {

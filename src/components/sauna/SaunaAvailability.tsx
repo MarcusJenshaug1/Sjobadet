@@ -39,6 +39,11 @@ export default function SaunaAvailability({
     const [error, setError] = useState(false);
     const [onlyAvailable, setOnlyAvailable] = useState(true);
     const hasDataRef = useRef(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const fetchData = useCallback(async (force = false, silent = false) => {
         if (showAvailability === false) {
@@ -62,9 +67,18 @@ export default function SaunaAvailability({
                 const currentTime = now.getHours() * 60 + now.getMinutes();
 
                 const filteredSlots = (json.slots || []).filter((s: ScrapedSlot) => {
-                    const [h, m] = s.from.split(':').map(Number);
-                    const slotTime = h * 60 + m;
-                    return slotTime >= currentTime;
+                    // Try to parse 'to' time, but fallback to 'from' time if needed
+                    const timeToParse = s.to || s.from;
+                    const parts = timeToParse.split(/[:.]/).map(Number);
+
+                    if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
+                        return true; // Keep it if we can't parse time
+                    }
+
+                    const slotTimeMinutes = parts[0] * 60 + parts[1];
+                    // If we are using 'to' time, show if it hasn't ended.
+                    // If we fallback to 'from' time, show if it hasn't started.
+                    return slotTimeMinutes > (s.to ? currentTime : currentTime - 30);
                 });
 
                 setData({ ...json, slots: filteredSlots });
@@ -78,7 +92,7 @@ export default function SaunaAvailability({
         } finally {
             setRefreshing(false);
         }
-    }, [saunaId, showAvailability]); // Removed 'data' from dependencies
+    }, [saunaId, showAvailability]);
 
     useEffect(() => {
         if (showAvailability === false) {
@@ -150,7 +164,7 @@ export default function SaunaAvailability({
                         </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {currentData.timestamp && (
+                        {(mounted && currentData.timestamp) && (
                             <p className={styles.updatedAt}>
                                 Oppdatert {new Date(currentData.timestamp).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })}
                             </p>
@@ -180,7 +194,7 @@ export default function SaunaAvailability({
                     onClick={() => setOnlyAvailable(!onlyAvailable)}
                     className={`${styles.toggleButton} ${onlyAvailable ? styles.toggleActive : ''}`}
                 >
-                    {onlyAvailable ? 'Vis alle' : 'Bare ledige'}
+                    {onlyAvailable ? 'Vis alle timer' : 'Vis bare ledige'}
                 </button>
             </div>
 
@@ -205,7 +219,10 @@ export default function SaunaAvailability({
                     ))
                 ) : (
                     <div className={styles.empty}>
-                        <p className={styles.emptyText}>Ingen ledige timer funnet</p>
+                        <p className={styles.emptyText}>Ingen ledige timer funnet akkurat nå</p>
+                        <button onClick={() => fetchData(true)} className={styles.retryButton} style={{ marginTop: '0.5rem' }}>
+                            Oppdater status
+                        </button>
                     </div>
                 )}
             </div>

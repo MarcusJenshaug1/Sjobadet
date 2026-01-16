@@ -92,7 +92,7 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
 
         const scrapedData = await page.evaluate(() => {
             const slots: any[] = [];
-            const timeRegex = /(\d{2}:\d{2})/;
+            const timeRegex = /(\d{1,2}[:.]\d{2})/;
             const candidates = Array.from(document.querySelectorAll('*')).filter(el => {
                 const txt = (el as HTMLElement).innerText;
                 return txt && timeRegex.test(txt) && txt.length < 50;
@@ -102,11 +102,14 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
                 const text = (el as HTMLElement).innerText;
                 const match = text.match(timeRegex);
                 if (match) {
-                    const fromTime = match[1];
+                    const fromTime = match[1].replace('.', ':'); // Normalize to HH:MM with colon
                     const [hours, minutes] = fromTime.split(':').map(Number);
                     const toDate = new Date();
                     toDate.setHours(hours + 1, minutes);
-                    const toTime = toDate.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+
+                    const toH = String(toDate.getHours()).padStart(2, '0');
+                    const toM = String(toDate.getMinutes()).padStart(2, '0');
+                    const toTime = `${toH}:${toM}`;
 
                     let current: HTMLElement | null = el as HTMLElement;
                     let availableSpots = 0;
