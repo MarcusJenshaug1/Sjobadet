@@ -27,11 +27,16 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
         }
 
         // Local Windows fallback
+        const isWindows = process.platform === 'win32';
         if (!executablePath || executablePath.includes('node_modules')) {
-            // Common local paths for Windows
-            executablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-            // If not there, maybe Edge?
-            // executablePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+            if (isWindows) {
+                executablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+            } else {
+                // On Linux/Vercel, if chromium.executablePath() failed, 
+                // we should NOT fallback to a Windows path.
+                console.error('[Scraper] Chromium path is missing on Linux environment!');
+                throw new Error('Chromium executable not found');
+            }
         }
 
         browser = await puppeteer.launch({

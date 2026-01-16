@@ -4,11 +4,19 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SaunaCard } from '@/components/sauna/SaunaCard';
 import { Button } from '@/components/ui/Button';
-import { Clock, MapPin, Sparkles, Droplets, Users } from 'lucide-react';
+import { Clock, MapPin, Sparkles, Droplets, Users, AlertTriangle } from 'lucide-react';
 import { getActiveSaunas } from '@/lib/sauna-service';
 
 export default async function Home() {
-  const saunas = await getActiveSaunas();
+  let saunas: any[] = [];
+  let dbError = false;
+
+  try {
+    saunas = await getActiveSaunas();
+  } catch (error) {
+    console.error('Failed to fetch saunas:', error);
+    dbError = true;
+  }
 
   const mappedSaunas = saunas.map((s: any) => ({
     ...s,
@@ -29,9 +37,17 @@ export default async function Home() {
             gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
             gap: '2rem'
           }}>
-            {mappedSaunas.map((sauna) => (
-              <SaunaCard key={sauna.id} sauna={sauna} />
-            ))}
+            {dbError ? (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', backgroundColor: '#fff5f5', borderRadius: '1rem', border: '1px solid #feb2b2' }}>
+                <AlertTriangle size={48} color="#f56565" style={{ marginBottom: '1rem' }} />
+                <h3 style={{ color: '#c53030', marginBottom: '0.5rem' }}>Midlertidig utilgjengelig</h3>
+                <p style={{ color: '#9b2c2c' }}>Vi har problemer med å hente badstue-data akkurat nå. Vennligst prøv igjen senere.</p>
+              </div>
+            ) : (
+              mappedSaunas.map((sauna) => (
+                <SaunaCard key={sauna.id} sauna={sauna} />
+              ))
+            )}
           </div>
         </section>
 

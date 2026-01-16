@@ -16,23 +16,36 @@ import { getSession } from '@/lib/auth';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
-    const sauna = await getSaunaBySlug(slug);
+    try {
+        const sauna = await getSaunaBySlug(slug);
+        if (!sauna) return { title: 'Fant ikke badstue' };
 
-    if (!sauna) return { title: 'Fant ikke badstue' };
-
-    return {
-        title: `${sauna.name} | Sjøbadet Badstue`,
-        description: sauna.shortDescription,
-    };
+        return {
+            title: `${sauna.name} | Sjøbadet Badstue`,
+            description: sauna.shortDescription,
+        };
+    } catch (error) {
+        return { title: 'Sjøbadet Badstue' };
+    }
 }
 
 export default async function SaunaDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
-    const sauna = await getSaunaBySlug(slug);
-    const session = await getSession();
-    const isAdmin = !!session?.user;
 
-    if (!sauna) {
+    let sauna = null;
+    let isAdmin = false;
+    let dbError = false;
+
+    try {
+        sauna = await getSaunaBySlug(slug);
+        const session = await getSession();
+        isAdmin = !!session?.user;
+    } catch (error) {
+        console.error('Failed to fetch sauna detail:', error);
+        dbError = true;
+    }
+
+    if (!sauna && !dbError) {
         notFound();
     }
 
@@ -46,8 +59,8 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
         }
     };
 
-    const facilities = parseJSON(sauna.facilities);
-    const gallery = parseJSON(sauna.gallery);
+    const facilities = sauna ? parseJSON(sauna.facilities) : [];
+    const gallery = sauna ? parseJSON(sauna.gallery) : [];
 
     return (
         <>
@@ -55,7 +68,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
             <main className={styles.main}>
                 {/* Hero Section */}
                 <div className={styles.heroImage}>
-                    {sauna.imageUrl ? (
+                    {sauna?.imageUrl ? (
                         <Image
                             src={sauna.imageUrl}
                             alt={sauna.name}
@@ -67,17 +80,17 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                         />
                     ) : (
                         <div style={{ width: '100%', height: '100%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            Ingen bilde
+                            {dbError ? 'Info utilgjengelig' : 'Ingen bilde'}
                         </div>
                     )}
                     <div className={styles.heroOverlay}>
                         <div className={styles.heroContentContainer}>
-                            <h1 className={styles.title}>{sauna.name}</h1>
+                            <h1 className={styles.title}>{sauna?.name || 'Badstue'}</h1>
                             <div className={styles.heroLocation}>
                                 <MapPin size={24} />
-                                {sauna.location}
+                                {sauna?.location || 'Lokasjon...'}
                             </div>
-                            {sauna.driftStatus === 'closed' && (
+                            {sauna?.driftStatus === 'closed' && (
                                 <div style={{
                                     marginTop: '1rem',
                                     display: 'inline-flex',
@@ -98,166 +111,180 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                 </div>
 
                 <div className={styles.contentContainer}>
-                    <div className={styles.grid}>
-                        {/* Left Column: Main Content */}
-                        <div className={styles.leftColumn}>
+                    {dbError ? (
+                        <div style={{ textAlign: 'center', padding: '4rem 1rem', maxWidth: '600px', margin: '0 auto' }}>
+                            <AlertTriangle size={64} color="#f56565" style={{ marginBottom: '1.5rem' }} />
+                            <h2 style={{ fontSize: '2rem', color: '#c53030', marginBottom: '1rem' }}>Midlertidig utilgjengelig</h2>
+                            <p style={{ fontSize: '1.25rem', color: '#718096', lineHeight: '1.6' }}>
+                                Vi klarte ikke å hente informasjon om badstuen akkurat nå.
+                                Vennligst prøv igjen om litt, eller gå tilbake til forsiden for å se andre badstuer. Slip.
+                            </p>
+                            <Link href="/" className={styles.actionButton} style={{ marginTop: '2rem', display: 'inline-flex', width: 'auto' }}>
+                                Tilbake til forsiden
+                            </Link>
+                        </div>
+                    ) : sauna && (
+                        <div className={styles.grid}>
+                            {/* Left Column: Main Content */}
+                            <div className={styles.leftColumn}>
 
-                            {sauna.driftStatus === 'closed' && sauna.kundeMelding && (
-                                <div style={{
-                                    padding: '1.5rem',
-                                    backgroundColor: '#fff1f2',
-                                    border: '1px solid #fecdd3',
-                                    borderRadius: '0.75rem',
-                                    color: '#9f1239',
-                                    marginBottom: '2rem'
-                                }}>
-                                    <p style={{ fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1.1rem' }}>Melding fra oss:</p>
-                                    <p>{sauna.kundeMelding}</p>
-                                </div>
-                            )}
-
-                            {/* Booking Options */}
-                            <SaunaBookingOptions
-                                saunaId={sauna.id}
-                                saunaName={sauna.name}
-                                capacityDropin={sauna.capacityDropin || 0}
-                                capacityPrivat={sauna.capacityPrivat || 0}
-                                bookingUrlDropin={sauna.bookingUrlDropin}
-                                bookingUrlPrivat={sauna.bookingUrlPrivat}
-                            />
-
-                            {/* Real-time Availability (Mobile Only) */}
-                            {(sauna.bookingUrlDropin?.includes('periode.no') || sauna.bookingUrlPrivat?.includes('periode.no')) && (
-                                <div className={styles.mobileOnly} style={{ marginBottom: '2rem' }}>
-                                    <SaunaAvailability
-                                        saunaId={sauna.id}
-                                        bookingUrlDropin={sauna.bookingUrlDropin}
-                                        bookingUrlPrivat={sauna.bookingUrlPrivat}
-                                        capacityDropin={sauna.capacityDropin || 0}
-                                        isAdmin={isAdmin}
-                                        showAvailability={(sauna as any).hasDropinAvailability ?? true}
-                                    />
-                                </div>
-                            )}
-
-                            {/* Description */}
-                            <div className={styles.textSection}>
-                                <h2 className={styles.sectionTitle}>Om badstuen</h2>
-                                <div className={styles.description}>
-                                    {/* Markdown rendering */}
-                                    <ReactMarkdown
-                                        components={{
-                                            p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', lineHeight: '1.7' }} {...props} />,
-                                            ul: ({ node, ...props }) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'disc' }} {...props} />,
-                                            ol: ({ node, ...props }) => <ol style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'decimal' }} {...props} />,
-                                            li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem' }} {...props} />,
-                                            h1: ({ node, ...props }) => <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '1rem' }} {...props} />,
-                                            h2: ({ node, ...props }) => <h4 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1.25rem', marginBottom: '0.75rem' }} {...props} />,
-                                            h3: ({ node, ...props }) => <h5 style={{ fontSize: '1.1rem', fontWeight: 600, marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
-                                        }}
-                                    >
-                                        {sauna.description}
-                                    </ReactMarkdown>
-                                </div>
-                            </div>
-
-                            {/* Gallery */}
-                            <SaunaGallery
-                                images={gallery}
-                                saunaName={sauna.name}
-                            />
-
-                            {/* Map */}
-                            <div className={styles.textSection}>
-                                <h2 className={styles.sectionTitle}>Kart og plassering</h2>
-                                <p style={{ marginBottom: '1rem', color: '#475569' }}>{sauna.address}</p>
-                                {sauna.mapEmbedUrl && (
-                                    <div className={styles.mapWrapper}>
-                                        <iframe
-                                            src={sauna.mapEmbedUrl}
-                                            width="100%"
-                                            height="100%"
-                                            style={{ border: 0 }}
-                                            allowFullScreen
-                                            loading="lazy"
-                                            referrerPolicy="no-referrer-when-downgrade"
-                                        ></iframe>
+                                {sauna.driftStatus === 'closed' && sauna.kundeMelding && (
+                                    <div style={{
+                                        padding: '1.5rem',
+                                        backgroundColor: '#fff1f2',
+                                        border: '1px solid #fecdd3',
+                                        borderRadius: '0.75rem',
+                                        color: '#9f1239',
+                                        marginBottom: '2rem'
+                                    }}>
+                                        <p style={{ fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1.1rem' }}>Melding fra oss:</p>
+                                        <p>{sauna.kundeMelding}</p>
                                     </div>
                                 )}
+
+                                {/* Booking Options */}
+                                <SaunaBookingOptions
+                                    saunaId={sauna.id}
+                                    saunaName={sauna.name}
+                                    capacityDropin={sauna.capacityDropin || 0}
+                                    capacityPrivat={sauna.capacityPrivat || 0}
+                                    bookingUrlDropin={sauna.bookingUrlDropin}
+                                    bookingUrlPrivat={sauna.bookingUrlPrivat}
+                                />
+
+                                {/* Real-time Availability (Mobile Only) */}
+                                {(sauna.bookingUrlDropin?.includes('periode.no') || sauna.bookingUrlPrivat?.includes('periode.no')) && (
+                                    <div className={styles.mobileOnly} style={{ marginBottom: '2rem' }}>
+                                        <SaunaAvailability
+                                            saunaId={sauna.id}
+                                            bookingUrlDropin={sauna.bookingUrlDropin}
+                                            bookingUrlPrivat={sauna.bookingUrlPrivat}
+                                            capacityDropin={sauna.capacityDropin || 0}
+                                            isAdmin={isAdmin}
+                                            showAvailability={(sauna as any).hasDropinAvailability ?? true}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Description */}
+                                <div className={styles.textSection}>
+                                    <h2 className={styles.sectionTitle}>Om badstuen</h2>
+                                    <div className={styles.description}>
+                                        {/* Markdown rendering */}
+                                        <ReactMarkdown
+                                            components={{
+                                                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', lineHeight: '1.7' }} {...props} />,
+                                                ul: ({ node, ...props }) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'disc' }} {...props} />,
+                                                ol: ({ node, ...props }) => <ol style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'decimal' }} {...props} />,
+                                                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem' }} {...props} />,
+                                                h1: ({ node, ...props }) => <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '1rem' }} {...props} />,
+                                                h2: ({ node, ...props }) => <h4 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1.25rem', marginBottom: '0.75rem' }} {...props} />,
+                                                h3: ({ node, ...props }) => <h5 style={{ fontSize: '1.1rem', fontWeight: 600, marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
+                                            }}
+                                        >
+                                            {sauna.description}
+                                        </ReactMarkdown>
+                                    </div>
+                                </div>
+
+                                {/* Gallery */}
+                                <SaunaGallery
+                                    images={gallery}
+                                    saunaName={sauna.name}
+                                />
+
+                                {/* Map */}
+                                <div className={styles.textSection}>
+                                    <h2 className={styles.sectionTitle}>Kart og plassering</h2>
+                                    <p style={{ marginBottom: '1rem', color: '#475569' }}>{sauna.address}</p>
+                                    {sauna.mapEmbedUrl && (
+                                        <div className={styles.mapWrapper}>
+                                            <iframe
+                                                src={sauna.mapEmbedUrl}
+                                                width="100%"
+                                                height="100%"
+                                                style={{ border: 0 }}
+                                                allowFullScreen
+                                                loading="lazy"
+                                                referrerPolicy="no-referrer-when-downgrade"
+                                            ></iframe>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Right Column: Sidebar */}
+                            <div className={styles.sidebar}>
+                                {/* Real-time Availability (Desktop Sidebar) */}
+                                {(sauna.bookingUrlDropin?.includes('periode.no') || sauna.bookingUrlPrivat?.includes('periode.no')) && (
+                                    <div className={`${styles.sidebarCard} ${styles.desktopOnly}`} style={{ marginBottom: '1.5rem', padding: 0, border: 'none' }}>
+                                        <SaunaAvailability
+                                            saunaId={sauna.id}
+                                            bookingUrlDropin={sauna.bookingUrlDropin}
+                                            bookingUrlPrivat={sauna.bookingUrlPrivat}
+                                            capacityDropin={sauna.capacityDropin || 0}
+                                            isAdmin={isAdmin}
+                                            showAvailability={(sauna as any).hasDropinAvailability ?? true}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Praktisk Info */}
+                                <div className={styles.sidebarCard}>
+                                    <h3 className={styles.sidebarTitle}>Praktisk info</h3>
+
+                                    <div className={styles.infoItem}>
+                                        <Users size={20} className={styles.infoIcon} />
+                                        <div>
+                                            <span className={styles.infoLabel}>Kapasitet drop-in</span>
+                                            <span className={styles.infoValue}>{sauna?.capacityDropin ?? 0} personer</span>
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.infoItem}>
+                                        <Users size={20} className={styles.infoIcon} />
+                                        <div>
+                                            <span className={styles.infoLabel}>Kapasitet privat</span>
+                                            <span className={styles.infoValue}>{sauna?.capacityPrivat ?? 0} personer</span>
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.infoItem}>
+                                        <MapPin size={20} className={styles.infoIcon} />
+                                        <div>
+                                            <span className={styles.infoLabel}>Adresse</span>
+                                            <span className={styles.infoValue}>{sauna?.address?.split(',')[0] || 'Ikke oppgitt'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Facilities */}
+                                <div className={styles.sidebarCard}>
+                                    <h3 className={styles.sidebarTitle}>Fasiliteter</h3>
+                                    {facilities.map((facility: string, index: number) => (
+                                        <div key={index} className={styles.facilityItem}>
+                                            <Check size={18} />
+                                            <span>{facility}</span>
+                                        </div>
+                                    ))}
+                                    {facilities.length === 0 && <span style={{ color: '#94a3b8' }}>Ingen fasiliteter oppført</span>}
+                                </div>
+
+                                {/* Actions */}
+                                <div style={{ marginTop: '0.5rem' }}>
+                                    <Link href="/medlemskap" className={styles.actionButton}>
+                                        <CreditCard size={18} style={{ marginRight: '0.5rem' }} />
+                                        Se medlemskap
+                                    </Link>
+                                    <Link href="/gavekort" className={styles.actionButton}>
+                                        <Gift size={18} style={{ marginRight: '0.5rem' }} />
+                                        Kjøp gavekort
+                                    </Link>
+                                </div>
+
                             </div>
                         </div>
-
-                        {/* Right Column: Sidebar */}
-                        <div className={styles.sidebar}>
-                            {/* Real-time Availability (Desktop Sidebar) */}
-                            {(sauna.bookingUrlDropin?.includes('periode.no') || sauna.bookingUrlPrivat?.includes('periode.no')) && (
-                                <div className={`${styles.sidebarCard} ${styles.desktopOnly}`} style={{ marginBottom: '1.5rem', padding: 0, border: 'none' }}>
-                                    <SaunaAvailability
-                                        saunaId={sauna.id}
-                                        bookingUrlDropin={sauna.bookingUrlDropin}
-                                        bookingUrlPrivat={sauna.bookingUrlPrivat}
-                                        capacityDropin={sauna.capacityDropin || 0}
-                                        isAdmin={isAdmin}
-                                        showAvailability={(sauna as any).hasDropinAvailability ?? true}
-                                    />
-                                </div>
-                            )}
-
-                            {/* Praktisk Info */}
-                            <div className={styles.sidebarCard}>
-                                <h3 className={styles.sidebarTitle}>Praktisk info</h3>
-
-                                <div className={styles.infoItem}>
-                                    <Users size={20} className={styles.infoIcon} />
-                                    <div>
-                                        <span className={styles.infoLabel}>Kapasitet drop-in</span>
-                                        <span className={styles.infoValue}>{sauna.capacityDropin} personer</span>
-                                    </div>
-                                </div>
-
-                                <div className={styles.infoItem}>
-                                    <Users size={20} className={styles.infoIcon} />
-                                    <div>
-                                        <span className={styles.infoLabel}>Kapasitet privat</span>
-                                        <span className={styles.infoValue}>{sauna.capacityPrivat} personer</span>
-                                    </div>
-                                </div>
-
-                                <div className={styles.infoItem}>
-                                    <MapPin size={20} className={styles.infoIcon} />
-                                    <div>
-                                        <span className={styles.infoLabel}>Adresse</span>
-                                        <span className={styles.infoValue}>{sauna.address?.split(',')[0]}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Facilities */}
-                            <div className={styles.sidebarCard}>
-                                <h3 className={styles.sidebarTitle}>Fasiliteter</h3>
-                                {facilities.map((facility: string, index: number) => (
-                                    <div key={index} className={styles.facilityItem}>
-                                        <Check size={18} />
-                                        <span>{facility}</span>
-                                    </div>
-                                ))}
-                                {facilities.length === 0 && <span style={{ color: '#94a3b8' }}>Ingen fasiliteter oppført</span>}
-                            </div>
-
-                            {/* Actions */}
-                            <div style={{ marginTop: '0.5rem' }}>
-                                <Link href="/medlemskap" className={styles.actionButton}>
-                                    <CreditCard size={18} style={{ marginRight: '0.5rem' }} />
-                                    Se medlemskap
-                                </Link>
-                                <Link href="/gavekort" className={styles.actionButton}>
-                                    <Gift size={18} style={{ marginRight: '0.5rem' }} />
-                                    Kjøp gavekort
-                                </Link>
-                            </div>
-
-                        </div>
-                    </div>
+                    )}
                 </div>
             </main>
             <Footer />

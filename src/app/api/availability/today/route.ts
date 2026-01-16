@@ -15,7 +15,13 @@ export async function GET(req: NextRequest) {
         const sauna = await prisma.sauna.findUnique({ where: { id: saunaId } });
 
         if (!sauna) {
-            return NextResponse.json({ error: 'Sauna not found' }, { status: 404 });
+            return NextResponse.json({
+                date: null,
+                slots: [],
+                timestamp: new Date().toISOString(),
+                isInitial: true,
+                message: 'Sauna not found'
+            });
         }
 
         const availabilityData = sauna.availabilityData;
@@ -68,10 +74,16 @@ export async function GET(req: NextRequest) {
         }
 
         // Return current data immediately (or fallback to previous if current is null)
-        const currentData = availabilityData ? JSON.parse(availabilityData) : null;
-        const fallbackData = previousAvailabilityData ? JSON.parse(previousAvailabilityData) : null;
-
-        const resultData = currentData || fallbackData;
+        let resultData = null;
+        try {
+            if (availabilityData) {
+                resultData = JSON.parse(availabilityData);
+            } else if (previousAvailabilityData) {
+                resultData = JSON.parse(previousAvailabilityData);
+            }
+        } catch (parseError) {
+            console.error('[Availability] JSON parse error:', parseError);
+        }
 
         if (!resultData) {
             return NextResponse.json({
