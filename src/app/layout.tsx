@@ -29,8 +29,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
-  const isAdmin = !!session;
+  let isAdmin = false;
+  try {
+    const session = await getSession();
+    isAdmin = !!session;
+  } catch (error) {
+    console.error('Failed to get session in RootLayout:', error);
+  }
 
   return (
     <html lang="no" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>

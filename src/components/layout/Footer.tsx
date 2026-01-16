@@ -8,8 +8,15 @@ export { FooterView };
  * Fetches data and passes it to the FooterView Client Component.
  */
 export async function Footer() {
-    const settings = await getGlobalSettings();
-    const saunas = await getActiveSaunas();
+    let settings: Record<string, string> = {};
+    let saunas: any[] = [];
+
+    try {
+        settings = await getGlobalSettings();
+        saunas = await getActiveSaunas();
+    } catch (error) {
+        console.error('Failed to fetch footer data:', error);
+    }
 
     const address = settings['contact_address'] || 'Nedre Langgate 44, 3126 Tønsberg';
     const email = settings['contact_email'] || 'booking@sjobadet.com';
