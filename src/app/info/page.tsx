@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { ArrowRight, HelpCircle, FileText, Scale, Users, Clock } from 'lucide-react';
+import { ArrowRight, HelpCircle, FileText, Scale, Users, Clock, Briefcase } from 'lucide-react';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -15,6 +15,7 @@ export default function InfoHubPage() {
         { href: '/info/faq', label: 'Ofte stilte spørsmål', icon: HelpCircle, desc: 'Svar på det meste du lurer på.' },
         { href: '/info/regler', label: 'Badstueregler', icon: FileText, desc: 'Trivselsregler for en god opplevelse.' },
         { href: '/info/vilkar', label: 'Salgsbetingelser', icon: Scale, desc: 'Vilkår for kjøp og booking.' },
+        { href: '/bedrift', label: 'Bedriftsmedlemskap', icon: Briefcase, desc: 'Unike fordeler for din bedrift.' },
         { href: '/info/om-oss', label: 'Om oss', icon: Users, desc: 'Hvem er vi og vår historie.' },
         { href: '/info/apningstider', label: 'Åpningstider', icon: Clock, desc: 'Oversikt over når vi har åpent.' },
     ];
