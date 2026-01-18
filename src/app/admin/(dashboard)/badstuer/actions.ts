@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth-guard'
+import { clearSaunaCaches } from '@/lib/sauna-service'
 
 export async function saveSauna(formData: FormData) {
     await requireAdmin()
@@ -81,6 +82,7 @@ export async function saveSauna(formData: FormData) {
         }
     }
 
+    clearSaunaCaches(data.slug)
     revalidatePath('/admin/badstuer')
     revalidatePath('/')
     revalidatePath(`/badstue/${data.slug}`)
@@ -93,6 +95,7 @@ export async function toggleSaunaStatus(id: string, currentStatus: string) {
         where: { id },
         data: { status: currentStatus === 'active' ? 'inactive' : 'active' }
     })
+    clearSaunaCaches()
     revalidatePath('/admin/badstuer')
     revalidatePath('/')
 }
@@ -102,6 +105,7 @@ export async function deleteSauna(id: string) {
     await prisma.sauna.delete({
         where: { id }
     })
+    clearSaunaCaches()
     revalidatePath('/admin/badstuer')
     revalidatePath('/')
 }

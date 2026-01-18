@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
-import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin } from 'lucide-react';
 import styles from './SaunaCard.module.css';
 import { Button } from '../ui/Button';
 import { trackEvent } from '@/lib/analytics/tracking';
+import { useRouter } from 'next/navigation';
 
 interface SaunaProps {
     id: string;
@@ -22,8 +22,42 @@ interface SaunaProps {
 }
 
 export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
+    const router = useRouter();
+    const cardRef = useRef<HTMLDivElement | null>(null);
+    const prefetchedRef = useRef(false);
+    const targetHref = `/home/${sauna.slug}`;
+
+    useEffect(() => {
+        if (prefetchedRef.current) return;
+        const node = cardRef.current;
+        if (!node) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !prefetchedRef.current) {
+                    try {
+                        router.prefetch(targetHref);
+                    } catch (_) { }
+                    prefetchedRef.current = true;
+                    observer.disconnect();
+                }
+            });
+        }, { rootMargin: '150px' });
+
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [router, targetHref]);
+
+    const handleHover = () => {
+        if (prefetchedRef.current) return;
+        try {
+            router.prefetch(targetHref);
+        } catch (_) { }
+        prefetchedRef.current = true;
+    };
+
     return (
-        <div className={styles.card}>
+        <div className={styles.card} ref={cardRef} onMouseEnter={handleHover}>
             <div className={styles.imageContainer}>
                 {sauna.imageUrl ? (
                     <Image

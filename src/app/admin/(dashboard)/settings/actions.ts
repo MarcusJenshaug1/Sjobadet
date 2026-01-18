@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth-guard'
+import { clearSaunaCaches } from '@/lib/sauna-service'
 
 export async function saveSettings(formData: FormData) {
     await requireAdmin()
@@ -26,4 +27,15 @@ export async function saveSettings(formData: FormData) {
 
     revalidatePath('/', 'layout')
     revalidatePath('/admin/settings')
+}
+
+export async function clearPublicCaches() {
+    await requireAdmin()
+    clearSaunaCaches()
+    revalidatePath('/', 'layout')
+    revalidatePath('/home')
+    revalidatePath('/info')
+    revalidatePath('/bedrift')
+    revalidatePath('/gavekort')
+    revalidatePath('/medlemskap')
 }

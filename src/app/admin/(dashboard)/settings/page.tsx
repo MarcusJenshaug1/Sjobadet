@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma'
 import { Button } from '@/components/ui/Button'
-import { saveSettings } from './actions'
+import { saveSettings, clearPublicCaches } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +16,14 @@ export default async function SettingsPage() {
     return (
         <div>
             <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>Innstillinger</h1>
+
+            <form action={clearPublicCaches} style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', border: '1px solid #e5e7eb', borderRadius: '0.5rem', background: '#f8fafc' }}>
+                <div style={{ flex: 1 }}>
+                    <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.25rem', color: '#0f172a' }}>Tøm cache for public sider</h2>
+                    <p style={{ fontSize: '0.9rem', color: '#475569' }}>Aktive badstuer og detaljer caches i ca. 10 min. Ledighet har egen 5-min cache. Trykk for å tvinge ny data nå.</p>
+                </div>
+                <Button type="submit" variant="secondary">Tøm cache nå</Button>
+            </form>
 
             <form action={saveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
 

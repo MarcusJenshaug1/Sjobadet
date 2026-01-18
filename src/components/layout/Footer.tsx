@@ -13,7 +13,7 @@ export async function Footer() {
 
     try {
         settings = await getGlobalSettings();
-        saunas = await getActiveSaunas();
+        saunas = await getActiveSaunas({ includeOpeningHours: true });
     } catch (error) {
         console.error('Failed to fetch footer data:', error);
     }

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
-    const saunas = await getActiveSaunas();
+    const saunas = await getActiveSaunas({ includeOpeningHours: true });
     const settings = await getGlobalSettings();
 
     const email = settings['contact_email'] || 'booking@sjobadet.com';

@@ -29,31 +29,66 @@ interface SaunaAvailabilityProps {
 export default function SaunaAvailability({
     saunaId,
     bookingUrlDropin,
-    bookingUrlPrivat,
+    bookingUrlPrivat: _bookingUrlPrivat,
     capacityDropin = 10,
     isAdmin = false,
     showAvailability = true
 }: SaunaAvailabilityProps) {
     const [data, setData] = useState<AvailabilityArea | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(false);
     const [onlyAvailable, setOnlyAvailable] = useState(true);
     const hasDataRef = useRef(false);
     const [mounted, setMounted] = useState(false);
+    const abortRef = useRef<AbortController | null>(null);
+    const isMountedRef = useRef(false);
+    const loaderTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         setMounted(true);
+        isMountedRef.current = true;
+
+        return () => {
+            isMountedRef.current = false;
+            abortRef.current?.abort();
+            if (loaderTimeoutRef.current) {
+                clearTimeout(loaderTimeoutRef.current);
+                loaderTimeoutRef.current = null;
+            }
+        };
     }, []);
 
     const fetchData = useCallback(async (force = false, silent = false) => {
         if (showAvailability === false) {
             setLoading(false);
+            if (loaderTimeoutRef.current) {
+                clearTimeout(loaderTimeoutRef.current);
+                loaderTimeoutRef.current = null;
+            }
             return;
         }
-        setError(false); // Reset error state to show loading UI if needed
-        if (!silent) setLoading(true);
+        if (isMountedRef.current) setError(false);
+        if (!silent) {
+            if (!hasDataRef.current) {
+                if (loaderTimeoutRef.current) {
+                    clearTimeout(loaderTimeoutRef.current);
+                }
+                loaderTimeoutRef.current = setTimeout(() => {
+                    if (isMountedRef.current && !hasDataRef.current) {
+                        setLoading(true);
+                    }
+                    loaderTimeoutRef.current = null;
+                }, 250);
+            } else {
+                setLoading(false);
+            }
+        }
         if (silent) setRefreshing(true);
+
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
 
         try {
             // Support external Azure API if configured
@@ -62,13 +97,16 @@ export default function SaunaAvailability({
                 ? `${externalApiUrl}?saunaId=${saunaId}${force ? '&force=true' : ''}`
                 : `/api/availability/today?saunaId=${saunaId}${force ? '&force=true' : ''}`;
 
-            const res = await fetch(url);
+            const res = await fetch(url, {
+                cache: 'no-store',
+                signal: controller.signal,
+            });
             if (!res.ok) throw new Error('Failed to fetch');
             const json = await res.json() as AvailabilityArea;
 
             if (json.isInitial && !hasDataRef.current) {
                 // Keep loading if first fetch only returns "initial" placeholder
-                setLoading(true);
+                if (isMountedRef.current) setLoading(true);
             } else {
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
@@ -99,20 +137,33 @@ export default function SaunaAvailability({
                     }
                 }
 
-                setData({
-                    ...json,
-                    displaySlots: slotsToShow,
-                    displayDate: activeDate
-                });
-                hasDataRef.current = true;
-                setLoading(false);
+                if (isMountedRef.current) {
+                    setData({
+                        ...json,
+                        displaySlots: slotsToShow,
+                        displayDate: activeDate
+                    });
+                    hasDataRef.current = true;
+                    setLoading(false);
+                }
             }
-            setError(false);
+            if (isMountedRef.current) setError(false);
         } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') {
+                return;
+            }
             console.error('Error fetching availability:', err);
-            if (!hasDataRef.current) setError(true);
+            if (isMountedRef.current && !hasDataRef.current) setError(true);
+            if (isMountedRef.current) setLoading(false);
         } finally {
-            setRefreshing(false);
+            if (abortRef.current === controller) {
+                abortRef.current = null;
+            }
+            if (isMountedRef.current) setRefreshing(false);
+            if (loaderTimeoutRef.current) {
+                clearTimeout(loaderTimeoutRef.current);
+                loaderTimeoutRef.current = null;
+            }
         }
     }, [saunaId, showAvailability]);
 
@@ -129,8 +180,8 @@ export default function SaunaAvailability({
 
         fetchData();
 
-        // Refresh every 10 minutes, but DON'T force a re-scrape (rely on server cache)
-        const interval = setInterval(() => fetchData(false, true), 1000 * 60 * 10);
+        // Refresh every 60 seconds, rely on server-side cache to throttle heavy work
+        const interval = setInterval(() => fetchData(false, true), 60_000);
         return () => clearInterval(interval);
     }, [saunaId, showAvailability, fetchData]);
 
@@ -181,7 +232,7 @@ export default function SaunaAvailability({
                         <h3 className={styles.title}>
                             {isTomorrow ? 'Ledighet i morgen' : 'Ledighet i dag'}
                         </h3>
-                        <div className={styles.badge} title="Denne hentes automatisk hvert 10. minutt">
+                        <div className={styles.badge} title="Denne hentes automatisk hvert minutt">
                             <div className={refreshing ? styles.dotRefreshing : styles.dot} />
                             <span className={styles.badgeText}>
                                 {refreshing ? 'Henter...' : 'Live-status'}

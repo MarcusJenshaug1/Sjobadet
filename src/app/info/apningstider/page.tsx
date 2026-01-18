@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function OpeningHoursPage() {
-    const saunas = await getActiveSaunas();
+    const saunas = await getActiveSaunas({ includeOpeningHours: true });
 
     return (
         <>

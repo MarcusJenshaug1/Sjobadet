@@ -6,16 +6,22 @@ import { Metadata } from 'next';
 import { getSaunaBySlug } from '@/lib/sauna-service';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
+import dynamic from 'next/dynamic';
 import { SaunaGallery } from '@/components/sauna/SaunaGallery';
 import Image from 'next/image';
 import SaunaAvailability from '@/components/sauna/SaunaAvailability';
 import SaunaBookingOptions from '@/components/sauna/SaunaBookingOptions';
 import { getSession } from '@/lib/auth';
 
+const ReactMarkdown = dynamic(() => import('react-markdown'), {
+    loading: () => <p>Laster inn innhold...</p>,
+    ssr: true,
+});
 
-// Revalidate every 5 minutes (ISR)
-export const revalidate = 300;
+
+// Revalidate every 10 minutes (ISR)
+export const revalidate = 600;
+export const dynamicParams = true;
 
 // Generate static params for all active saunas
 export async function generateStaticParams() {
@@ -37,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             title: `${sauna.name} | Sjøbadet Badstue`,
             description: sauna.shortDescription,
         };
-    } catch (error) {
+    } catch {
         return { title: 'Sjøbadet Badstue' };
     }
 }
@@ -186,13 +192,13 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                         {/* Markdown rendering */}
                                         <ReactMarkdown
                                             components={{
-                                                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', lineHeight: '1.7' }} {...props} />,
-                                                ul: ({ node, ...props }) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'disc' }} {...props} />,
-                                                ol: ({ node, ...props }) => <ol style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'decimal' }} {...props} />,
-                                                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem' }} {...props} />,
-                                                h1: ({ node, ...props }) => <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '1rem' }} {...props} />,
-                                                h2: ({ node, ...props }) => <h4 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1.25rem', marginBottom: '0.75rem' }} {...props} />,
-                                                h3: ({ node, ...props }) => <h5 style={{ fontSize: '1.1rem', fontWeight: 600, marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
+                                                p: (props) => <p style={{ marginBottom: '1rem', lineHeight: '1.7' }} {...props} />,
+                                                ul: (props) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'disc' }} {...props} />,
+                                                ol: (props) => <ol style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'decimal' }} {...props} />,
+                                                li: (props) => <li style={{ marginBottom: '0.5rem' }} {...props} />,
+                                                h1: (props) => <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '1rem' }} {...props} />,
+                                                h2: (props) => <h4 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1.25rem', marginBottom: '0.75rem' }} {...props} />,
+                                                h3: (props) => <h5 style={{ fontSize: '1.1rem', fontWeight: 600, marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
                                             }}
                                         >
                                             {sauna.description}
