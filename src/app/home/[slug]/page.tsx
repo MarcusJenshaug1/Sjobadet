@@ -24,7 +24,7 @@ export async function generateStaticParams() {
         where: { status: 'active' },
         select: { slug: true }
     });
-    return saunas.map((sauna) => ({ slug: sauna.slug }));
+    return saunas.map((sauna: { slug: string }) => ({ slug: sauna.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {

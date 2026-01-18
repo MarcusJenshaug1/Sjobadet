@@ -1,5 +1,4 @@
 import prisma from './prisma'
-import { Sauna, OpeningHour } from '@prisma/client'
 
 export const getActiveSaunas = async () => {
     return await prisma.sauna.findMany({
