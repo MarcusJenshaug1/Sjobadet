@@ -242,7 +242,7 @@ export default function SaunaAvailability({
                 <div>
                     <div className={styles.titleWrapper}>
                         <h3 className={styles.title}>
-                            {isTomorrow ? 'Ledighet i morgen' : 'Ledighet i dag'}
+                            {isTomorrow ? 'Drop-in ledighet i morgen' : 'Drop-in ledighet i dag'}
                         </h3>
                         <div className={styles.badge} title="Denne hentes automatisk hvert minutt">
                             <div className={refreshing ? styles.dotRefreshing : styles.dot} />

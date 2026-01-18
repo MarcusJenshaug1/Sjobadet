@@ -18,6 +18,8 @@
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
     }
 }
 
@@ -42,6 +44,7 @@
     border: 1px solid #dcfce7;
     padding: 0.125rem 0.5rem;
     border-radius: 9999px;
+    white-space: nowrap;
 }
 
 .dot {
@@ -109,6 +112,7 @@
     border: 1px solid #e2e8f0;
     background-color: #ffffff;
     color: #718096;
+    white-space: nowrap;
 }
 
 .toggleButton:hover {
