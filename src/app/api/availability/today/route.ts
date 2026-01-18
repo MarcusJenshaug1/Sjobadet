@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { fetchAvailability } from '@/lib/availability-scraper';
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -11,78 +10,27 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        // Use standard Prisma query
-        const sauna = await prisma.sauna.findUnique({ where: { id: saunaId } });
+        // Only select the fields we need for better performance
+        const sauna = await prisma.sauna.findUnique({
+            where: { id: saunaId },
+            select: {
+                availabilityData: true
+            }
+        });
 
         if (!sauna) {
             return NextResponse.json({
-                date: null,
-                slots: [],
+                days: {},
                 timestamp: new Date().toISOString(),
-                isInitial: true,
-                message: 'Sauna not found'
+                isInitial: true
             });
         }
 
-        const availabilityData = sauna.availabilityData;
-        const lastScrapedAt = sauna.lastScrapedAt;
-        const previousAvailabilityData = sauna.previousAvailabilityData;
-
-        const now = new Date();
-        const TEN_MINUTES = 1000 * 60 * 10;
-        const force = searchParams.get('force') === 'true';
-        const isFresh = !force && lastScrapedAt && (now.getTime() - new Date(lastScrapedAt).getTime() < TEN_MINUTES);
-
-        // NOTE: Background refresh is now handled by GitHub Actions scraper
-        // This API route just returns the data from the database
-        /*
-        if (!isFresh) {
-            console.log(`[Availability] Data for ${saunaId} is stale or missing. Triggering background refresh.`);
-
-            const refreshData = async () => {
-                try {
-                    const dropinUrl = sauna.bookingUrlDropin;
-
-                    // Fetch new structure { date, slots }
-                    const scrapeResult = dropinUrl && dropinUrl.includes('periode.no')
-                        ? await fetchAvailability(dropinUrl)
-                        : { date: null, slots: [] };
-
-                    const result = {
-                        date: scrapeResult.date,
-                        slots: scrapeResult.slots,
-                        timestamp: new Date().toISOString(),
-                    };
-
-                    const resultJson = JSON.stringify(result);
-
-                    await prisma.sauna.update({
-                        where: { id: saunaId },
-                        data: {
-                            previousAvailabilityData: availabilityData,
-                            availabilityData: resultJson,
-                            lastScrapedAt: new Date().toISOString()
-                        }
-                    });
-
-                    console.log(`[Availability] Background refresh complete for ${saunaId}`);
-                } catch (err) {
-                    console.error(`[Availability] Background refresh failed for ${saunaId}:`, err);
-                }
-            };
-
-            // Start background work without awaiting
-            refreshData();
-        }
-        */
-
-        // Return current data immediately (or fallback to previous if current is null)
+        // Parse and return the data from the database
         let resultData = null;
         try {
-            if (availabilityData) {
-                resultData = JSON.parse(availabilityData);
-            } else if (previousAvailabilityData) {
-                resultData = JSON.parse(previousAvailabilityData);
+            if (sauna.availabilityData) {
+                resultData = JSON.parse(sauna.availabilityData);
             }
         } catch (parseError) {
             console.error('[Availability] JSON parse error:', parseError);
@@ -96,7 +44,6 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        // Return data as-is (scraper now stores in correct format with 'days')
         return NextResponse.json(resultData);
     } catch (error) {
         console.error('Error in availability API:', error);
