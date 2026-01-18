@@ -11,12 +11,6 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-interface ScrapedSlot {
-    from: string;
-    to: string;
-    availableSpots: number;
-}
-
 async function scrapeSauna(saunaId: string, url: string) {
     console.log(`[Scraper] Starting scrape for ${saunaId} (${url})`);
     const browser = await chromium.launch({ headless: true });
@@ -27,8 +21,8 @@ async function scrapeSauna(saunaId: string, url: string) {
         const page = await context.newPage();
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-        const daysToScrape = [0, 1]; // 0 = Today, 1 = Tomorrow
-        const dailyResults: Record<string, any> = {};
+    const daysToScrape = [0, 1]; // 0 = Today, 1 = Tomorrow
+    const dailyResults: Record<string, { from: string; to: string; availableSpots: number }[]> = {};
 
         for (const dayOffset of daysToScrape) {
             const TargetDate = new Date();
@@ -52,50 +46,65 @@ async function scrapeSauna(saunaId: string, url: string) {
             await page.waitForTimeout(3000); // Wait for lazy loading
 
             const slots = await page.evaluate(() => {
-                const results: any[] = [];
-                const timeRegex = /(\d{1,2}[:.]?\d{2})\s*[-–]\s*(\d{1,2}[:.]?\d{2})/; // Match "HH:MM - HH:MM" format
-                const elements = Array.from(document.querySelectorAll('*')).filter(el => {
-                    const txt = (el as HTMLElement).innerText;
-                    return txt && timeRegex.test(txt) && txt.length < 100;
-                });
+                const normalizeTime = (value: string) => value.replace('.', ':');
+                const timeRangeRegex = /(\d{1,2}[:.]?\d{2})\s*[-–]\s*(\d{1,2}[:.]?\d{2})/;
+                const availableRegex = /(\d+)\s*(?:ledige?\s*plasse?r?|ledig\s*plass|ledige?|available)/i;
 
-                elements.forEach(el => {
-                    const text = (el as HTMLElement).innerText;
-                    const match = text.match(timeRegex);
-                    if (match) {
-                        const fromTime = match[1].replace('.', ':');
-                        const toTime = match[2].replace('.', ':');
+                const upsertSlot = (store: Map<string, { from: string; to: string; availableSpots: number }>, from: string, to: string, availableSpots: number) => {
+                    const existing = store.get(from);
+                    if (!existing || availableSpots !== undefined) {
+                        store.set(from, { from, to, availableSpots: Number.isFinite(availableSpots) ? availableSpots : 0 });
+                    }
+                };
 
-                        let current: HTMLElement | null = el as HTMLElement;
-                        let availableSpots = 0;
-                        let depth = 0;
+                const parseRowText = (text: string, target: Map<string, { from: string; to: string; availableSpots: number }>) => {
+                    const condensed = text.replace(/\s+/g, ' ').trim();
+                    const timeMatch = condensed.match(timeRangeRegex);
+                    if (!timeMatch) return;
 
-                        // Search up the DOM tree for availability info
-                        while (current && current !== document.body && depth < 5) {
-                            const txt = current.innerText || '';
+                    const fromTime = normalizeTime(timeMatch[1]);
+                    const toTime = normalizeTime(timeMatch[2]);
+                    const availMatch = condensed.match(availableRegex);
+                    const availableSpots = availMatch ? parseInt(availMatch[1], 10) : 0;
 
-                            // Match Norwegian patterns: "6 Ledige plasser", "5 ledig plass", etc.
-                            const capMatch = txt.match(/(\d+)\s*(?:ledige?\s*plasse?r?|ledig|plasser?|stk|available)/i);
-                            if (capMatch) {
-                                availableSpots = parseInt(capMatch[1], 10);
-                                break;
-                            }
+                    upsertSlot(target, fromTime, toTime, availableSpots);
+                };
 
-                            if (txt.toLowerCase().includes('fullt') || txt.toLowerCase().includes('0 ledig')) {
-                                availableSpots = 0;
-                                break;
-                            }
+                const slots = new Map<string, { from: string; to: string; availableSpots: number }>();
 
-                            current = current.parentElement;
-                            depth++;
-                        }
-
-                        if (!results.find(s => s.from === fromTime)) {
-                            results.push({ from: fromTime, to: toTime, availableSpots });
-                        }
+                const tableRows = Array.from(document.querySelectorAll('tr'));
+                tableRows.forEach(row => {
+                    const text = (row as HTMLElement).innerText || '';
+                    if (/ledig/i.test(text)) {
+                        parseRowText(text, slots);
                     }
                 });
-                return results;
+
+                if (slots.size === 0) {
+                    const candidates = Array.from(document.querySelectorAll('*')).filter(el => {
+                        const txt = (el as HTMLElement).innerText;
+                        return txt && timeRangeRegex.test(txt) && /ledig/i.test(txt);
+                    });
+
+                    candidates.forEach(el => {
+                        const text = (el as HTMLElement).innerText || '';
+                        parseRowText(text, slots);
+                    });
+                }
+
+                const ordered = Array.from(slots.values()).sort((a, b) => a.from.localeCompare(b.from));
+
+                return ordered.map(slot => {
+                    if (!slot.to) {
+                        const [h, m] = slot.from.split(':').map(Number);
+                        const end = new Date();
+                        end.setHours(h + 1, m);
+                        const hh = `${end.getHours()}`.padStart(2, '0');
+                        const mm = `${end.getMinutes()}`.padStart(2, '0');
+                        return { ...slot, to: `${hh}:${mm}` };
+                    }
+                    return slot;
+                });
             });
 
             dailyResults[dateStr] = slots.sort((a, b) => a.from.localeCompare(b.from));

@@ -20,9 +20,8 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
         let executablePath = '';
 
         try {
-            // @ts-ignore - chromium.executablePath() can fail locally
             executablePath = await chromium.executablePath();
-        } catch (e) {
+        } catch {
             console.log('[Scraper] sparticuz/chromium-min failed, using local Chrome path');
         }
 
@@ -41,11 +40,11 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
 
         browser = await puppeteer.launch({
             args: [...chromium.args, '--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox'],
-            // @ts-ignore
+            // @ts-expect-error chromium typings in sparticuz package omit defaultViewport
             defaultViewport: chromium.defaultViewport,
             executablePath: executablePath,
             headless: true,
-            // @ts-ignore
+            // @ts-expect-error puppeteer LaunchOptions typing omits ignoreHTTPSErrors here
             ignoreHTTPSErrors: true,
         });
 
@@ -96,64 +95,69 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
         await new Promise(r => setTimeout(r, 2000));
 
         const scrapedData = await page.evaluate(() => {
-            const slots: any[] = [];
-            const timeRegex = /(\d{1,2}[:.]\d{2})/;
-            const candidates = Array.from(document.querySelectorAll('*')).filter(el => {
-                const txt = (el as HTMLElement).innerText;
-                return txt && timeRegex.test(txt) && txt.length < 50;
-            });
+            const normalizeTime = (value: string) => value.replace('.', ':');
+            const timeRangeRegex = /(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/;
+            const availableRegex = /(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i;
 
-            candidates.forEach(el => {
-                const text = (el as HTMLElement).innerText;
-                const match = text.match(timeRegex);
-                if (match) {
-                    const fromTime = match[1].replace('.', ':'); // Normalize to HH:MM with colon
-                    const [hours, minutes] = fromTime.split(':').map(Number);
-                    const toDate = new Date();
-                    toDate.setHours(hours + 1, minutes);
+            const upsertSlot = (store: Map<string, { from: string; to: string; availableSpots: number }>, from: string, to: string, availableSpots: number) => {
+                const existing = store.get(from);
+                if (!existing || availableSpots !== undefined) {
+                    store.set(from, { from, to, availableSpots: Number.isFinite(availableSpots) ? availableSpots : 0 });
+                }
+            };
 
-                    const toH = String(toDate.getHours()).padStart(2, '0');
-                    const toM = String(toDate.getMinutes()).padStart(2, '0');
-                    const toTime = `${toH}:${toM}`;
+            const parseRowText = (text: string, target: Map<string, { from: string; to: string; availableSpots: number }>) => {
+                const condensed = text.replace(/\s+/g, ' ').trim();
+                const timeMatch = condensed.match(timeRangeRegex);
+                if (!timeMatch) return;
 
-                    let current: HTMLElement | null = el as HTMLElement;
-                    let availableSpots = 0;
-                    let depth = 0;
+                const fromTime = normalizeTime(timeMatch[1]);
+                const toTime = normalizeTime(timeMatch[2]);
+                const availMatch = condensed.match(availableRegex);
+                const availableSpots = availMatch ? parseInt(availMatch[1], 10) : 0;
 
-                    while (current && current !== document.body && depth < 5) {
-                        const txt = current.innerText || '';
-                        const lowerText = txt.toLowerCase();
+                upsertSlot(target, fromTime, toTime, availableSpots);
+            };
 
-                        // Look for numerical capacity first
-                        const capMatch = txt.match(/(\d+)\s*(?:ledig|plass|stk|available)/i);
-                        if (capMatch) {
-                            availableSpots = parseInt(capMatch[1], 10);
-                            break;
-                        }
+            const slots = new Map<string, { from: string; to: string; availableSpots: number }>();
 
-                        // Look for "full" indicators
-                        if (lowerText.includes('fullt') || lowerText.includes('venteliste') || lowerText.includes('0 ledig')) {
-                            availableSpots = 0;
-                            break;
-                        }
-
-                        // Heuristic: If we hit a container with many slots, we've gone too far
-                        if (depth > 0) {
-                            const timesInContainer = (txt.match(/\d{2}:\d{2}/g) || []).length;
-                            if (timesInContainer > 10) break; // Increased threshold
-                        }
-
-                        current = current.parentElement;
-                        depth++;
-                    }
-
-                    if (!slots.find(s => s.from === fromTime)) {
-                        slots.push({ from: fromTime, to: toTime, availableSpots });
-                    }
+            // Preferred: table rows with explicit availability text
+            const tableRows = Array.from(document.querySelectorAll('tr'));
+            tableRows.forEach(row => {
+                const text = (row as HTMLElement).innerText || '';
+                if (/ledig/i.test(text)) {
+                    parseRowText(text, slots);
                 }
             });
 
-            return { date: null, slots: slots.sort((a, b) => a.from.localeCompare(b.from)) };
+            // Fallback: generic elements with time ranges and availability wording
+            if (slots.size === 0) {
+                const candidates = Array.from(document.querySelectorAll('*')).filter(el => {
+                    const txt = (el as HTMLElement).innerText;
+                    return txt && timeRangeRegex.test(txt) && /ledig/i.test(txt);
+                });
+
+                candidates.forEach(el => {
+                    const text = (el as HTMLElement).innerText || '';
+                    parseRowText(text, slots);
+                });
+            }
+
+            const ordered = Array.from(slots.values()).sort((a, b) => a.from.localeCompare(b.from));
+
+            const normalized = ordered.map(slot => {
+                if (!slot.to) {
+                    const [h, m] = slot.from.split(':').map(Number);
+                    const end = new Date();
+                    end.setHours(h + 1, m);
+                    const hh = `${end.getHours()}`.padStart(2, '0');
+                    const mm = `${end.getMinutes()}`.padStart(2, '0');
+                    return { ...slot, to: `${hh}:${mm}` };
+                }
+                return slot;
+            });
+
+            return { date: null, slots: normalized };
         });
 
         await browser.close();
