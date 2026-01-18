@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { getActiveSaunas, formatSmartOpeningHours } from "@/lib/sauna-service";
+import { getActiveSaunas } from "@/lib/sauna-service";
+import { formatSmartOpeningHours } from "@/lib/sauna-utils";
 import { Metadata } from 'next';
 import styles from '../OpeningHours.module.css';
 import { Clock, Info, AlertCircle, Calendar, ArrowRight } from 'lucide-react';

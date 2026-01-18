@@ -1,7 +1,8 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Metadata } from 'next';
-import { getActiveSaunas, getGlobalSettings, formatSmartOpeningHours } from "@/lib/sauna-service";
+import { getActiveSaunas, getGlobalSettings } from "@/lib/sauna-service";
+import { formatSmartOpeningHours } from "@/lib/sauna-utils";
 import styles from '../Contact.module.css';
 import { Mail, Phone, MapPin, Instagram, Facebook, Clock } from 'lucide-react';
 import { SaunaStory } from '@/components/sauna/SaunaStory';

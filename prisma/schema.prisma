@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
@@ -40,7 +40,6 @@ model Sauna {
   stengtTil                    DateTime?
   kundeMelding                 String?
   flexibleHours                Boolean       @default(false)
-  hasDropinAvailability        Boolean       @default(true)
   hoursMessage                 String?
   updatedAt                    DateTime      @updatedAt
   createdAt                    DateTime      @default(now())
@@ -49,6 +48,7 @@ model Sauna {
   availabilityData             String?
   previousAvailabilityData     String?
   lastScrapedAt                DateTime?
+  hasDropinAvailability        Boolean       @default(true)
   mediaAssets                  MediaAsset[]
   openingHours                 OpeningHour[]
   priceItems                   PriceItem[]
@@ -124,32 +124,32 @@ model MediaAsset {
 }
 
 model AnalyticsSession {
-  id           String           @id @default(cuid())
-  startTime    DateTime         @default(now())
-  endTime      DateTime?
-  duration     Int?             // total duration in seconds
-  deviceType   String?
-  browser      String?
-  os           String?
-  referrer     String?
-  utmSource    String?
-  utmMedium    String?
-  utmCampaign  String?
-  events       AnalyticsEvent[]
-  createdAt    DateTime         @default(now())
+  id          String           @id @default(cuid())
+  startTime   DateTime         @default(now())
+  endTime     DateTime?
+  duration    Int?
+  deviceType  String?
+  browser     String?
+  os          String?
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  createdAt   DateTime         @default(now())
+  events      AnalyticsEvent[]
 
   @@index([startTime])
 }
 
 model AnalyticsEvent {
-  id        String            @id @default(cuid())
-  sessionId String?
-  type      String            // "pageview", "event"
-  eventName String?           // name for general events
-  path      String?           // URL path
-  payload   String?           // JSON string
-  timestamp DateTime          @default(now())
-  session   AnalyticsSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id        String           @id @default(cuid())
+  sessionId String
+  type      String
+  eventName String?
+  path      String?
+  payload   String?
+  timestamp DateTime         @default(now())
+  session   AnalyticsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
   @@index([type, timestamp])
