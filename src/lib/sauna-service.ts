@@ -1,4 +1,5 @@
 import prisma from './prisma'
+import type { OpeningHour } from '@prisma/client'
 
 export const getActiveSaunas = async () => {
     return await prisma.sauna.findMany({
@@ -16,6 +17,7 @@ export const getActiveSaunas = async () => {
             capacityPrivat: true,
             bookingUrlDropin: true,
             bookingUrlPrivat: true,
+            openingHours: true,
         }
     })
 }
@@ -50,7 +52,9 @@ export function getTodayOpeningHours(openingHours: OpeningHour[]) {
     return todayHours
 }
 
-export function formatSmartOpeningHours(openingHours: OpeningHour[]) {
+export function formatSmartOpeningHours(openingHours: OpeningHour[] | undefined) {
+    if (!openingHours || openingHours.length === 0) return 'Kontakt oss for åpningstider';
+
     const weekly = openingHours
         .filter(h => h.type === 'weekly')
         .sort((a, b) => (a.weekday ?? 0) - (b.weekday ?? 0));
