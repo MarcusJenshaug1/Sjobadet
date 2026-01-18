@@ -50,6 +50,7 @@ export default function SaunaAvailability({
             setLoading(false);
             return;
         }
+        setError(false); // Reset error state to show loading UI if needed
         if (!silent) setLoading(true);
         if (silent) setRefreshing(true);
 
