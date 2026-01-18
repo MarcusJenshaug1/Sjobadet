@@ -54,7 +54,12 @@ export default function SaunaAvailability({
         if (silent) setRefreshing(true);
 
         try {
-            const url = `/api/availability/today?saunaId=${saunaId}${force ? '&force=true' : ''}`;
+            // Support external Azure API if configured
+            const externalApiUrl = process.env.NEXT_PUBLIC_AVAILABILITY_API_URL;
+            const url = externalApiUrl
+                ? `${externalApiUrl}?saunaId=${saunaId}${force ? '&force=true' : ''}`
+                : `/api/availability/today?saunaId=${saunaId}${force ? '&force=true' : ''}`;
+
             const res = await fetch(url);
             if (!res.ok) throw new Error('Failed to fetch');
             const json = await res.json();
@@ -67,18 +72,25 @@ export default function SaunaAvailability({
                 const currentTime = now.getHours() * 60 + now.getMinutes();
 
                 const filteredSlots = (json.slots || []).filter((s: ScrapedSlot) => {
-                    // Try to parse 'to' time, but fallback to 'from' time if needed
-                    const timeToParse = s.to || s.from;
-                    const parts = timeToParse.split(/[:.]/).map(Number);
+                    try {
+                        // Try to parse 'to' time, but fallback to 'from' time if needed
+                        const timeToParse = s.to || s.from;
+                        if (!timeToParse) return true; // Keep it if we can't parse time
 
-                    if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-                        return true; // Keep it if we can't parse time
+                        const parts = timeToParse.split(/[:.]/).map(Number);
+
+                        if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
+                            return true; // Keep it if we can't parse time
+                        }
+
+                        const slotTimeMinutes = parts[0] * 60 + parts[1];
+                        // If we are using 'to' time, show if it hasn't ended.
+                        // If we fallback to 'from' time, show if it hasn't started.
+                        return slotTimeMinutes > (s.to ? currentTime : currentTime - 30);
+                    } catch (e) {
+                        console.error('Error parsing slot time:', e, s);
+                        return true;
                     }
-
-                    const slotTimeMinutes = parts[0] * 60 + parts[1];
-                    // If we are using 'to' time, show if it hasn't ended.
-                    // If we fallback to 'from' time, show if it hasn't started.
-                    return slotTimeMinutes > (s.to ? currentTime : currentTime - 30);
                 });
 
                 setData({ ...json, slots: filteredSlots });

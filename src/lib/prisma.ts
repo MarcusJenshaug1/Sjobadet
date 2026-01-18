@@ -1,7 +1,20 @@
 import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
-    return new PrismaClient()
+    const url = process.env.DATABASE_URL;
+    console.log('[Prisma] Initializing client. DATABASE_URL is', url ? 'PRESENT' : 'MISSING');
+
+    if (!url) {
+        console.error('[Prisma] CRITICAL: DATABASE_URL is missing from process.env!');
+    }
+
+    return new PrismaClient({
+        datasources: {
+            db: {
+                url: url
+            }
+        }
+    })
 }
 
 declare global {

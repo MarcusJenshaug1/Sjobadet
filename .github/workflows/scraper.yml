@@ -1,0 +1,30 @@
+name: Sauna Scraper
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # Kjører hvert 15. minutt
+  workflow_dispatch: # Tillater manuell kjøring
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+        
+      - name: Run Scraper
+        run: npx tsx scripts/run_scraper.ts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

@@ -1,6 +1,6 @@
 import sharp from 'sharp';
 import { nanoid } from 'nanoid';
-import { supabaseAdmin } from './supabase';
+import { getSupabaseAdmin } from './supabase';
 
 const BUCKET_NAME = 'images';
 
@@ -18,7 +18,7 @@ export interface ProcessedMedia {
  * Uploads a file buffer to Supabase Storage.
  */
 async function uploadToSupabase(buffer: Buffer, path: string, mimeType: string) {
-    const { error } = await supabaseAdmin.storage
+    const { error } = await getSupabaseAdmin().storage
         .from(BUCKET_NAME)
         .upload(path, buffer, {
             contentType: mimeType,
@@ -30,7 +30,7 @@ async function uploadToSupabase(buffer: Buffer, path: string, mimeType: string) 
         throw new Error(`Supabase upload failed: ${error.message}`);
     }
 
-    const { data } = supabaseAdmin.storage
+    const { data } = getSupabaseAdmin().storage
         .from(BUCKET_NAME)
         .getPublicUrl(path);
 
@@ -107,7 +107,7 @@ export async function deleteMediaFiles(urls: string[]) {
 
     if (paths.length === 0) return;
 
-    const { error } = await supabaseAdmin.storage
+    const { error } = await getSupabaseAdmin().storage
         .from(BUCKET_NAME)
         .remove(paths);
 
