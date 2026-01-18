@@ -52,6 +52,11 @@ model Sauna {
   mediaAssets                  MediaAsset[]
   openingHours                 OpeningHour[]
   priceItems                   PriceItem[]
+
+  @@index([slug])
+  @@index([status, sorting])
+  @@index([status])
+  @@index([driftStatus])
 }
 
 model OpeningHour {
@@ -65,6 +70,9 @@ model OpeningHour {
   active    Boolean   @default(true)
   createdAt DateTime  @default(now())
   sauna     Sauna     @relation(fields: [saunaId], references: [id], onDelete: Cascade)
+
+  @@index([saunaId])
+  @@index([saunaId, type, active])
 }
 
 model PriceItem {
@@ -78,6 +86,9 @@ model PriceItem {
   active      Boolean @default(true)
   sorting     Int     @default(0)
   sauna       Sauna?  @relation(fields: [saunaId], references: [id], onDelete: Cascade)
+
+  @@index([saunaId])
+  @@index([active, sorting])
 }
 
 model SiteSetting {
@@ -121,6 +132,11 @@ model MediaAsset {
   createdAt          DateTime   @default(now())
   creator            AdminUser? @relation(fields: [creatorId], references: [id])
   sauna              Sauna?     @relation(fields: [saunaId], references: [id], onDelete: Cascade)
+
+  @@index([saunaId])
+  @@index([saunaId, kind, orderIndex])
+  @@index([status])
+  @@index([creatorId])
 }
 
 model AnalyticsSession {
