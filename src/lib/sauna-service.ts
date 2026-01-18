@@ -28,6 +28,7 @@ type ActiveSauna = {
 type SaunaDetail = ActiveSauna & {
     description?: string | null;
     gallery?: string | null;
+    facilities?: string | null;
     address?: string | null;
     mapEmbedUrl?: string | null;
     status?: string | null;

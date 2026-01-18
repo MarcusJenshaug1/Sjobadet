@@ -45,7 +45,7 @@ export async function preloadPublicPages() {
     await requireAdmin()
 
     // Derive base URL from headers or fallback to localhost
-    const hdrs = headers()
+    const hdrs = await headers()
     const host = hdrs.get('x-forwarded-host') || hdrs.get('host') || 'localhost:3000'
     const protocol = (hdrs.get('x-forwarded-proto') || 'https') as 'http' | 'https'
     const base = `${protocol}://${host}`

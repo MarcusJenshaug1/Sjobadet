@@ -69,7 +69,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     }
 
     // Parse JSON fields
-    const parseJSON = (str: string | null) => {
+    const parseJSON = (str: string | null | undefined) => {
         try {
             return str ? JSON.parse(str) : [];
         } catch (e) {
