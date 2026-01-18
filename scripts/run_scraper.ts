@@ -47,10 +47,10 @@ async function scrapeSauna(saunaId: string, url: string) {
 
             const slots = await page.evaluate(() => {
                 const results: any[] = [];
-                const timeRegex = /(\d{1,2}[:.]\d{2})/;
+                const timeRegex = /(\d{1,2}[:.]?\d{2})\s*[-–]\s*(\d{1,2}[:.]?\d{2})/; // Match "HH:MM - HH:MM" format
                 const elements = Array.from(document.querySelectorAll('*')).filter(el => {
                     const txt = (el as HTMLElement).innerText;
-                    return txt && timeRegex.test(txt) && txt.length < 50;
+                    return txt && timeRegex.test(txt) && txt.length < 100;
                 });
 
                 elements.forEach(el => {
@@ -58,28 +58,32 @@ async function scrapeSauna(saunaId: string, url: string) {
                     const match = text.match(timeRegex);
                     if (match) {
                         const fromTime = match[1].replace('.', ':');
-                        const [h, m] = fromTime.split(':').map(Number);
-                        const toDate = new Date();
-                        toDate.setHours(h + 1, m);
-                        const toTime = `${String(toDate.getHours()).padStart(2, '0')}:${String(toDate.getMinutes()).padStart(2, '0')}`;
+                        const toTime = match[2].replace('.', ':');
 
                         let current: HTMLElement | null = el as HTMLElement;
                         let availableSpots = 0;
                         let depth = 0;
+
+                        // Search up the DOM tree for availability info
                         while (current && current !== document.body && depth < 5) {
                             const txt = current.innerText || '';
-                            const capMatch = txt.match(/(\d+)\s*(?:ledig|plass|stk|available)/i);
+
+                            // Match Norwegian patterns: "6 Ledige plasser", "5 ledig plass", etc.
+                            const capMatch = txt.match(/(\d+)\s*(?:ledige?\s*plasse?r?|ledig|plasser?|stk|available)/i);
                             if (capMatch) {
                                 availableSpots = parseInt(capMatch[1], 10);
                                 break;
                             }
+
                             if (txt.toLowerCase().includes('fullt') || txt.toLowerCase().includes('0 ledig')) {
                                 availableSpots = 0;
                                 break;
                             }
+
                             current = current.parentElement;
                             depth++;
                         }
+
                         if (!results.find(s => s.from === fromTime)) {
                             results.push({ from: fromTime, to: toTime, availableSpots });
                         }
