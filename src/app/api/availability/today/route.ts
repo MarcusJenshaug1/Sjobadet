@@ -87,13 +87,13 @@ export async function GET(req: NextRequest) {
 
         if (!resultData) {
             return NextResponse.json({
-                date: null,
-                slots: [],
+                days: {},
                 timestamp: new Date().toISOString(),
                 isInitial: true
             });
         }
 
+        // Return data as-is (scraper now stores in correct format with 'days')
         return NextResponse.json(resultData);
     } catch (error) {
         console.error('Error in availability API:', error);
