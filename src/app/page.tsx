@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/Button';
 import { Clock, MapPin, Sparkles, Droplets, Users, AlertTriangle } from 'lucide-react';
 import { getActiveSaunas } from '@/lib/sauna-service';
 
+// Revalidate this page every 60 seconds (ISR)
+export const revalidate = 60;
+
 export default async function Home() {
   let saunas: any[] = [];
   let dbError = false;

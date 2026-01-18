@@ -5,7 +5,19 @@ export const getActiveSaunas = async () => {
     return await prisma.sauna.findMany({
         where: { status: 'active' },
         orderBy: { sorting: 'asc' },
-        include: { openingHours: true }
+        select: {
+            id: true,
+            slug: true,
+            name: true,
+            location: true,
+            shortDescription: true,
+            imageUrl: true,
+            driftStatus: true,
+            capacityDropin: true,
+            capacityPrivat: true,
+            bookingUrlDropin: true,
+            bookingUrlPrivat: true,
+        }
     })
 }
 

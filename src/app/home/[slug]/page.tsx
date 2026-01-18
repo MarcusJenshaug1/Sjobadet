@@ -14,6 +14,19 @@ import SaunaBookingOptions from '@/components/sauna/SaunaBookingOptions';
 import { getSession } from '@/lib/auth';
 
 
+// Revalidate every 5 minutes (ISR)
+export const revalidate = 300;
+
+// Generate static params for all active saunas
+export async function generateStaticParams() {
+    const prisma = (await import('@/lib/prisma')).default;
+    const saunas = await prisma.sauna.findMany({
+        where: { status: 'active' },
+        select: { slug: true }
+    });
+    return saunas.map((sauna) => ({ slug: sauna.slug }));
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
     try {

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// Cache for 30 seconds, revalidate in background
+export const revalidate = 30;
+export const dynamic = 'force-dynamic'; // Always run on server but cache results
+
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const saunaId = searchParams.get('saunaId');
