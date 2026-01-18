@@ -45,6 +45,12 @@ async function scrapeSauna(saunaId: string, url: string) {
                 await page.waitForTimeout(2000);
             }
 
+            // Scroll down to load lazy-loaded time slots
+            await page.evaluate(() => {
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+            await page.waitForTimeout(3000); // Wait for lazy loading
+
             const slots = await page.evaluate(() => {
                 const results: any[] = [];
                 const timeRegex = /(\d{1,2}[:.]?\d{2})\s*[-–]\s*(\d{1,2}[:.]?\d{2})/; // Match "HH:MM - HH:MM" format
