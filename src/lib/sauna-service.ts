@@ -136,7 +136,7 @@ export const getSaunaBySlug = async (slug: string) => {
     });
 
     if (result) {
-        saunaBySlugCache.set(slug, { data: result, expiresAt: now + SAUNA_CACHE_TTL_MS });
+        saunaBySlugCache.set(slug, { data: result as SaunaDetail, expiresAt: now + SAUNA_CACHE_TTL_MS });
     }
 
     return result;
@@ -161,10 +161,10 @@ export const getGlobalSettings = async () => {
         select: { key: true, value: true }
     });
 
-    const normalized = settings.reduce((acc: Record<string, string>, curr) => {
+    const normalized = settings.reduce<Record<string, string>>((acc, curr) => {
         acc[curr.key] = curr.value;
         return acc;
-    }, {} as Record<string, string>);
+    }, {});
 
     settingsCache = {
         data: normalized,

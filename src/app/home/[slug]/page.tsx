@@ -180,7 +180,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                             bookingUrlPrivat={sauna.bookingUrlPrivat}
                                             capacityDropin={sauna.capacityDropin || 0}
                                             isAdmin={isAdmin}
-                                            showAvailability={(sauna as any).hasDropinAvailability ?? true}
+                                            showAvailability={sauna.hasDropinAvailability ?? true}
                                         />
                                     </div>
                                 )}
@@ -243,7 +243,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                             bookingUrlPrivat={sauna.bookingUrlPrivat}
                                             capacityDropin={sauna.capacityDropin || 0}
                                             isAdmin={isAdmin}
-                                            showAvailability={(sauna as any).hasDropinAvailability ?? true}
+                                            showAvailability={sauna.hasDropinAvailability ?? true}
                                         />
                                     </div>
                                 )}
