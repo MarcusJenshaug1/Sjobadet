@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import styles from './Footer.module.css';
-import { formatSmartOpeningHours } from '@/lib/sauna-service';
+import { formatSmartOpeningHours } from '@/lib/sauna-utils';
 import { Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
 
 interface FooterViewProps {

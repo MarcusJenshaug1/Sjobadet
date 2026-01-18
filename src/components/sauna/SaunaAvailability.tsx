@@ -9,11 +9,12 @@ interface ScrapedSlot {
     availableSpots: number;
 }
 
-interface AvailabilityResponse {
-    date: string | null;
-    slots: ScrapedSlot[];
+interface AvailabilityArea {
+    days?: Record<string, ScrapedSlot[]>;
     timestamp: string | null;
     isInitial?: boolean;
+    displaySlots?: ScrapedSlot[];
+    displayDate?: string;
 }
 
 interface SaunaAvailabilityProps {
@@ -33,7 +34,7 @@ export default function SaunaAvailability({
     isAdmin = false,
     showAvailability = true
 }: SaunaAvailabilityProps) {
-    const [data, setData] = useState<AvailabilityResponse | null>(null);
+    const [data, setData] = useState<AvailabilityArea | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(false);
@@ -63,7 +64,7 @@ export default function SaunaAvailability({
 
             const res = await fetch(url);
             if (!res.ok) throw new Error('Failed to fetch');
-            const json = await res.json();
+            const json = await res.json() as AvailabilityArea;
 
             if (json.isInitial && !hasDataRef.current) {
                 // Keep loading if first fetch only returns "initial" placeholder
@@ -71,30 +72,38 @@ export default function SaunaAvailability({
             } else {
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
+                const todayStr = now.toISOString().split('T')[0];
 
-                const filteredSlots = (json.slots || []).filter((s: ScrapedSlot) => {
-                    try {
-                        // Try to parse 'to' time, but fallback to 'from' time if needed
-                        const timeToParse = s.to || s.from;
-                        if (!timeToParse) return true; // Keep it if we can't parse time
+                const tomorrow = new Date();
+                tomorrow.setDate(now.getDate() + 1);
+                const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-                        const parts = timeToParse.split(/[:.]/).map(Number);
+                let slotsToShow: ScrapedSlot[] = [];
+                let activeDate = todayStr;
 
-                        if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-                            return true; // Keep it if we can't parse time
-                        }
+                if (json.days) {
+                    const todaySlots = (json.days[todayStr] || []);
+                    const filteredToday = todaySlots.filter((s: ScrapedSlot) => {
+                        const parts = (s.to || s.from).split(/[:.]/).map(Number);
+                        const slotEndTime = parts[0] * 60 + parts[1];
+                        return slotEndTime > currentTime;
+                    });
 
-                        const slotTimeMinutes = parts[0] * 60 + parts[1];
-                        // If we are using 'to' time, show if it hasn't ended.
-                        // If we fallback to 'from' time, show if it hasn't started.
-                        return slotTimeMinutes > (s.to ? currentTime : currentTime - 30);
-                    } catch (e) {
-                        console.error('Error parsing slot time:', e, s);
-                        return true;
+                    // If today has no future slots, or it's past 22:00, show tomorrow
+                    if (filteredToday.length === 0 || now.getHours() >= 22) {
+                        slotsToShow = json.days[tomorrowStr] || [];
+                        activeDate = tomorrowStr;
+                    } else {
+                        slotsToShow = filteredToday;
+                        activeDate = todayStr;
                     }
-                });
+                }
 
-                setData({ ...json, slots: filteredSlots });
+                setData({
+                    ...json,
+                    displaySlots: slotsToShow,
+                    displayDate: activeDate
+                });
                 hasDataRef.current = true;
                 setLoading(false);
             }
@@ -157,18 +166,21 @@ export default function SaunaAvailability({
     }
 
     // Filter available slots
-    const availableSlots = data?.slots.filter(s => !onlyAvailable || s.availableSpots > 0) || [];
-    const currentData = data || { date: null, slots: [], timestamp: null };
+    const availableSlots = (data?.displaySlots || []).filter((s: ScrapedSlot) => !onlyAvailable || s.availableSpots > 0);
+    const currentData = data || { timestamp: null, displayDate: '' };
+    const isTomorrow = currentData.displayDate !== new Date().toISOString().split('T')[0];
 
     // Find next available slot
-    const nextSlot = currentData.slots.find(s => s.availableSpots > 0);
+    const nextSlot = (data?.displaySlots || []).find((s: ScrapedSlot) => s.availableSpots > 0);
 
     return (
         <div className={styles.container}>
             <div className={styles.header}>
                 <div>
                     <div className={styles.titleWrapper}>
-                        <h3 className={styles.title}>Ledighet i dag</h3>
+                        <h3 className={styles.title}>
+                            {isTomorrow ? 'Ledighet i morgen' : 'Ledighet i dag'}
+                        </h3>
                         <div className={styles.badge} title="Denne hentes automatisk hvert 10. minutt">
                             <div className={refreshing ? styles.dotRefreshing : styles.dot} />
                             <span className={styles.badgeText}>
@@ -222,12 +234,13 @@ export default function SaunaAvailability({
 
             <div className={styles.grid}>
                 {availableSlots.length > 0 ? (
-                    availableSlots.map((slot, i) => (
+                    availableSlots.map((slot: ScrapedSlot, i: number) => (
                         <SlotCard
                             key={i}
                             slot={slot}
                             totalCapacity={capacityDropin}
                             baseBookingUrl={bookingUrlDropin}
+                            isTomorrow={isTomorrow}
                         />
                     ))
                 ) : (
@@ -243,7 +256,7 @@ export default function SaunaAvailability({
     );
 }
 
-function SlotCard({ slot, totalCapacity, baseBookingUrl }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null }) {
+function SlotCard({ slot, totalCapacity, baseBookingUrl, isTomorrow }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null, isTomorrow: boolean }) {
     const isFull = slot.availableSpots === 0;
     const availablePlaces = slot.availableSpots;
 
@@ -259,8 +272,10 @@ function SlotCard({ slot, totalCapacity, baseBookingUrl }: { slot: ScrapedSlot, 
     // Construct booking link: [Base URL]/[YYYY-MM-DD]/[HH:MM]
     let bookingLink = '';
     if (baseBookingUrl && baseBookingUrl.includes('periode.no') && !isFull) {
-        const now = new Date();
-        const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const targetDate = new Date();
+        if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
+
+        const dateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD
         const timeStr = slot.from; // HH:MM
 
         const cleanBase = baseBookingUrl.endsWith('/') ? baseBookingUrl.slice(0, -1) : baseBookingUrl;

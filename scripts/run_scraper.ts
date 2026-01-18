@@ -27,60 +27,72 @@ async function scrapeSauna(saunaId: string, url: string) {
         const page = await context.newPage();
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-        // Click Today logic
-        const todayNum = new Date().getDate().toString();
-        const todayEl = await page.locator(`div:text-is("${todayNum}"), span:text-is("${todayNum}"), button:text-is("${todayNum}"), td:text-is("${todayNum}")`).first();
-        if (await todayEl.isVisible()) {
-            await todayEl.click();
-            await page.waitForTimeout(2000);
+        const daysToScrape = [0, 1]; // 0 = Today, 1 = Tomorrow
+        const dailyResults: Record<string, any> = {};
+
+        for (const dayOffset of daysToScrape) {
+            const TargetDate = new Date();
+            TargetDate.setDate(TargetDate.getDate() + dayOffset);
+            const dateStr = TargetDate.toISOString().split('T')[0];
+            const dayNum = TargetDate.getDate().toString();
+
+            console.log(`[Scraper] Scraping for ${dateStr} (day ${dayNum})`);
+
+            // Try to find and click the day
+            const dayEl = await page.locator(`div:text-is("${dayNum}"), span:text-is("${dayNum}"), button:text-is("${dayNum}"), td:text-is("${dayNum}")`).first();
+            if (await dayEl.isVisible()) {
+                await dayEl.click();
+                await page.waitForTimeout(2000);
+            }
+
+            const slots = await page.evaluate(() => {
+                const results: any[] = [];
+                const timeRegex = /(\d{1,2}[:.]\d{2})/;
+                const elements = Array.from(document.querySelectorAll('*')).filter(el => {
+                    const txt = (el as HTMLElement).innerText;
+                    return txt && timeRegex.test(txt) && txt.length < 50;
+                });
+
+                elements.forEach(el => {
+                    const text = (el as HTMLElement).innerText;
+                    const match = text.match(timeRegex);
+                    if (match) {
+                        const fromTime = match[1].replace('.', ':');
+                        const [h, m] = fromTime.split(':').map(Number);
+                        const toDate = new Date();
+                        toDate.setHours(h + 1, m);
+                        const toTime = `${String(toDate.getHours()).padStart(2, '0')}:${String(toDate.getMinutes()).padStart(2, '0')}`;
+
+                        let current: HTMLElement | null = el as HTMLElement;
+                        let availableSpots = 0;
+                        let depth = 0;
+                        while (current && current !== document.body && depth < 5) {
+                            const txt = current.innerText || '';
+                            const capMatch = txt.match(/(\d+)\s*(?:ledig|plass|stk|available)/i);
+                            if (capMatch) {
+                                availableSpots = parseInt(capMatch[1], 10);
+                                break;
+                            }
+                            if (txt.toLowerCase().includes('fullt') || txt.toLowerCase().includes('0 ledig')) {
+                                availableSpots = 0;
+                                break;
+                            }
+                            current = current.parentElement;
+                            depth++;
+                        }
+                        if (!results.find(s => s.from === fromTime)) {
+                            results.push({ from: fromTime, to: toTime, availableSpots });
+                        }
+                    }
+                });
+                return results;
+            });
+
+            dailyResults[dateStr] = slots.sort((a, b) => a.from.localeCompare(b.from));
         }
 
-        const slots = await page.evaluate(() => {
-            const results: any[] = [];
-            const timeRegex = /(\d{1,2}[:.]\d{2})/;
-            const elements = Array.from(document.querySelectorAll('*')).filter(el => {
-                const txt = (el as HTMLElement).innerText;
-                return txt && timeRegex.test(txt) && txt.length < 50;
-            });
-
-            elements.forEach(el => {
-                const text = (el as HTMLElement).innerText;
-                const match = text.match(timeRegex);
-                if (match) {
-                    const fromTime = match[1].replace('.', ':');
-                    const [h, m] = fromTime.split(':').map(Number);
-                    const toDate = new Date();
-                    toDate.setHours(h + 1, m);
-                    const toTime = `${String(toDate.getHours()).padStart(2, '0')}:${String(toDate.getMinutes()).padStart(2, '0')}`;
-
-                    let current: HTMLElement | null = el as HTMLElement;
-                    let availableSpots = 0;
-                    let depth = 0;
-                    while (current && current !== document.body && depth < 5) {
-                        const txt = current.innerText || '';
-                        const capMatch = txt.match(/(\d+)\s*(?:ledig|plass|stk|available)/i);
-                        if (capMatch) {
-                            availableSpots = parseInt(capMatch[1], 10);
-                            break;
-                        }
-                        if (txt.toLowerCase().includes('fullt') || txt.toLowerCase().includes('0 ledig')) {
-                            availableSpots = 0;
-                            break;
-                        }
-                        current = current.parentElement;
-                        depth++;
-                    }
-                    if (!results.find(s => s.from === fromTime)) {
-                        results.push({ from: fromTime, to: toTime, availableSpots });
-                    }
-                }
-            });
-            return results;
-        });
-
         const resultJson = JSON.stringify({
-            date: new Date().toISOString().split('T')[0],
-            slots: slots.sort((a, b) => a.from.localeCompare(b.from)),
+            days: dailyResults,
             timestamp: new Date().toISOString()
         });
 
