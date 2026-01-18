@@ -33,7 +33,9 @@ export async function GET(req: NextRequest) {
         const force = searchParams.get('force') === 'true';
         const isFresh = !force && lastScrapedAt && (now.getTime() - new Date(lastScrapedAt).getTime() < TEN_MINUTES);
 
-        // If data is stale OR missing OR forced, trigger background refresh
+        // NOTE: Background refresh is now handled by GitHub Actions scraper
+        // This API route just returns the data from the database
+        /*
         if (!isFresh) {
             console.log(`[Availability] Data for ${saunaId} is stale or missing. Triggering background refresh.`);
 
@@ -72,6 +74,7 @@ export async function GET(req: NextRequest) {
             // Start background work without awaiting
             refreshData();
         }
+        */
 
         // Return current data immediately (or fallback to previous if current is null)
         let resultData = null;
