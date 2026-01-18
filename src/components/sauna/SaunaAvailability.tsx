@@ -20,7 +20,6 @@ interface AvailabilityArea {
 interface SaunaAvailabilityProps {
     saunaId: string;
     bookingUrlDropin?: string | null;
-    bookingUrlPrivat?: string | null;
     capacityDropin: number;
     isAdmin?: boolean;
     showAvailability?: boolean;
@@ -29,7 +28,6 @@ interface SaunaAvailabilityProps {
 export default function SaunaAvailability({
     saunaId,
     bookingUrlDropin,
-    bookingUrlPrivat: _bookingUrlPrivat,
     capacityDropin = 10,
     isAdmin = false,
     showAvailability = true
@@ -110,11 +108,25 @@ export default function SaunaAvailability({
             } else {
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
-                const todayStr = now.toISOString().split('T')[0];
 
-                const tomorrow = new Date();
-                tomorrow.setDate(now.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                const getDateKey = (offsetDays = 0) => {
+                    const target = new Date(now);
+                    target.setDate(now.getDate() + offsetDays);
+                    const parts = new Intl.DateTimeFormat('sv-SE', {
+                        timeZone: 'Europe/Oslo',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                    }).formatToParts(target);
+
+                    const year = parts.find(p => p.type === 'year')?.value ?? '';
+                    const month = parts.find(p => p.type === 'month')?.value ?? '';
+                    const day = parts.find(p => p.type === 'day')?.value ?? '';
+                    return `${year}-${month}-${day}`;
+                };
+
+                const todayStr = getDateKey(0);
+                const tomorrowStr = getDateKey(1);
 
                 let slotsToShow: ScrapedSlot[] = [];
                 let activeDate = todayStr;
@@ -127,8 +139,8 @@ export default function SaunaAvailability({
                         return slotEndTime > currentTime;
                     });
 
-                    // If today has no future slots, or it's past 22:00, show tomorrow
-                    if (filteredToday.length === 0 || now.getHours() >= 22) {
+                    // By default show dagens dato; switch to i morgen først etter kl 22
+                    if (now.getHours() >= 22) {
                         slotsToShow = json.days[tomorrowStr] || [];
                         activeDate = tomorrowStr;
                     } else {

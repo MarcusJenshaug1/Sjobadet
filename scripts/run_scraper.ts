@@ -27,8 +27,21 @@ async function scrapeSauna(saunaId: string, url: string) {
         for (const dayOffset of daysToScrape) {
             const TargetDate = new Date();
             TargetDate.setDate(TargetDate.getDate() + dayOffset);
-            const dateStr = TargetDate.toISOString().split('T')[0];
-            const dayNum = TargetDate.getDate().toString();
+
+            const osloFormatter = new Intl.DateTimeFormat('sv-SE', {
+                timeZone: 'Europe/Oslo',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            });
+
+            const parts = osloFormatter.formatToParts(TargetDate);
+            const year = parts.find(p => p.type === 'year')?.value ?? '';
+            const month = parts.find(p => p.type === 'month')?.value ?? '';
+            const day = parts.find(p => p.type === 'day')?.value ?? '';
+
+            const dateStr = `${year}-${month}-${day}`;
+            const dayNum = Number(day).toString();
 
             console.log(`[Scraper] Scraping for ${dateStr} (day ${dayNum})`);
 
