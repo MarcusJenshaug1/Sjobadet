@@ -5,6 +5,7 @@ import Link from 'next/link';
 import styles from './Footer.module.css';
 import { formatSmartOpeningHours } from '@/lib/sauna-utils';
 import { Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
+import { CookieSettingsTrigger } from './CookieSettingsTrigger';
 
 interface FooterViewProps {
     address: string;
@@ -93,18 +94,13 @@ export function FooterView({ address, email, phone, instagram, facebook, saunas 
                             <Link href="/info/om-oss">Om oss</Link>
                             <Link href="/info/apningstider">Åpningstider</Link>
                             <Link href="/info/personvern">Personvernerklæring</Link>
-                            <button
-                                onClick={() => window.dispatchEvent(new CustomEvent('openConsentSettings'))}
-                                style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', textAlign: 'left', padding: 0 }}
-                            >
-                                Innstillinger for infokapsler
-                            </button>
                         </div>
                     </div>
                 </div>
 
                 <div className={styles.bottom}>
                     <p>&copy; {new Date().getFullYear()} Sjøbadet AS. Org.nr: 926 084 275.</p>
+                    <CookieSettingsTrigger label="Personvernvalg" />
                 </div>
             </div>
         </footer>

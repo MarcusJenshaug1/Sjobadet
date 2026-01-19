@@ -1,0 +1,73 @@
+.title {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.lead {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    color: #334155;
+}
+
+.card {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 16px -12px rgba(15, 23, 42, 0.16);
+}
+
+.card h2 {
+    margin-bottom: 0.75rem;
+}
+
+.card p {
+    color: #475569;
+    line-height: 1.6;
+}
+
+.card ul {
+    padding-left: 1.1rem;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.table {
+    display: grid;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.tableHead, .tableRow {
+    display: grid;
+    grid-template-columns: 1.1fr 1.4fr 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    align-items: start;
+}
+
+.tableHead {
+    background: #f8fafc;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.tableRow:nth-child(odd) {
+    background: #fbfdff;
+}
+
+.tableRow div {
+    color: #475569;
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+@media (max-width: 720px) {
+    .tableHead, .tableRow {
+        grid-template-columns: 1fr;
+    }
+}

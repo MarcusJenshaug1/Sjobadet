@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, ShieldCheck } from 'lucide-react';
@@ -15,14 +15,28 @@ interface HeaderViewProps {
 export function HeaderView({ isAdmin }: HeaderViewProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [clientIsAdmin, setClientIsAdmin] = useState(isAdmin);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 10);
         };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetch('/api/auth/session', { cache: 'no-store' })
+            .then((res) => res.ok ? res.json() : { isAdmin })
+            .then((data) => {
+                if (!cancelled && typeof data?.isAdmin === 'boolean') {
+                    setClientIsAdmin(data.isAdmin);
+                }
+            })
+            .catch(() => { /* ignore */ });
+        return () => { cancelled = true; };
+    }, [isAdmin]);
 
     const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
@@ -34,7 +48,7 @@ export function HeaderView({ isAdmin }: HeaderViewProps) {
         { href: '/info', label: 'Info' },
     ];
 
-    const adminLink = isAdmin ? (
+    const adminLink = clientIsAdmin ? (
         <Link href="/admin" className={`${styles.navLink} ${styles.adminLink}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#2563eb', fontWeight: '600' }}>
             <ShieldCheck size={18} />
             Admin
@@ -95,7 +109,7 @@ export function HeaderView({ isAdmin }: HeaderViewProps) {
                                 {link.label}
                             </Link>
                         ))}
-                        {isAdmin && (
+                        {clientIsAdmin && (
                             <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.mobileLink} ${styles.mobileAdmin}`}>
                                 <ShieldCheck size={20} />
                                 Admin

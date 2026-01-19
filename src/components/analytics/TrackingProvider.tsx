@@ -62,7 +62,8 @@ export function TrackingProvider({ children, isAdmin }: { children: React.ReactN
     return (
         <TrackingContext.Provider value={{ consent, showBanner, setShowBanner }}>
             {children}
-            {!isAdmin && <ConsentBanner />}
+            {/* Always render ConsentBanner so the event listener is active, even for admins */}
+            <ConsentBanner />
         </TrackingContext.Provider>
     );
 }
