@@ -215,6 +215,19 @@ async function runFullScan() {
 
   try {
     const urls = await getAllUrls();
+
+    if (!urls.length) {
+      await prisma.lighthouseScan.update({
+        where: { id: scanId },
+        data: {
+          status: 'failed',
+          completedAt: new Date(),
+          error: 'Ingen URLer å skanne. Sjekk base-URL og tilgang til sauna-listen.',
+        },
+      });
+      console.error('No URLs found for Lighthouse scan. Aborting.');
+      return;
+    }
     
     await prisma.lighthouseScan.update({
       where: { id: scanId },

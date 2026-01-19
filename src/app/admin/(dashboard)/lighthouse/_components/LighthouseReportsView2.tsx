@@ -184,7 +184,10 @@ export default function LighthouseReportsView() {
   const isScanning = latestScan?.status === 'running';
   const isStartingScan = Boolean(scanRequestedAt && !isScanning);
   const scanAgeSeconds = scanRequestedAt ? Math.floor((Date.now() - scanRequestedAt) / 1000) : 0;
-  const progress = latestScan ? Math.round((latestScan.completedUrls / latestScan.totalUrls) * 100) : 0;
+  const progress = latestScan && latestScan.totalUrls > 0
+    ? Math.round((latestScan.completedUrls / latestScan.totalUrls) * 100)
+    : 0;
+  const isWaitingForUrls = Boolean(isScanning && latestScan && latestScan.totalUrls === 0);
   const isScanBusy = scanning || isScanning || isStartingScan;
 
   useEffect(() => {
@@ -352,7 +355,11 @@ export default function LighthouseReportsView() {
               {isScanning ? (
                 <>
                   <Activity size={16} className={styles.iconPulse} />
-                  <span>{Math.floor(latestScan.completedUrls / 2)}/{Math.floor(latestScan.totalUrls / 2)} sider ({latestScan.completedUrls}/{latestScan.totalUrls} scans)</span>
+                  <span>
+                    {isWaitingForUrls
+                      ? 'Henter sider…'
+                      : `${Math.floor(latestScan.completedUrls / 2)}/${Math.floor(latestScan.totalUrls / 2)} sider (${latestScan.completedUrls}/${latestScan.totalUrls} scans)`}
+                  </span>
                 </>
               ) : isStartingScan ? (
                 <>
@@ -367,7 +374,7 @@ export default function LighthouseReportsView() {
               ) : (
                 <>
                   <AlertCircle size={16} />
-                  <span>Feilet</span>
+                  <span>Feilet{latestScan?.error ? `: ${latestScan.error}` : ''}</span>
                 </>
               )}
             </div>
@@ -432,13 +439,15 @@ export default function LighthouseReportsView() {
       {(isScanning || isStartingScan) && (
         <div className={styles.progressSection}>
           <div className={styles.progressHeader}>
-            <span className={styles.progressLabel}>{isStartingScan ? 'Starter skanning' : 'Pågående skanning'}</span>
-            <span className={styles.progressPercent}>{isStartingScan ? '...' : `${progress}%`}</span>
+            <span className={styles.progressLabel}>
+              {isStartingScan ? 'Starter skanning' : isWaitingForUrls ? 'Henter sider' : 'Pågående skanning'}
+            </span>
+            <span className={styles.progressPercent}>{isStartingScan || isWaitingForUrls ? '...' : `${progress}%`}</span>
           </div>
           <div className={styles.progressBar}>
             <div 
               className={`${styles.progressFill} ${styles.progressAnimated}`}
-              style={{ width: isStartingScan ? '100%' : `${progress}%` }}
+              style={{ width: isStartingScan || isWaitingForUrls ? '100%' : `${progress}%` }}
             />
           </div>
         </div>
@@ -764,9 +773,11 @@ export default function LighthouseReportsView() {
           <div className={styles.progressHeader}>
             <Activity size={20} className={styles.iconPulse} />
             <div>
-              <h3 className={styles.progressTitle}>{isStartingScan ? 'Starter skanning...' : 'Scanning i progress...'}</h3>
+              <h3 className={styles.progressTitle}>
+                {isStartingScan ? 'Starter skanning...' : isWaitingForUrls ? 'Klargjør sider...' : 'Scanning i progress...'}
+              </h3>
               <p className={styles.progressMeta}>
-                {isStartingScan
+                {isStartingScan || isWaitingForUrls
                   ? 'Venter på første status...'
                   : `${Math.floor(latestScan.completedUrls / 2)} av ${Math.floor(latestScan.totalUrls / 2)} sider (${latestScan.completedUrls} av ${latestScan.totalUrls} scans)`}
               </p>
@@ -774,8 +785,8 @@ export default function LighthouseReportsView() {
           </div>
           <div className={styles.progressBar}>
             <div 
-              className={`${styles.progressFill} ${isStartingScan ? styles.progressAnimated : ''}`}
-              style={{ width: isStartingScan ? '100%' : `${(latestScan.completedUrls / latestScan.totalUrls) * 100}%` }}
+              className={`${styles.progressFill} ${(isStartingScan || isWaitingForUrls) ? styles.progressAnimated : ''}`}
+              style={{ width: isStartingScan || isWaitingForUrls ? '100%' : `${(latestScan.completedUrls / latestScan.totalUrls) * 100}%` }}
             />
           </div>
         </div>
