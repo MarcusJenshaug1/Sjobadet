@@ -134,30 +134,46 @@ export default function SaunaAvailability({
                 let activeDate = todayStr;
 
                 if (json.days) {
-                    const dayKeys = Object.keys(json.days).sort();
+                    const dayKeys = Object.keys(json.days).filter(Boolean).sort();
 
-                    const pickDateKey = () => {
-                        if (dayKeys.includes(todayStr)) return todayStr;
-                        const future = dayKeys.find((d) => d >= todayStr);
-                        if (future) return future;
-                        return dayKeys[dayKeys.length - 1];
+                    const parseMinutes = (time: string | undefined) => {
+                        if (!time) return null;
+                        const [h, m] = time.split(/[:.]/).map(Number);
+                        if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+                        return h * 60 + m;
                     };
 
-                    const targetDate = pickDateKey();
-                    const targetSlots = json.days[targetDate] || [];
+                    const getSlotsForDay = (day: string) => json.days?.[day] || [];
 
-                    if (targetDate === todayStr) {
-                        if (now.getHours() >= 22) {
-                            slotsToShow = json.days[tomorrowStr] || [];
-                            activeDate = tomorrowStr;
-                        } else {
-                            // Show all slots for today (filtering by lead time happens in render based on toggle)
-                            slotsToShow = targetSlots;
+                    const hasUpcomingAvailabilityToday = (slots: ScrapedSlot[]) => {
+                        return slots.some((slot) => {
+                            if (slot.availableSpots <= 0) return false;
+                            const endMinutes = parseMinutes(slot.to || slot.from);
+                            if (endMinutes === null) return true;
+                            return endMinutes > currentTime;
+                        });
+                    };
+
+                    const todaySlots = getSlotsForDay(todayStr);
+                    const tomorrowSlots = getSlotsForDay(tomorrowStr);
+                    const hasTodayAvailability = hasUpcomingAvailabilityToday(todaySlots);
+
+                    if (!hasTodayAvailability && tomorrowSlots.length > 0) {
+                        slotsToShow = tomorrowSlots;
+                        activeDate = tomorrowStr;
+                    } else if (!hasTodayAvailability) {
+                        const futureDay = dayKeys.find((d) => d > todayStr && (getSlotsForDay(d).length > 0))
+                            || dayKeys.find((d) => d > todayStr);
+                        if (futureDay) {
+                            slotsToShow = getSlotsForDay(futureDay);
+                            activeDate = futureDay;
+                        } else if (dayKeys.includes(todayStr)) {
+                            slotsToShow = todaySlots;
                             activeDate = todayStr;
                         }
                     } else {
-                        slotsToShow = targetSlots;
-                        activeDate = targetDate;
+                        slotsToShow = todaySlots;
+                        activeDate = todayStr;
                     }
                 }
 
@@ -393,6 +409,7 @@ export default function SaunaAvailability({
                             slot={slot}
                             totalCapacity={capacityDropin}
                             baseBookingUrl={bookingUrlDropin}
+                            displayDate={currentData.displayDate || ''}
                             isTomorrow={isTomorrow}
                             onOpenBooking={(url) => setBookingUrl(url)}
                         />
@@ -416,7 +433,7 @@ export default function SaunaAvailability({
     );
 }
 
-function SlotCard({ slot, totalCapacity, baseBookingUrl, isTomorrow, onOpenBooking }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null, isTomorrow: boolean, onOpenBooking: (url: string) => void }) {
+function SlotCard({ slot, totalCapacity, baseBookingUrl, displayDate, isTomorrow, onOpenBooking }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null, displayDate: string, isTomorrow: boolean, onOpenBooking: (url: string) => void }) {
     const isFull = slot.availableSpots === 0;
     const availablePlaces = slot.availableSpots;
 
@@ -432,10 +449,11 @@ function SlotCard({ slot, totalCapacity, baseBookingUrl, isTomorrow, onOpenBooki
     // Construct booking link: [Base URL]/[YYYY-MM-DD]/[HH:MM]
     let bookingLink = '';
     if (baseBookingUrl && baseBookingUrl.includes('periode.no') && !isFull) {
-        const targetDate = new Date();
-        if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
-
-        const dateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD
+        const dateStr = displayDate || (() => {
+            const targetDate = new Date();
+            if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
+            return targetDate.toISOString().split('T')[0];
+        })();
         const timeStr = slot.from; // HH:MM
 
         const cleanBase = baseBookingUrl.endsWith('/') ? baseBookingUrl.slice(0, -1) : baseBookingUrl;

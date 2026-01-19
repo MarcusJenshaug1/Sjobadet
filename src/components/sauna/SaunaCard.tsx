@@ -77,8 +77,32 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
 
     const formatNextSlotLabel = () => {
         if (!sauna.nextAvailableSlot) return null;
-        const { time, availableSpots } = sauna.nextAvailableSlot;
-        return { time, availableSpots };
+        const { time, availableSpots, date } = sauna.nextAvailableSlot;
+
+        const osloNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
+        const todayKey = new Intl.DateTimeFormat('sv-SE', {
+            timeZone: 'Europe/Oslo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).format(osloNow);
+        const tomorrow = new Date(osloNow);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowKey = new Intl.DateTimeFormat('sv-SE', {
+            timeZone: 'Europe/Oslo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).format(tomorrow);
+
+        let dayLabel: string | null = null;
+        if (date === tomorrowKey) {
+            dayLabel = 'i morgen';
+        } else if (date && date !== todayKey) {
+            dayLabel = date;
+        }
+
+        return { time, availableSpots, dayLabel };
     };
 
     const nextSlotLabel = formatNextSlotLabel();
@@ -140,7 +164,7 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                                 <div className={styles.nextSlotMain}>
                                     <Clock size={16} />
                                     <span className={styles.nextSlotText}>
-                                        Neste ledige: {nextSlotLabel.time}
+                                        Neste ledige: {nextSlotLabel.time}{nextSlotLabel.dayLabel ? ` (${nextSlotLabel.dayLabel})` : ''}
                                     </span>
                                 </div>
                                 <span className={styles.nextSlotSpots}>{nextSlotLabel.availableSpots} plasser</span>
