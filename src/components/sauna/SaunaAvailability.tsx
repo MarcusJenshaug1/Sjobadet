@@ -385,8 +385,8 @@ export default function SaunaAvailability({
             <div className={styles.grid}>
                 {availableSlots.length > 0 ? (
                     availableSlots.map((slot: ScrapedSlot, i: number) => {
-                        const endMinutes = parseMinutes(slot.to || slot.from);
-                        const isPast = isToday && endMinutes !== null && endMinutes <= nowMinutes;
+                        const startMinutes = parseMinutes(slot.from);
+                        const isPast = isToday && startMinutes !== null && startMinutes <= nowMinutes;
                         return (
                             <SlotCard
                                 key={i}
