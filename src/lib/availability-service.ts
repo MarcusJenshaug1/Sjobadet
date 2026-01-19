@@ -49,13 +49,15 @@ export async function updateSaunaAvailability(saunaId: string) {
             ...(shouldMergeFresh ? { [fresh.date as string]: fresh.slots } : {}),
         };
 
+        // Check if availability data has actually changed (compare slots, not timestamp)
+        const existingDateSlots = existing.days?.[fresh.date as string];
+        const dataHasChanged = !existingDateSlots || 
+            JSON.stringify(existingDateSlots) !== JSON.stringify(fresh.slots);
+
         const payload = JSON.stringify({
             days: mergedDays,
             timestamp: new Date().toISOString(),
         });
-
-        // Check if data has changed compared to previous
-        const dataHasChanged = sauna.availabilityData !== payload;
 
         const updated = await prisma.sauna.update({
             where: { id: saunaId },
