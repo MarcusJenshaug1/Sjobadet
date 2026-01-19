@@ -70,12 +70,12 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
     const nextSlotLabel = formatNextSlotLabel();
 
     return (
-        <div className={styles.card} ref={cardRef} onMouseEnter={handleHover}>
+        <div className={styles.card} ref={cardRef} onMouseEnter={handleHover} role="article" aria-label={`Badstue: ${sauna.name}`}>
             <div className={styles.imageContainer}>
                 {sauna.imageUrl ? (
                     <Image
                         src={sauna.imageUrl}
-                        alt={sauna.name}
+                        alt={`${sauna.name} - badstue`}
                         fill
                         className={styles.image}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -83,12 +83,12 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                         quality={80}
                     />
                 ) : (
-                    <div style={{ width: '100%', height: '100%', backgroundColor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
+                    <div style={{ width: '100%', height: '100%', backgroundColor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }} aria-label="Bilde ikke tilgjengelig">
                         <span>Bilde kommer</span>
                     </div>
                 )}
                 {sauna.driftStatus === 'closed' && (
-                    <span className={styles.badge}>
+                    <span className={styles.badge} aria-label="Badstuen er stengt">
                         Stengt
                     </span>
                 )}
