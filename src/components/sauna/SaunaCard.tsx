@@ -81,10 +81,11 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                         className={styles.image}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         loading="lazy"
-                        quality={80}
+                        quality={75}
+                        decoding="async"
                     />
                 ) : (
-                    <div style={{ width: '100%', height: '100%', backgroundColor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }} aria-label="Bilde ikke tilgjengelig">
+                    <div style={{ width: '100%', height: '100%', backgroundColor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }} role="img" aria-label="Bilde ikke tilgjengelig">
                         <span>Bilde kommer</span>
                     </div>
                 )}

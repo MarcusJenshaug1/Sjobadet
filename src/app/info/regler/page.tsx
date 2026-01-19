@@ -16,13 +16,17 @@ import {
     Info,
     Check
 } from 'lucide-react';
+import { getGlobalSettings } from '@/lib/sauna-service';
 
 export const metadata: Metadata = {
     title: 'Badstueregler | Sjøbadet Badstue',
     description: 'Vilkår og trivselsregler for bruk av badstuen.',
 };
 
-export default function RulesPage() {
+export default async function RulesPage() {
+    const settings = await getGlobalSettings();
+    const phone = settings['contact_phone'] || '+47 401 55 365';
+
     return (
         <>
             <Header />
@@ -150,7 +154,9 @@ export default function RulesPage() {
                         <PhoneCall size={24} />
                         Driftsavbrudd / Nød
                     </div>
-                    <p style={{ color: '#991b1b', fontWeight: '600', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Ring: 401 55 365</p>
+                    <p style={{ color: '#991b1b', fontWeight: '600', fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+                        Ring: <a href={`tel:${phone.replace(/\s/g, '')}`} style={{ color: 'inherit', textDecoration: 'underline' }}>{phone}</a>
+                    </p>
                     <p style={{ color: '#b91c1c' }}><strong>Ved fare for liv eller helse ring 113</strong></p>
                 </div>
             </main>

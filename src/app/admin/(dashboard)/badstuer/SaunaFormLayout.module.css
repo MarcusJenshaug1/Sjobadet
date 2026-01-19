@@ -1,0 +1,231 @@
+.layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    padding-bottom: 5rem;
+    padding-top: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    /* Space for sticky bar */
+}
+
+.mainColumn {
+    flex: 1;
+    min-width: 0;
+    /* Prevention for grid overflow */
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sideColumn {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: sticky;
+    top: 2rem;
+}
+
+/* Accordion Sections */
+.section {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.sectionHeader {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0f172a;
+    transition: background 0.1s;
+    user-select: none;
+}
+
+.sectionHeader:hover {
+    background: #f8fafc;
+}
+
+.sectionBody {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.sectionBodyHidden {
+    display: none;
+}
+
+/* Fields */
+.fieldGroup {
+    margin-bottom: 1.25rem;
+}
+
+.label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 0.5rem;
+}
+
+.labelRequired::after {
+    content: " *";
+    color: #ef4444;
+}
+
+.input {
+    width: 100%;
+    padding: 0.625rem;
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    font-size: 0.9375rem;
+    transition: border-color 0.2s;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.helperText {
+    font-size: 0.8125rem;
+    color: #64748b;
+    margin-top: 0.375rem;
+}
+
+/* Chips Input (Facilities) */
+.chipsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    background: white;
+    min-height: 42px;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.chipRemove {
+    border: none;
+    background: transparent;
+    color: #0369a1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.chipInput {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 120px;
+    padding: 0.25rem;
+    font-size: 0.9375rem;
+}
+
+/* Sticky Action Bar */
+.stickyBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    /* Or adjust based on sidebar width if needed */
+    right: 0;
+    background: white;
+    padding: 1rem 2rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+    z-index: 50;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+}
+
+/* Adjust left offset based on layout assumptions, usually admin layout has padding or sidebar. 
+   Ideally this bar is inside the main content area or spans full width. 
+   For simplicity, we'll make it fixed full width but with max-width container inside. */
+.stickyBarVisible {
+    transform: translateY(0);
+}
+
+.stickyBarContent {
+    width: 100%;
+    max-width: 1200px;
+    /* Match standard admin width */
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Status Panel (Side) */
+.statusPanel {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.statusRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.statusRow:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.warningBox {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .layout {
+        flex-direction: column;
+    }
+
+    .sideColumn {
+        width: 100%;
+        position: static;
+        order: -1;
+        /* Show status on top on mobile? Or bottom? Top usually better for visibility */
+    }
+}

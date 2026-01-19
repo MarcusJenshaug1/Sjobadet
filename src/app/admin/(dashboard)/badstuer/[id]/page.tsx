@@ -21,7 +21,7 @@ export default async function EditSaunaPage({ params }: { params: Promise<{ id: 
     }
 
     return (
-        <div>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', paddingTop: '1rem' }}>
             <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>Rediger Badstue</h1>
             <SaunaForm sauna={sauna} />
         </div>

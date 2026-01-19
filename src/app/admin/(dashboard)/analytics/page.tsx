@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth";
 import { ActionMenu } from "./_components/ActionMenu";
 import { DataQualityBox } from "./_components/DataQualityBox";
 import { PopularPagesCard } from "./_components/PopularPagesCard";
+import { PageWrapper } from "@/components/admin/PageWrapper";
 
 export const dynamic = 'force-dynamic';
 
@@ -272,19 +273,11 @@ export default async function AnalyticsPage({
     }).sort((a, b) => b.views - a.views);
 
     return (
-        <div style={{ padding: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1e293b', letterSpacing: '-0.025em', marginBottom: '0.5rem' }}>
-                        Besøksstatistikk
-                    </h1>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#64748b' }}>
-                        <Calendar size={16} />
-                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Tidsperiode:</span>
-                        <RangeSelector currentDays={days} />
-                    </div>
-                </div>
-                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <PageWrapper 
+            layout="wide"
+            title="Besøksstatistikk"
+            actions={
+                <>
                     <a
                         href={`/api/analytics/export?days=${days}`}
                         download
@@ -300,16 +293,21 @@ export default async function AnalyticsPage({
                             fontWeight: 600,
                             textDecoration: 'none',
                             fontSize: '0.9rem',
-                            boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                            transition: 'all 0.2s'
                         }}
                     >
                         <Download size={18} />
-                        Last ned CSV-eksport
+                        Eksporter CSV
                     </a>
-                        <ActionMenu username={currentUser?.username || currentUser?.email} />
-                </div>
-            </div>
-
+                    <RangeSelector currentDays={days} />
+                    {currentUser && (
+                        <ActionMenu 
+                            username={currentUser.username || 'Admin'}
+                        />
+                    )}
+                </>
+            }
+        >
             {/* KPI Cards Section */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '3rem' }}>
                 <KPICardWithTrend
@@ -410,7 +408,7 @@ export default async function AnalyticsPage({
                     </div>
                 </div>
             </div>
-        </div>
+        </PageWrapper>
     );
 }
 

@@ -12,7 +12,8 @@
     "postinstall": "prisma generate",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "lighthouse:scan": "node scripts/daily_lighthouse_scan.mjs"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed.ts"
@@ -27,9 +28,11 @@
     "@vercel/speed-insights": "^1.3.1",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.1.2",
+    "chrome-launcher": "^1.2.1",
     "clsx": "^2.1.1",
     "easymde": "^2.20.0",
     "jose": "^6.1.3",
+    "lighthouse": "^13.0.1",
     "lru-cache": "^11.2.4",
     "lucide-react": "^0.562.0",
     "nanoid": "^5.1.6",

@@ -34,7 +34,7 @@ export function FooterView({ address, email, phone, instagram, facebook, saunas 
                             </div>
                             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                                 <Phone size={18} className={styles.icon} />
-                                <span>{phone}</span>
+                                <a href={`tel:${phone.replace(/\s/g, '')}`} style={{ color: 'inherit' }}>{phone}</a>
                             </div>
                         </div>
 

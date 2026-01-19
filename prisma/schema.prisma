@@ -12,6 +12,7 @@ model AdminUser {
   id           String       @id @default(cuid())
   username     String       @unique
   passwordHash String
+  avatarUrl    String?
   createdAt    DateTime     @default(now())
   mediaAssets  MediaAsset[]
 }
@@ -170,4 +171,50 @@ model AnalyticsEvent {
   @@index([sessionId])
   @@index([type, timestamp])
   @@index([path])
+}
+
+model LighthouseReport {
+  id               String   @id @default(cuid())
+  url              String
+  device           String // 'mobile' or 'desktop'
+  performance      Float
+  accessibility    Float
+  bestPractices    Float
+  seo              Float
+  pwa              Float?
+  firstContentfulPaint  Float?
+  largestContentfulPaint Float?
+  totalBlockingTime     Float?
+  cumulativeLayoutShift Float?
+  speedIndex            Float?
+  fullReport       String   @db.Text // JSON of full Lighthouse report
+  createdAt        DateTime @default(now())
+  
+  @@index([url, device, createdAt])
+  @@index([createdAt])
+}
+
+model LighthouseScan {
+  id          String   @id @default(cuid())
+  status      String   @default("running") // 'running', 'completed', 'failed'
+  totalUrls   Int      @default(0)
+  completedUrls Int    @default(0)
+  failedUrls  Int      @default(0)
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  error       String?
+  
+  @@index([status, startedAt])
+}
+
+model AdminLog {
+  id          String   @id @default(cuid())
+  action      String
+  details     String?
+  status      String   @default("SUCCESS") // SUCCESS, FAILURE, WARNING
+  performedBy String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
 }

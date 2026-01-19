@@ -7,6 +7,8 @@ import styles from '../OpeningHours.module.css';
 import { Clock, Info, AlertCircle, Calendar, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
     title: 'Åpningstider | Sjøbadet Badstue',
     description: 'Se våre åpningstider for alle badstuer.',

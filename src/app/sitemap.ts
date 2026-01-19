@@ -2,7 +2,19 @@ import { MetadataRoute } from 'next'
 import prisma from '@/lib/prisma'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = 'https://sjobadet.com';
+    // Fetch base URL from settings, fallback to production URL
+    let baseUrl = 'https://sjobadet.net';
+    
+    try {
+        const setting = await prisma.siteSetting.findUnique({
+            where: { key: 'lighthouse_base_url' },
+        });
+        if (setting?.value) {
+            baseUrl = setting.value;
+        }
+    } catch (error) {
+        console.warn('Failed to fetch base URL from settings for sitemap, using default');
+    }
 
     const staticRoutes = [
         '',

@@ -52,9 +52,16 @@ export async function GET(req: NextRequest) {
                     }
                 })();
 
-                const sanitizedExistingDays = Object.fromEntries(
-                    Object.entries(existing.days || {}).filter(([key]) => Boolean(key?.trim()))
-                );
+                const todayKey = new Intl.DateTimeFormat('sv-SE', {
+                    timeZone: 'Europe/Oslo',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                }).format(new Date());
+
+                const sanitizedExistingDays = Object.entries(existing.days || {})
+                    .filter(([key]) => Boolean(key?.trim()) && key >= todayKey)
+                    .reduce((acc, [key, val]) => ({ ...acc, [key]: val }), {});
 
                 const shouldMergeFresh = Boolean(fresh.date && fresh.slots && fresh.slots.length > 0);
 

@@ -1,0 +1,291 @@
+.card {
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    border-color: #cbd5e1;
+}
+
+.header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    background-color: white;
+    user-select: none;
+}
+
+.headerContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.summary {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.badgeUnsaved {
+    background-color: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #ffedd5;
+}
+
+.chevron {
+    color: #94a3b8;
+    transition: transform 0.2s;
+}
+
+.chevronExpanded {
+    transform: rotate(180deg);
+}
+
+.body {
+    border-top: 1px solid #f1f5f9;
+    padding: 1.25rem;
+    background-color: #f8fafc;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Bulk Actions */
+.bulkActions {
+    display: flex;
+    gap: 0.75rem;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+
+.bulkButton {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bulkButton:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+/* Days List */
+.daysList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dayRow {
+    display: grid;
+    grid-template-columns: 100px 100px 1fr 1fr 100px;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+}
+
+.dayRow:hover {
+    border-color: #cbd5e1;
+}
+
+.dayLabel {
+    font-weight: 500;
+    color: #334155;
+    font-size: 0.9375rem;
+}
+
+/* Toggle Switch */
+.switch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.switchInput {
+    display: none;
+}
+
+.switchTrack {
+    width: 36px;
+    height: 20px;
+    background-color: #cbd5e1;
+    border-radius: 9999px;
+    position: relative;
+    transition: background-color 0.2s;
+}
+
+.switchInput:checked+.switchTrack {
+    background-color: #0ea5e9;
+}
+
+.switchThumb {
+    width: 16px;
+    height: 16px;
+    background-color: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.switchInput:checked+.switchTrack .switchThumb {
+    transform: translateX(16px);
+}
+
+.switchLabel {
+    font-size: 0.875rem;
+    color: #64748b;
+    width: 48px;
+}
+
+.switchInput:checked~.switchLabel {
+    color: #0f172a;
+    font-weight: 500;
+}
+
+/* Time Inputs */
+.timeInput {
+    padding: 0.375rem 0.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.375rem;
+    font-size: 0.9375rem;
+    width: 100%;
+    color: #0f172a;
+    font-family: inherit;
+}
+
+.timeInput:disabled {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.disabledText {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    font-style: italic;
+    padding: 0.375rem 0;
+}
+
+/* Action Bar */
+.actionBar {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    bottom: 0;
+    background: #f8fafc;
+    z-index: 10;
+}
+
+.saveButton {
+    background-color: #0f172a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.saveButton:hover:not(:disabled) {
+    background-color: #1e293b;
+}
+
+.saveButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.resetButton {
+    color: #64748b;
+    font-size: 0.875rem;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.resetButton:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+    .dayRow {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+
+    .timeContainer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .dayHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+}

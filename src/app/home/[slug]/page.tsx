@@ -3,7 +3,7 @@ import { Footer } from '@/components/layout/Footer';
 import styles from './SaunaDetail.module.css';
 import { MapPin, Users, Check, AlertTriangle, Gift, CreditCard } from 'lucide-react';
 import { Metadata } from 'next';
-import { getSaunaBySlug, getActiveSaunas } from '@/lib/sauna-service';
+import { getSaunaBySlug, getActiveSaunas, getGlobalSettings } from '@/lib/sauna-service';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
@@ -43,6 +43,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     let isAdmin = false;
     let dbError = false;
     let otherSaunas: Awaited<ReturnType<typeof getActiveSaunas>> = [];
+    let settings: Record<string, string> = {};
 
     try {
         sauna = await getSaunaBySlug(slug);
@@ -50,6 +51,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
         otherSaunas = allSaunas.filter(s => s.slug !== slug).slice(0, 3);
         const session = await getSession();
         isAdmin = !!session?.user;
+        settings = await getGlobalSettings();
     } catch (error) {
         console.error('Failed to fetch sauna detail:', error);
         dbError = true;
@@ -71,6 +73,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
 
     const facilities = sauna ? parseJSON(sauna.facilities) : [];
     const gallery = sauna ? parseJSON(sauna.gallery) : [];
+    const phone = settings['contact_phone'] || '+47 401 55 365';
 
     return (
         <>
@@ -126,11 +129,16 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                         <div style={{ textAlign: 'center', padding: '4rem 1rem', maxWidth: '600px', margin: '0 auto' }}>
                             <AlertTriangle size={64} color="#f56565" style={{ marginBottom: '1.5rem' }} />
                             <h2 style={{ fontSize: '2rem', color: '#c53030', marginBottom: '1rem' }}>Midlertidig utilgjengelig</h2>
-                            <p style={{ fontSize: '1.25rem', color: '#718096', lineHeight: '1.6' }}>
+                            <p style={{ fontSize: '1.25rem', color: '#718096', lineHeight: '1.6', marginBottom: '2rem' }}>
                                 Vi klarte ikke å hente informasjon om badstuen akkurat nå.
-                                Vennligst prøv igjen om litt, eller gå tilbake til forsiden for å se andre badstuer. Slip.
+                                Vennligst prøv igjen om litt.
                             </p>
-                            <Link href="/" className={styles.actionButton} style={{ marginTop: '2rem', display: 'inline-flex', width: 'auto' }}>
+                            <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '0.5rem', display: 'inline-block', textAlign: 'left', marginBottom: '2rem' }}>
+                                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Trenger du hjelp?</p>
+                                <p>Ring oss på: <a href={`tel:${phone.replace(/\s/g, '')}`} style={{ color: 'var(--primary)', fontWeight: 600 }}>{phone}</a></p>
+                            </div>
+                            <br />
+                            <Link href="/" className={styles.actionButton} style={{ display: 'inline-flex', width: 'auto' }}>
                                 Tilbake til forsiden
                             </Link>
                         </div>

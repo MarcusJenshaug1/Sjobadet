@@ -28,9 +28,8 @@
 
 html {
   overflow-x: hidden;
-  scroll-behavior: smooth;
   scroll-padding-top: 80px;
-  /* Offset for sticky header */
+  /* Offset for sticky header - removed smooth scroll to fix CLS */
 }
 
 body {

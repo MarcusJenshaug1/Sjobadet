@@ -3,7 +3,6 @@ import type { OpeningHour } from '@prisma/client'
 import saunasJson from '@/data/saunas.json'
 
 const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-let settingsCache: { data: Record<string, string>; expiresAt: number } | null = null;
 const SAUNA_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes for public content
 
 type ActiveSauna = {
@@ -40,8 +39,23 @@ type SaunaDetail = ActiveSauna & {
     stengtTil?: Date | null;
 };
 
-const activeSaunaCache = new Map<string, { data: ActiveSauna[]; expiresAt: number }>();
-const saunaBySlugCache = new Map<string, { data: SaunaDetail; expiresAt: number }>();
+
+const globalForSauna = globalThis as unknown as {
+    activeSaunaCache: Map<string, { data: ActiveSauna[]; expiresAt: number }>;
+    saunaBySlugCache: Map<string, { data: SaunaDetail; expiresAt: number }>;
+    settingsCache: { data: Record<string, string>; expiresAt: number } | null;
+};
+
+const activeSaunaCache = globalForSauna.activeSaunaCache || new Map<string, { data: ActiveSauna[]; expiresAt: number }>();
+const saunaBySlugCache = globalForSauna.saunaBySlugCache || new Map<string, { data: SaunaDetail; expiresAt: number }>();
+let settingsCache: { data: Record<string, string>; expiresAt: number } | null = globalForSauna.settingsCache || null;
+
+if (process.env.NODE_ENV !== 'production') {
+    globalForSauna.activeSaunaCache = activeSaunaCache;
+    globalForSauna.saunaBySlugCache = saunaBySlugCache;
+    globalForSauna.settingsCache = settingsCache;
+}
+
 
 type StaticSauna = {
     id: string;
@@ -143,6 +157,9 @@ function computeNextAvailableSlot(availabilityData?: string | null): { time: str
         };
 
         for (const day of dayKeys) {
+            // Skip days in the past
+            if (day < todayKey) continue;
+
             const slots = (days[day] || [])
                 .filter((s) => Number.isFinite(s.availableSpots) && s.availableSpots > 0)
                 .sort((a, b) => (a.from || '').localeCompare(b.from || ''));
@@ -343,6 +360,14 @@ export function getTodayOpeningHours(openingHours: OpeningHour[]) {
     const todayHours = openingHours.find(h => h.weekday === dbDay && h.type === 'weekly')
 
     return todayHours
+}
+
+export const getCacheStats = async () => {
+    return {
+        activeSaunas: activeSaunaCache.size,
+        saunaDetails: saunaBySlugCache.size,
+        settings: settingsCache ? 1 : 0
+    }
 }
 
 export function formatSmartOpeningHours(openingHours: OpeningHour[] | undefined) {

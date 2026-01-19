@@ -8,6 +8,8 @@ import { Mail, Phone, MapPin, Instagram, Facebook, Clock } from 'lucide-react';
 import { SaunaStory } from '@/components/sauna/SaunaStory';
 import { ContactForm } from '@/components/contact/ContactForm';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
     title: 'Om oss & Kontakt | Sjøbadet Badstue',
     description: 'Historien om Sjøbadet Badstue, våre åpningstider og kontaktskjema.',

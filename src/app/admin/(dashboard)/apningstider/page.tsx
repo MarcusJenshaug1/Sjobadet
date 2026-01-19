@@ -5,43 +5,7 @@ import { requireAdmin } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
 
-async function updateHours(formData: FormData) {
-    'use server'
-    await requireAdmin()
-    // Iterate over all entries in the form
-    const entries = Array.from(formData.entries())
-    const updates: Record<string, any> = {}
-
-    // Group by ID
-    entries.forEach(([key, value]) => {
-        if (typeof value !== 'string') return
-
-        const prefixes = ['opens_', 'closes_', 'active_']
-        const prefix = prefixes.find(p => key.startsWith(p))
-
-        if (prefix) {
-            const field = prefix.replace('_', '')
-            const id = key.substring(prefix.length)
-
-            if (!updates[id]) updates[id] = {}
-            updates[id][field] = value
-        }
-    })
-
-    // Batch update (using updateMany for ID-specific updates avoids "Record not found" errors)
-    for (const [id, data] of Object.entries(updates)) {
-        await prisma.openingHour.updateMany({
-            where: { id },
-            data: {
-                opens: data.opens,
-                closes: data.closes,
-                active: data.active === 'on'
-            }
-        })
-    }
-
-    revalidatePath('/admin/apningstider')
-}
+import OpeningHoursList from './OpeningHoursList'
 
 export default async function OpeningHoursPage() {
     const saunas = await prisma.sauna.findMany({
@@ -73,52 +37,24 @@ export default async function OpeningHoursPage() {
     })
 
     // Filter out saunas with flexible hours (user request)
-    const saunasWithHours = allSaunas.filter((s: any) => !s.flexibleHours)
+    const saunasWithHours = allSaunas
+        .filter((s: any) => !s.flexibleHours)
+        .map((s: any) => ({
+            ...s,
+            openingHours: s.openingHours.map((h: any) => ({
+                ...h,
+                weekday: h.weekday ?? 0
+            }))
+        }))
 
     return (
-        <div style={{ maxWidth: '100%' }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Åpningstider (Ukentlig)</h1>
+        <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem', paddingTop: '2rem' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Åpningstider (Ukentlig)</h1>
+            <p style={{ color: '#64748b', marginBottom: '2rem' }}>
+                Administrer faste åpningstider for hver lokasjon. Avvikende åpningstider administreres under "Avvik".
+            </p>
 
-            {saunasWithHours.map((sauna: any) => (
-                <div key={sauna.id} style={{ marginBottom: '2rem', backgroundColor: 'white', padding: '1.25rem', borderRadius: '0.75rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', border: '1px solid #e5e7eb' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>{sauna.name}</h2>
-                    <form action={updateHours}>
-                        <div style={{ width: '100%', overflowX: 'auto' }}>
-                            <table style={{ width: '100%', minWidth: '520px' }}>
-                                <thead>
-                                    <tr>
-                                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Dag</th>
-                                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Åpner</th>
-                                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Stenger</th>
-                                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Åpen?</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {sauna.openingHours
-                                        .sort((a: any, b: any) => (a.weekday ?? 0) - (b.weekday ?? 0))
-                                        .map((hour: any) => (
-                                            <tr key={hour.id}>
-                                                <td style={{ padding: '0.5rem' }}>{['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'][hour.weekday ?? 0]}</td>
-                                                <td style={{ padding: '0.5rem' }}>
-                                                    <input name={`opens_${hour.id}`} defaultValue={hour.opens || ''} style={{ padding: '0.35rem', border: '1px solid #cbd5e1', borderRadius: '6px', width: '100%' }} />
-                                                </td>
-                                                <td style={{ padding: '0.5rem' }}>
-                                                    <input name={`closes_${hour.id}`} defaultValue={hour.closes || ''} style={{ padding: '0.35rem', border: '1px solid #cbd5e1', borderRadius: '6px', width: '100%' }} />
-                                                </td>
-                                                <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                                                    <input type="checkbox" name={`active_${hour.id}`} defaultChecked={hour.active} />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button type="submit">Lagre endringer for {sauna.name}</Button>
-                        </div>
-                    </form>
-                </div>
-            ))}
+            <OpeningHoursList saunas={saunasWithHours} />
         </div>
     )
 }

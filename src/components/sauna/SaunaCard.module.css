@@ -7,6 +7,7 @@
     background-color: white;
     transition: transform 0.2s, box-shadow 0.2s;
     height: 100%;
+    content-visibility: auto;
 }
 
 .card:hover {
@@ -19,6 +20,7 @@
     width: 100%;
     height: 250px;
     background-color: var(--secondary);
+    aspect-ratio: 1;
 }
 
 .image {

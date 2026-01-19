@@ -4,7 +4,7 @@ import { getSession } from './lib/auth'
 import { cookies } from 'next/headers'
 import { decrypt } from './lib/auth'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname
 
     // Check if it's an admin route

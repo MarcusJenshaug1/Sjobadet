@@ -1,0 +1,95 @@
+/* Page Container */
+.page {
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+/* Page Header */
+.pageHeader {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+.pageTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.pageActions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Page Content - Layout Modes */
+.pageContent {
+    padding: 2rem;
+}
+
+/* Narrow Layout (Forms, Settings) */
+.layout-narrow {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Wide Layout (Dashboards, Overview) */
+.layout-wide {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Fluid Layout (Tables, Analysis) */
+.layout-fluid {
+    max-width: none;
+    width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .pageHeader {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .pageContent {
+        padding: 1.5rem;
+    }
+    
+    .pageTitle {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .pageHeader {
+        padding: 1rem;
+        position: static;
+    }
+    
+    .pageContent {
+        padding: 1rem;
+    }
+    
+    .pageTitle {
+        font-size: 1.125rem;
+    }
+    
+    .pageActions {
+        flex-wrap: wrap;
+    }
+    
+    /* All layouts become full-width on mobile */
+    .layout-narrow,
+    .layout-wide {
+        max-width: none;
+    }
+}
