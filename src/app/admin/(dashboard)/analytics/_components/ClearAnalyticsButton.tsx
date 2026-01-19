@@ -103,7 +103,6 @@ export function ClearAnalyticsButton({ username }: ClearAnalyticsButtonProps) {
                 >
                     <div
                         style={{
-                            backgroundColor: 'white',
                             padding: '2rem',
                             borderRadius: '1rem',
                             border: '1px solid #fee2e2',
