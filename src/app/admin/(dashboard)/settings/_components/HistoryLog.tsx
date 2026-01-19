@@ -38,9 +38,9 @@ export default function HistoryLog() {
     }, [])
 
     const logs = data.logs
+    const totalPages = Math.ceil(data.total / data.pageSize)
     const uniqueActions = ['ALL', ...Array.from(new Set(logs.map(l => l.action)))]
     const filteredLogs = filter === 'ALL' ? logs : logs.filter(l => l.action === filter)
-    const totalPages = Math.ceil(data.total / data.pageSize)
 
     return (
         <div>
