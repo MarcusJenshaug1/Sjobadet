@@ -45,17 +45,20 @@ export async function updateSaunaAvailability(saunaId: string) {
             .filter(([key]) => Boolean(key?.trim()) && key >= todayKey)
             .reduce((acc, [key, val]) => ({ ...acc, [key]: val }), {});
 
-        const shouldMergeFresh = Boolean(fresh.date && fresh.slots && fresh.slots.length > 0);
+        const freshDays = Object.entries(fresh.days || {}).filter(([key]) => Boolean(key?.trim()));
+        const shouldMergeFresh = freshDays.length > 0;
 
         const mergedDays = {
             ...sanitizedExistingDays,
-            ...(shouldMergeFresh ? { [fresh.date as string]: fresh.slots } : {}),
+            ...Object.fromEntries(freshDays),
         };
 
-        // Check if availability data has actually changed (compare slots, not timestamp)
-        const existingDateSlots = existing.days?.[fresh.date as string];
-        const dataHasChanged = !existingDateSlots || 
-            JSON.stringify(existingDateSlots) !== JSON.stringify(fresh.slots);
+        const firstFreshDay = freshDays[0]?.[0];
+        const firstFreshSlots = firstFreshDay ? fresh.days[firstFreshDay] : [];
+
+        const existingDateSlots = firstFreshDay ? existing.days?.[firstFreshDay] : null;
+        const dataHasChanged = !existingDateSlots ||
+            JSON.stringify(existingDateSlots) !== JSON.stringify(firstFreshSlots);
 
         const payload = JSON.stringify({
             days: mergedDays,
@@ -88,14 +91,15 @@ export async function updateSaunaAvailability(saunaId: string) {
 
         // Add log entry for the individual scrape
         if (shouldMergeFresh) {
-            const slotSummary = fresh.slots.slice(0, 3).map(s => `${s.from}: ${s.availableSpots}`).join(', ');
+            const slotSummary = (firstFreshSlots || []).slice(0, 3).map(s => `${s.from}: ${s.availableSpots}`).join(', ');
+            const dayLabel = firstFreshDay || todayKey;
             
             if (dataHasChanged) {
                 // Data has changed - log as SUCCESS with details
-                const status = fresh.slots.some(s => s.availableSpots > 0) ? 'SUCCESS' : 'INFO';
+                const status = (firstFreshSlots || []).some(s => s.availableSpots > 0) ? 'SUCCESS' : 'INFO';
                 await logAdminAction(
                     'AVAILABILITY_CHECK',
-                    `${sauna.name}: Oppdatert ${fresh.date}. Totalt ${fresh.slots.length} tider. (Eks: ${slotSummary}...)`,
+                    `${sauna.name}: Oppdatert ${dayLabel}. Totalt ${(firstFreshSlots || []).length} tider. (Eks: ${slotSummary}...)`,
                     status,
                     'System'
                 );
@@ -103,7 +107,7 @@ export async function updateSaunaAvailability(saunaId: string) {
                 // Data is unchanged - log as OK
                 await logAdminAction(
                     'AVAILABILITY_CHECK',
-                    `${sauna.name}: ${fresh.date}. Ingen endringer siden sist (${fresh.slots.length} tider, samme som før)`,
+                    `${sauna.name}: ${dayLabel}. Ingen endringer siden sist (${(firstFreshSlots || []).length} tider, samme som før)`,
                     'OK',
                     'System'
                 );

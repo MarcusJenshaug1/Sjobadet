@@ -8,8 +8,7 @@ export interface ScrapedSlot {
 }
 
 export interface AvailabilityResponse {
-    date: string | null;
-    slots: ScrapedSlot[];
+    days: Record<string, ScrapedSlot[]>;
 }
 
 export async function fetchAvailability(url: string): Promise<AvailabilityResponse> {
@@ -73,107 +72,100 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
         await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
         await new Promise((r) => setTimeout(r, 2000));
 
-        // Detect if we are already on a specific date URL (e.g. ends in /2026-01-19)
-        const hasDateInUrl = /\/\d{4}-\d{2}-\d{2}$/.test(url);
-
-        if (!hasDateInUrl) {
-            console.log('[Scraper] No date in URL, clicking "Today"...');
-            await page.evaluate(() => {
-                const todayNum = new Date().getDate().toString();
-                const elements = Array.from(document.querySelectorAll('div, span, button, td, a'));
-                const todayEl = elements.find(el => {
-                    const text = (el as HTMLElement).innerText?.trim();
-                    return text === todayNum && el.getBoundingClientRect().width < 80;
-                });
-                if (todayEl) (todayEl as HTMLElement).click();
-            });
-            await new Promise((r) => setTimeout(r, 3000));
-        } else {
-            console.log('[Scraper] Date already in URL, skipping day click.');
-        }
-
-        // Wait for the availability grid to appear
-        console.log('[Scraper] Waiting for booking slots to load...');
-        try {
-            await page.waitForSelector('label.ant-radio-button-wrapper', { timeout: 10000 });
-            console.log('[Scraper] Booking slots loaded!');
-        } catch (e) {
-            console.log('[Scraper] WARNING: Timeout waiting for slots, proceeding anyway...');
-        }
-
-        // Wait for a few more seconds for the grid to render
-        await new Promise((r) => setTimeout(r, 2000));
-
-        console.log('[Scraper] About to extract data from page...');
-        const scrapedData = await page.evaluate(() => {
-            const slots: Record<string, { from: string; to: string; availableSpots: number }> = {};
-            const timeRangeRegex = /(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/;
-
-            // Target specifically the ant-radio-button-wrapper labels
-            const labelList = document.querySelectorAll('label.ant-radio-button-wrapper');
-
-            // Collect all labels with their times and availability
-            const labelData: Array<{ time: string; toTime: string; spots: number; isAvailable: boolean }> = [];
-
-            for (let i = 0; i < labelList.length; i++) {
-                const label = labelList[i] as HTMLElement;
-                const fullText = label.innerText?.trim() || '';
-                const timeMatch = fullText.match(timeRangeRegex);
-                
-                if (!timeMatch) continue;
-
-                const availMatch = fullText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
-                if (!availMatch) continue;
-
-                // Check if the slot is available (not grayed out/disabled)
-                const style = window.getComputedStyle(label);
-                const isDisabled = label.hasAttribute('aria-disabled') && label.getAttribute('aria-disabled') === 'true';
-                const isGrayedOut = style.opacity === '0' || style.pointerEvents === 'none' || isDisabled;
-                const isAvailable = !isGrayedOut;
-
-                const fromTime = timeMatch[1].replace('.', ':');
-                const toTime = timeMatch[2].replace('.', ':');
-                const spots = parseInt(availMatch[1], 10);
-
-                labelData.push({ time: fromTime, toTime: toTime, spots: spots, isAvailable: isAvailable });
-            }
-
-            // Keep only first occurrence of each time, and only if it's available
-            for (const entry of labelData) {
-                if (!slots[entry.time] && entry.isAvailable) {
-                    slots[entry.time] = { from: entry.time, to: entry.toTime, availableSpots: entry.spots };
-                }
-            }
-
-            // Convert to array and sort
-            const ordered = Object.values(slots).sort((a, b) => a.from.localeCompare(b.from));
-
-            return {
-                slots: ordered,
-                debug: {
-                    totalLabels: labelList.length,
-                    processedCount: labelData.length,
-                    slotsExtracted: ordered.length,
-                    sampleTexts: ordered.slice(0, 5).map(s => `${s.from}: ${s.availableSpots}`)
-                }
-            };
-        });
-
-        console.log('[Scraper] Scraped data:', JSON.stringify(scrapedData.debug, null, 2));
-
-        const todayKey = new Intl.DateTimeFormat('sv-SE', {
+        const osloNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
+        const formatter = new Intl.DateTimeFormat('sv-SE', {
             timeZone: 'Europe/Oslo',
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
-        }).format(new Date());
+        });
+
+        const buildDateKey = (offsetDays: number) => {
+            const target = new Date(osloNow);
+            target.setDate(target.getDate() + offsetDays);
+            return formatter.format(target);
+        };
+
+        const targets = [0, 1].map((offset) => ({
+            offset,
+            dateKey: buildDateKey(offset),
+            dayNum: new Date(osloNow.getFullYear(), osloNow.getMonth(), osloNow.getDate() + offset).getDate().toString(),
+        }));
+
+        const scrapeSlots = async () => {
+            // Wait for the availability grid to appear
+            try {
+                await page.waitForSelector('label.ant-radio-button-wrapper', { timeout: 10000 });
+            } catch (e) {
+                console.log('[Scraper] WARNING: Timeout waiting for slots, proceeding anyway...');
+            }
+
+            await new Promise((r) => setTimeout(r, 1500));
+
+            return page.evaluate(() => {
+                const slots: Record<string, { from: string; to: string; availableSpots: number }> = {};
+                const timeRangeRegex = /(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/;
+
+                const labelList = document.querySelectorAll('label.ant-radio-button-wrapper');
+                const labelData: Array<{ time: string; toTime: string; spots: number; isAvailable: boolean }> = [];
+
+                for (let i = 0; i < labelList.length; i++) {
+                    const label = labelList[i] as HTMLElement;
+                    const fullText = label.innerText?.trim() || '';
+                    const timeMatch = fullText.match(timeRangeRegex);
+
+                    if (!timeMatch) continue;
+
+                    const availMatch = fullText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
+                    if (!availMatch) continue;
+
+                    const style = window.getComputedStyle(label);
+                    const isDisabled = label.hasAttribute('aria-disabled') && label.getAttribute('aria-disabled') === 'true';
+                    const isGrayedOut = style.opacity === '0' || style.pointerEvents === 'none' || isDisabled;
+                    const isAvailable = !isGrayedOut;
+
+                    const fromTime = timeMatch[1].replace('.', ':');
+                    const toTime = timeMatch[2].replace('.', ':');
+                    const spots = parseInt(availMatch[1], 10);
+
+                    labelData.push({ time: fromTime, toTime: toTime, spots: spots, isAvailable: isAvailable });
+                }
+
+                for (const entry of labelData) {
+                    if (!slots[entry.time] && entry.isAvailable) {
+                        slots[entry.time] = { from: entry.time, to: entry.toTime, availableSpots: entry.spots };
+                    }
+                }
+
+                return Object.values(slots).sort((a, b) => a.from.localeCompare(b.from));
+            });
+        };
+
+        const days: Record<string, ScrapedSlot[]> = {};
+
+        for (const target of targets) {
+            console.log(`[Scraper] Selecting day ${target.dateKey}...`);
+            await page.evaluate((dayNumber) => {
+                const elements = Array.from(document.querySelectorAll('div, span, button, td, a'));
+                const dayEl = elements.find(el => {
+                    const text = (el as HTMLElement).innerText?.trim();
+                    return text === dayNumber && el.getBoundingClientRect().width < 80;
+                });
+                if (dayEl) (dayEl as HTMLElement).click();
+            }, target.dayNum);
+
+            await new Promise((r) => setTimeout(r, 2500));
+            const slots = await scrapeSlots();
+            days[target.dateKey] = slots;
+            console.log(`[Scraper] ${target.dateKey}: ${slots.length} slots`);
+        }
 
         await browser.close();
-        return { date: todayKey, slots: scrapedData.slots };
+        return { days };
 
     } catch (error) {
         console.error('[Scraper] Error:', error);
         if (browser) await browser.close();
-        return { date: null, slots: [] };
+        return { days: {} };
     }
 }
