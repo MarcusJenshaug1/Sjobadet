@@ -11,7 +11,7 @@ import { getActiveSaunas } from '@/lib/sauna-service';
 export const revalidate = 300;
 
 export default async function Home() {
-  let saunas: any[] = [];
+  let saunas: Awaited<ReturnType<typeof getActiveSaunas>> = [];
   let dbError = false;
 
   try {
@@ -21,7 +21,7 @@ export default async function Home() {
     dbError = true;
   }
 
-  const mappedSaunas = saunas.map((s: any) => ({
+  const mappedSaunas = saunas.map((s) => ({
     ...s,
   }));
 

@@ -79,6 +79,8 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                         fill
                         className={styles.image}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        loading="lazy"
+                        quality={80}
                     />
                 ) : (
                     <div style={{ width: '100%', height: '100%', backgroundColor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>

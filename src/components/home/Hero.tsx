@@ -11,6 +11,7 @@ export function Hero() {
                 fill
                 priority
                 className={styles.backgroundImage}
+                quality={85}
             />
             <div className={styles.overlay} />
             <div className={styles.content}>
