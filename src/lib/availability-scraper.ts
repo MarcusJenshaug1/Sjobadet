@@ -92,10 +92,21 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
             console.log('[Scraper] Date already in URL, skipping day click.');
         }
 
+        // Wait for the availability grid to appear
+        console.log('[Scraper] Waiting for booking slots to load...');
+        try {
+            await page.waitForSelector('label.ant-radio-button-wrapper', { timeout: 10000 });
+            console.log('[Scraper] Booking slots loaded!');
+        } catch (e) {
+            console.log('[Scraper] WARNING: Timeout waiting for slots, proceeding anyway...');
+        }
+
         // Wait for a few more seconds for the grid to render
         await new Promise((r) => setTimeout(r, 2000));
 
+        console.log('[Scraper] About to extract data from page...');
         const scrapedData = await page.evaluate(() => {
+            console.log('[Scraper In-Page] Starting evaluation...');
             const normalizeTime = (value: string) => value.replace('.', ':');
             const timeRangeRegex = /(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/;
             const availableRegex = /(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i;
@@ -110,16 +121,16 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
                     el.getClientRects().length > 0;
             };
 
-            const parseRowText = (text: string, sourceEl: HTMLElement, target: Map<string, { from: string; to: string; availableSpots: number }>) => {
+            const parseRowText = function (text: string, sourceEl: HTMLElement, target: Map<string, { from: string; to: string; availableSpots: number }>) {
                 // Improve text extraction: Add spaces between children to prevent "20:006"
-                const getBetterInnerText = (el: HTMLElement) => {
+                function getBetterInnerText(el: HTMLElement) {
                     if (el.children.length === 0) return el.innerText;
                     return Array.from(el.childNodes)
                         .map(node => node.textContent || '')
                         .join(' ')
                         .replace(/\s+/g, ' ')
                         .trim();
-                };
+                }
 
                 const betterText = getBetterInnerText(sourceEl);
                 const timeMatch = betterText.match(timeRangeRegex);
@@ -132,6 +143,9 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
                 // Look for: [number] [separator?] [ledige?] [plasser]
                 // OR: [total] / [available]
                 const availMatch = betterText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
+
+                console.log(`[Scraper Debug] Processing: "${betterText.substring(0, 100)}"`);
+                console.log(`[Scraper Debug] Time match: ${fromTime} - ${toTime}, Avail match: ${availMatch ? availMatch[1] : 'NONE'}`);
 
                 if (!availMatch) {
                     // Fallback for just a number followed by nothing or something else if we have "ledig" nearby
@@ -171,48 +185,48 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
                 (entry as any)._visible = visible;
             };
 
-            // Preferred: table rows with explicit availability text
-            const allElements = Array.from(document.querySelectorAll('tr, div[role="row"], .booking-slot, td, .time-slot'));
+            // Preferred: elements with explicit availability text
+            // We search broad and then filter for rows that contain both a time and "ledig"
+            const allElements = Array.from(document.querySelectorAll('tr, div, button, li, label, .booking-slot, td, .time-slot'));
+            console.log(`[Scraper In-Page] Found ${allElements.length} total elements to check`);
+
             allElements.forEach(el => {
-                const text = (el as HTMLElement).innerText || '';
-                if (/ledig/i.test(text) && timeRangeRegex.test(text)) {
-                    parseRowText(text, el as HTMLElement, slots);
+                const htmlEl = el as HTMLElement;
+                // Only process elements that aren't too large (avoid container divs) and contain a time
+                if (htmlEl.innerText && htmlEl.children.length < 15) {
+                    const text = htmlEl.innerText;
+                    if (/ledig/i.test(text) && timeRangeRegex.test(text)) {
+                        parseRowText(text, htmlEl, slots);
+                    }
                 }
             });
+
+            console.log(`[Scraper In-Page] Extracted ${slots.size} slots`);
 
 
             const ordered = Array.from(slots.values()).sort((a, b) => a.from.localeCompare(b.from));
 
-            const normalized = ordered.map(slot => {
-                if (!slot.to) {
-                    const [h, m] = slot.from.split(':').map(Number);
-                    const end = new Date();
-                    end.setHours(h + 1, m);
-                    const hh = `${end.getHours()}`.padStart(2, '0');
-                    const mm = `${end.getMinutes()}`.padStart(2, '0');
-                    return { ...slot, to: `${hh}:${mm}` };
+            return {
+                slots: ordered,
+                debug: {
+                    totalElements: allElements.length,
+                    slotsExtracted: slots.size,
+                    sampleTexts: ordered.slice(0, 3).map(s => `${s.from}: ${s.availableSpots}`)
                 }
-                return slot;
-            });
-
-            const today = new Date();
-            const parts = new Intl.DateTimeFormat('sv-SE', {
-                timeZone: 'Europe/Oslo',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-            }).formatToParts(today);
-
-            const year = parts.find(p => p.type === 'year')?.value ?? '';
-            const month = parts.find(p => p.type === 'month')?.value ?? '';
-            const day = parts.find(p => p.type === 'day')?.value ?? '';
-            const dateKey = `${year}-${month}-${day}`;
-
-            return { date: dateKey, slots: normalized };
+            };
         });
 
+        console.log('[Scraper] Scraped data:', JSON.stringify(scrapedData.debug, null, 2));
+
+        const todayKey = new Intl.DateTimeFormat('sv-SE', {
+            timeZone: 'Europe/Oslo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).format(new Date());
+
         await browser.close();
-        return scrapedData as AvailabilityResponse;
+        return { date: todayKey, slots: scrapedData.slots };
 
     } catch (error) {
         console.error('[Scraper] Error:', error);
