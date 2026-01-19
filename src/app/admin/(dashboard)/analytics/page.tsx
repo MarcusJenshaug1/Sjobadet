@@ -324,8 +324,7 @@ export default async function AnalyticsPage({
                     definition="Totalt antall sidevisninger registrert i perioden"
                 />
                 <KPICardWithTrend
-                    title="Samtykke Status"
-                       title="Analysesamtykke"
+                    title="Analysesamtykke"
                     value={consentStats.accepted.toLocaleString()}
                     icon={<Shield size={24} color="#10b981" />}
                     subtitle={`Godtatt: ${consentStats.accepted} | Avslått: ${consentStats.declined} | Ikke valgt: ${consentStats.notChosenYet}`}
