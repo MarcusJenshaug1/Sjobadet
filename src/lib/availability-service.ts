@@ -68,16 +68,19 @@ export async function updateSaunaAvailability(saunaId: string) {
         // Add log entry for the individual scrape
         if (shouldMergeFresh) {
             const slotSummary = fresh.slots.slice(0, 3).map(s => `${s.from}: ${s.availableSpots}`).join(', ');
+            const status = fresh.slots.some(s => s.availableSpots > 0) ? 'SUCCESS' : 'INFO';
             await logAdminAction(
                 'SCRAPER_RUN',
                 `${sauna.name}: Oppdatert ${fresh.date}. Totalt ${fresh.slots.length} tider. (Eks: ${slotSummary}...)`,
-                'SUCCESS',
+                status,
                 'System'
             );
         } else {
+            // No slots found in scrape result
+            console.warn(`[AvailabilityService] No slots found for ${sauna.name} on the expected date`);
             await logAdminAction(
                 'SCRAPER_RUN',
-                `${sauna.name}: Fant ingen ledige tider på siden. Sjekk URL og dato.`,
+                `${sauna.name}: Fant ingen tider på siden. Mulig URL-endring, nettsted ute, eller alle tider booket. Sjekk manuelt: ${sauna.bookingAvailabilityUrlDropin}`,
                 'WARNING',
                 'System'
             );
@@ -97,26 +100,37 @@ export async function updateSaunaAvailability(saunaId: string) {
 }
 
 export async function updateAllSaunasAvailability() {
-    const saunas = await prisma.sauna.findMany({
-        where: {
-            status: 'active',
-            AND: [
-                { bookingAvailabilityUrlDropin: { not: null } },
-                { bookingAvailabilityUrlDropin: { not: '' } }
-            ]
-        },
-        select: { id: true }
+    // Get all active saunas
+    const allActiveSaunas = await prisma.sauna.findMany({
+        where: { status: 'active' },
+        select: { id: true, name: true, bookingAvailabilityUrlDropin: true }
     });
 
-    console.log(`[AvailabilityService] Running batch update for ${saunas.length} saunas...`);
+    // Only scrape those with URLs
+    const saunasWithUrls = allActiveSaunas.filter(s => s.bookingAvailabilityUrlDropin?.trim());
+
+    console.log(`[AvailabilityService] Running batch update for ${saunasWithUrls.length}/${allActiveSaunas.length} saunas with URLs...`);
 
     const results = [];
-    for (const sauna of saunas) {
+    
+    // Process saunas with URLs
+    for (const sauna of saunasWithUrls) {
         try {
             results.push(await updateSaunaAvailability(sauna.id));
         } catch (e) {
             results.push({ error: String(e) });
         }
+    }
+
+    // Log saunas without URLs
+    for (const sauna of allActiveSaunas.filter(s => !s.bookingAvailabilityUrlDropin?.trim())) {
+        console.log(`[AvailabilityService] Skipping ${sauna.name} - no booking URL configured`);
+        await logAdminAction(
+            'SCRAPER_RUN',
+            `${sauna.name}: Ingen booking-URL konfigurert. Kan ikke hente ledighet.`,
+            'INFO',
+            'System'
+        );
     }
 
     return results;
