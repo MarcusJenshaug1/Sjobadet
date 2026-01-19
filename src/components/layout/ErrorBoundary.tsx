@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode, ReactError } from 'react';
+import React, { ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 interface ErrorBoundaryProps {

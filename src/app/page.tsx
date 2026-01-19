@@ -52,11 +52,7 @@ export default async function Home() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '1.5rem',
-            '@media (min-width: 768px)': {
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '2rem',
-            }
+            gap: '1.5rem'
           }}>
             {dbError ? (
               <div style={{ 

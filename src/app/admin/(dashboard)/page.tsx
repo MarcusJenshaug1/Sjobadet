@@ -3,6 +3,9 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Activity, Users, Radio, Image as ImageIcon, Clock4, MousePointer2, Gauge, ListChecks } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const cardStyle = {
     padding: '1.25rem',
     backgroundColor: 'white',
