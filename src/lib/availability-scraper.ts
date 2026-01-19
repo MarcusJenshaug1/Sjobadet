@@ -113,7 +113,7 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
             const labelList = document.querySelectorAll('label.ant-radio-button-wrapper');
 
             // Collect all labels with their times and availability
-            const labelData: Array<{ time: string; toTime: string; spots: number }> = [];
+            const labelData: Array<{ time: string; toTime: string; spots: number; isAvailable: boolean }> = [];
 
             for (let i = 0; i < labelList.length; i++) {
                 const label = labelList[i] as HTMLElement;
@@ -125,16 +125,22 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
                 const availMatch = fullText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
                 if (!availMatch) continue;
 
+                // Check if the slot is available (not grayed out/disabled)
+                const style = window.getComputedStyle(label);
+                const isDisabled = label.hasAttribute('aria-disabled') && label.getAttribute('aria-disabled') === 'true';
+                const isGrayedOut = style.opacity === '0' || style.pointerEvents === 'none' || isDisabled;
+                const isAvailable = !isGrayedOut;
+
                 const fromTime = timeMatch[1].replace('.', ':');
                 const toTime = timeMatch[2].replace('.', ':');
                 const spots = parseInt(availMatch[1], 10);
 
-                labelData.push({ time: fromTime, toTime: toTime, spots: spots });
+                labelData.push({ time: fromTime, toTime: toTime, spots: spots, isAvailable: isAvailable });
             }
 
-            // Keep only first occurrence of each time
+            // Keep only first occurrence of each time, and only if it's available
             for (const entry of labelData) {
-                if (!slots[entry.time]) {
+                if (!slots[entry.time] && entry.isAvailable) {
                     slots[entry.time] = { from: entry.time, to: entry.toTime, availableSpots: entry.spots };
                 }
             }
