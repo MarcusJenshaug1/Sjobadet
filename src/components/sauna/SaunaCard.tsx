@@ -55,6 +55,7 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
         if (prefetchedRef.current) return;
         try {
             router.prefetch(targetHref);
+            trackEvent('sauna_card_prefetch', { saunaId: sauna.id, saunaName: sauna.name });
         } catch {
             /* ignore prefetch errors */
         }
@@ -129,7 +130,12 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                 </div>
 
                 <div className={styles.actions}>
-                    <Button href={`/home/${sauna.slug}`} variant="outline" fullWidth>
+                    <Button 
+                        href={`/home/${sauna.slug}`} 
+                        variant="outline" 
+                        fullWidth
+                        onClick={() => trackEvent('view_sauna_detail', { saunaId: sauna.id, saunaName: sauna.name })}
+                    >
                         Se badstuen
                     </Button>
 

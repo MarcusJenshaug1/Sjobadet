@@ -6,9 +6,23 @@ import { SaunaCard } from '@/components/sauna/SaunaCard';
 import { Button } from '@/components/ui/Button';
 import { Clock, MapPin, Sparkles, Droplets, Users, AlertTriangle, RotateCw } from 'lucide-react';
 import { getActiveSaunas } from '@/lib/sauna-service';
+import { Metadata } from 'next';
 
 // Revalidate this page every 5 minutes (ISR)
 export const revalidate = 300;
+
+// Cache strategy: Tag-based for fine-grained control
+export const dynamic = 'force-static';
+
+export const metadata: Metadata = {
+  title: "Sjøbadet Badstue | Badstue i Tønsberg",
+  description: "Book badstue hos Sjøbadet. Avslappende og rolige badstuer på Tønsberg Brygge og Hjemseng Brygge.",
+  openGraph: {
+    title: "Sjøbadet Badstue",
+    description: "Book badstue hos Sjøbadet",
+    type: "website",
+  },
+};
 
 export default async function Home() {
   let saunas: Awaited<ReturnType<typeof getActiveSaunas>> = [];

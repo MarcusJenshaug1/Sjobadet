@@ -3,6 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ScrollToTop } from '@/components/layout/ScrollToTop';
+import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -40,11 +41,13 @@ export default async function RootLayout({
   return (
     <html lang="no" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
       <body className={`${inter.className} ${outfit.className}`}>
-        <TrackingProvider isAdmin={isAdmin}>
-          <ScrollToTop />
-          {/* <AlertBar /> */}
-          {children}
-        </TrackingProvider>
+        <ErrorBoundary>
+          <TrackingProvider isAdmin={isAdmin}>
+            <ScrollToTop />
+            {/* <AlertBar /> */}
+            {children}
+          </TrackingProvider>
+        </ErrorBoundary>
         <SpeedInsights />
       </body>
     </html>
