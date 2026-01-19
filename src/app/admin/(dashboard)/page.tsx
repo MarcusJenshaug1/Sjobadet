@@ -4,17 +4,41 @@ import DriftStatus from './_components/DriftStatus'
 import ActionableKPIs from './_components/ActionableKPIs'
 import RecentActivity from './_components/RecentActivity'
 import QuickActions from './_components/QuickActions'
+import { Users } from 'lucide-react'
 
 export default async function AdminDashboard() {
     const [stats, drift, logs] = await Promise.all([
         getDashboardStats(),
         getDriftStatus(),
-        getRecentActivity(10)
+        getRecentActivity(5) // Changed to 5 max
     ])
+
+    const activeSessions = drift.privacyStats?.activeSessions || 0
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '1.875rem', fontWeight: 800, color: '#0f172a', marginBottom: '2rem' }}>Oversikt</h1>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '1.875rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Oversikt</h1>
+                
+                {/* Active Users Badge */}
+                <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    borderRadius: '9999px',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                    color: 'white',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    border: '2px solid rgba(255, 255, 255, 0.2)'
+                }}>
+                    <Users size={18} />
+                    <span>{activeSessions}</span>
+                    <span style={{ opacity: 0.9 }}>aktive brukere</span>
+                </div>
+            </div>
 
             {/* 1. Alerts & Status */}
             <DashboardAlerts
@@ -31,6 +55,7 @@ export default async function AdminDashboard() {
                     lastPreload={drift.lastPreload}
                     cacheStats={drift.cacheStats}
                     lighthouse={drift.lighthouse}
+                    privacyStats={drift.privacyStats}
                 />
             </div>
 

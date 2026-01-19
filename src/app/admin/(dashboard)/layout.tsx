@@ -22,7 +22,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  LucideIcon
+  LucideIcon,
+  Shield
 } from 'lucide-react'
 
 interface NavItem {
@@ -58,6 +59,7 @@ const navSections: NavSection[] = [
     title: 'Analyse',
     items: [
       { href: '/admin/analytics', label: 'Sidestatistikk', icon: BarChart3 },
+      { href: '/admin/privacy', label: 'Personvern', icon: Shield },
       { href: '/admin/lighthouse', label: 'Lighthouse', icon: Zap },
     ]
   },

@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, Settings, RefreshCw, Zap, UserPlus } from 'lucide-react'
+import { Plus, Settings, RefreshCw, Zap, UserPlus, Shield, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { clearCacheAction } from '../settings/actions'
@@ -30,9 +30,16 @@ export default function QuickActions() {
                 />
 
                 <Shortcut
-                    href="/admin/medlemskap"
-                    icon={<CreditCardIcon size={16} />}
-                    label="Nytt medlemskap"
+                    href="/admin/privacy"
+                    icon={<Shield size={16} />}
+                    label="Personvern & sessions"
+                    color="blue"
+                />
+
+                <Shortcut
+                    href="/admin/media"
+                    icon={<ImageIcon size={16} />}
+                    label="Bildegalleri"
                     color="blue"
                 />
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { Users, Flame, Image as ImageIcon, CreditCard, ArrowRight } from 'lucide-react'
+import { Users, Flame, Image as ImageIcon, CreditCard, ArrowRight, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 type Props = {
@@ -10,6 +10,7 @@ type Props = {
         totalSaunas: number
         users: number
         memberships: number
+        totalMedia: number
         prices?: number
     }
 }
@@ -26,6 +27,16 @@ export default function ActionableKPIs({ stats }: Props) {
             warning: stats.activeSaunas === 0
         },
         {
+            title: 'Bilder',
+            value: stats.totalMedia,
+            label: stats.pendingMedia > 0 ? `${stats.pendingMedia} venter` : 'I galleri',
+            icon: <ImageIcon size={20} />,
+            href: '/admin/media',
+            action: stats.pendingMedia > 0 ? 'Godkjenn nå' : 'Gå til galleri',
+            warning: stats.pendingMedia > 0,
+            highlight: stats.pendingMedia > 0
+        },
+        {
             title: 'Medlemskap',
             value: stats.memberships,
             label: 'Aktive typer',
@@ -33,16 +44,6 @@ export default function ActionableKPIs({ stats }: Props) {
             href: '/admin/medlemskap',
             action: 'Administrer',
             warning: stats.memberships === 0
-        },
-        {
-            title: 'Bilder',
-            value: stats.pendingMedia,
-            label: 'Venter godkjenning',
-            icon: <ImageIcon size={20} />,
-            href: '/admin/badstuer', // Optimally a dedicated media page, but saunas is fine
-            action: stats.pendingMedia > 0 ? 'Godkjenn nå' : 'Gå til galleri',
-            warning: stats.pendingMedia > 0,
-            highlight: stats.pendingMedia > 0
         },
         {
             title: 'Administratorer',

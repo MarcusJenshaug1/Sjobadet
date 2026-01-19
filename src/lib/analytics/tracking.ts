@@ -34,9 +34,9 @@ export const getConsent = (): ConsentChoices | null => {
 };
 
 /**
- * Persist consent choices to a long-lived cookie.
+ * Persist consent choices to a long-lived cookie and log to server.
  */
-export const setConsent = (choices: Partial<ConsentChoices>) => {
+export const setConsent = async (choices: Partial<ConsentChoices>) => {
     const fullChoices: ConsentChoices = {
         essential: true, // Always required
         analysis: choices.analysis ?? false,
@@ -49,6 +49,44 @@ export const setConsent = (choices: Partial<ConsentChoices>) => {
     const value = encodeURIComponent(JSON.stringify(fullChoices));
     // Set cookie for 1 year, samesite lax
     document.cookie = `${CONSENT_KEY}=${value}; path=/; max-age=${365 * 24 * 60 * 60}; samesite=lax; secure`;
+
+    // Log consent to server (bypasses admin check for consent logging)
+    if (typeof window !== 'undefined' && !(window as any).SJOBADET_IS_ADMIN) {
+        try {
+            // Determine choice type
+            let choice = 'custom';
+            if (fullChoices.analysis && fullChoices.functional && fullChoices.marketing) {
+                choice = 'accepted';
+            } else if (!fullChoices.analysis && !fullChoices.functional && !fullChoices.marketing) {
+                choice = 'declined';
+            }
+
+            // CRITICAL: Generate session AFTER consent is set so sessionId is available
+            let sessionId = null;
+            if (fullChoices.analysis) {
+                const sessionData = getSessionData();
+                sessionId = sessionData.id;
+            }
+
+            await fetch('/api/privacy/consent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    consentVersion: CONSENT_VERSION,
+                    essential: fullChoices.essential,
+                    analysis: fullChoices.analysis,
+                    functional: fullChoices.functional,
+                    marketing: fullChoices.marketing,
+                    choice,
+                    source: 'banner',
+                    sessionId, // Send sessionId explicitly
+                }),
+                keepalive: true,
+            });
+        } catch (e) {
+            // Silent fail
+        }
+    }
 
     // Broadcast change for components to react (e.g. TrackingProvider)
     if (typeof window !== 'undefined') {
@@ -71,6 +109,12 @@ interface SessionData {
 const getSessionData = (): SessionData => {
     if (typeof window === 'undefined') return { id: '', utmSource: null, utmMedium: null, utmCampaign: null, referrer: null };
 
+    // Check consent first - don't create session if no analysis consent
+    const consent = getConsent();
+    if (!consent?.analysis) {
+        return { id: '', utmSource: null, utmMedium: null, utmCampaign: null, referrer: null };
+    }
+
     const cookie = document.cookie
         .split('; ')
         .find(row => row.startsWith(`${SESSION_KEY}=`));
@@ -81,7 +125,7 @@ const getSessionData = (): SessionData => {
         } catch (e) { }
     }
 
-    // New session: capture initial attribution
+    // New session: capture initial attribution (ONLY if consent given)
     const searchParams = new URLSearchParams(window.location.search);
     const data: SessionData = {
         id: nanoid(),

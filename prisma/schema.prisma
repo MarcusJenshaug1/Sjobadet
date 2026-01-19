@@ -220,3 +220,50 @@ model AdminLog {
   @@index([createdAt])
   @@index([action])
 }
+
+// Privacy & Consent Management Models
+model ConsentLog {
+  id              String   @id @default(cuid())
+  consentVersion  String   @default("v1")
+  essential       Boolean  @default(true)
+  analysis        Boolean  @default(false)
+  functional      Boolean  @default(false)
+  marketing       Boolean  @default(false)
+  choice          String   // 'accepted', 'declined', 'custom'
+  source          String?  // 'banner', 'customize', 'footer'
+  // NO personal data before consent - only anonymized identifier if user accepted
+  sessionId       String?  
+  ipAddressHash   String?  // Only stored if analysis consent given
+  timestamp       DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([consentVersion])
+  @@index([choice])
+  @@index([analysis])
+}
+
+model PrivacySession {
+  id              String   @id // This is the nanoid from frontend
+  consentLogId    String?  // Link to consent if given
+  firstSeen       DateTime @default(now())
+  lastSeen        DateTime @updatedAt
+  // Below fields ONLY populated if analysis consent = true
+  hasConsent      Boolean  @default(false)
+  ipAddress       String?  // Only if hasConsent
+  ipAddressHash   String?  // Hashed version
+  userAgent       String?  // Only if hasConsent
+  deviceType      String?  // desktop/mobile
+  browser         String?
+  os              String?
+  referrer        String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  pageviewCount   Int      @default(0)
+  eventCount      Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  @@index([firstSeen])
+  @@index([hasConsent])
+  @@index([ipAddressHash])
+}

@@ -109,6 +109,36 @@ export async function POST(req: NextRequest) {
                     endTime: new Date(),
                 },
             });
+
+            // CRITICAL: Update PrivacySession lastSeen for live tracking
+            // Only if the session has consent (don't create if it doesn't exist)
+            try {
+                // Check if session exists first
+                const existingSession = await analytics.privacySession.findFirst({
+                    where: {
+                        id: sessionId,
+                        hasConsent: true,
+                    },
+                });
+
+                if (existingSession) {
+                    const updateData: any = { lastSeen: new Date() };
+                    
+                    if (type === 'pageview') {
+                        updateData.pageviewCount = { increment: 1 };
+                    } else if (type === 'event') {
+                        updateData.eventCount = { increment: 1 };
+                    }
+
+                    await analytics.privacySession.update({
+                        where: { id: sessionId },
+                        data: updateData
+                    });
+                }
+            } catch (e) {
+                // Ignore if PrivacySession doesn't exist (user declined consent)
+                console.warn('Failed to update PrivacySession:', e);
+            }
         }
 
         // Record the event
@@ -125,6 +155,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Analytics ingest error:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        console.error("Stack:", error instanceof Error ? error.stack : 'No stack');
+        return NextResponse.json({ 
+            error: "Internal server error",
+            details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 });
     }
 }

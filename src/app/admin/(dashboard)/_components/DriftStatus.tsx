@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { HardDrive, Play, Activity, RefreshCw, CheckCircle, AlertTriangle, XCircle, Gauge } from 'lucide-react'
+import Link from 'next/link'
+import { HardDrive, Play, Activity, RefreshCw, CheckCircle, AlertTriangle, XCircle, Gauge, Shield, Users } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { clearCacheAction, getPreloadTargets, logPreloadResult } from '../settings/actions'
 import { useRouter } from 'next/navigation'
@@ -11,9 +12,10 @@ type Props = {
     lastPreload: { createdAt: Date; status: string; details: string | null } | null
     cacheStats: { activeSaunas: number; saunaDetails: number; settings: number }
     lighthouse: { mobile: number; desktop: number; trend: number; lastScan: string }
+    privacyStats: { consentRate7d: number; consentChanges24h: number; activeSessions: number; policyVersion: string } | null
 }
 
-export default function DriftStatus({ lastCacheClear, lastPreload, cacheStats, lighthouse }: Props) {
+export default function DriftStatus({ lastCacheClear, lastPreload, cacheStats, lighthouse, privacyStats }: Props) {
     const router = useRouter()
     const [preloadRunning, setPreloadRunning] = useState(false)
     const [preloadProgress, setPreloadProgress] = useState(0)
@@ -169,6 +171,61 @@ export default function DriftStatus({ lastCacheClear, lastPreload, cacheStats, l
                     Sist sjekket: {new Date(lighthouse.lastScan).toLocaleDateString()}
                 </div>
             </DriftCard>
+
+            {/* Privacy & Consent Card */}
+            {privacyStats && (
+                <DriftCard
+                    icon={<Shield size={20} />}
+                    title="Personvern & Samtykke"
+                    status={privacyStats.consentRate7d >= 50 ? 'success' : 'warning'}
+                    statusText={`${privacyStats.consentRate7d}% samtykke`}
+                >
+                    <div style={statRow}>
+                        <span style={label}>Samtykke-rate (7d):</span>
+                        <span style={value}>{privacyStats.consentRate7d}%</span>
+                    </div>
+                    <div style={statRow}>
+                        <span style={label}>Endringer (24t):</span>
+                        <span style={value}>{privacyStats.consentChanges24h}</span>
+                    </div>
+                    <div style={statRow}>
+                        <span style={label}>Policy-versjon:</span>
+                        <span style={value}><code style={{ fontSize: '0.85rem' }}>{privacyStats.policyVersion}</code></span>
+                    </div>
+                    <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
+                        <Link href="/admin/privacy" style={{ display: 'block', width: '100%', textDecoration: 'none' }}>
+                            <Button size="sm" variant="outline" style={{ width: '100%' }}>
+                                Gå til personvern
+                            </Button>
+                        </Link>
+                    </div>
+                </DriftCard>
+            )}
+
+            {/* Sessions Card */}
+            {privacyStats && (
+                <DriftCard
+                    icon={<Users size={20} />}
+                    title="Sessions"
+                    status="info"
+                    statusText={`${privacyStats.activeSessions} aktive`}
+                >
+                    <div style={statRow}>
+                        <span style={label}>Aktive sessions:</span>
+                        <span style={value}>{privacyStats.activeSessions}</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                        Kun sessions med analyse-samtykke
+                    </div>
+                    <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
+                        <Link href="/admin/privacy?tab=sessions" style={{ display: 'block', width: '100%', textDecoration: 'none' }}>
+                            <Button size="sm" variant="outline" style={{ width: '100%' }}>
+                                Se sessions
+                            </Button>
+                        </Link>
+                    </div>
+                </DriftCard>
+            )}
 
         </div>
     )

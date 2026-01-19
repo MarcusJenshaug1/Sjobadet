@@ -12,13 +12,15 @@ export async function getDashboardStats() {
         activeSaunas,
         totalSaunas,
         users,
-        memberships
+        memberships,
+        totalMedia
     ] = await Promise.all([
         prisma.mediaAsset.count({ where: { status: 'pending' } }),
         prisma.sauna.count({ where: { status: 'active' } }),
         prisma.sauna.count(),
         prisma.adminUser.count(),
-        prisma.subscription.count({ where: { active: true } })
+        prisma.subscription.count({ where: { active: true } }),
+        prisma.mediaAsset.count()
     ])
 
     return {
@@ -26,7 +28,8 @@ export async function getDashboardStats() {
         activeSaunas,
         totalSaunas,
         users,
-        memberships
+        memberships,
+        totalMedia
     }
 }
 
@@ -35,6 +38,7 @@ export async function getDriftStatus() {
 
     let lastCacheClear = null
     let lastPreload = null
+    let privacyStats = null
 
     try {
         if ((prisma as any).adminLog) {
@@ -51,8 +55,52 @@ export async function getDriftStatus() {
             lastCacheClear = clear
             lastPreload = preload
         }
+
+        // Fetch privacy stats
+        if ((prisma as any).consentLog && (prisma as any).privacySession) {
+            const now = new Date()
+            const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
+            const [
+                consents7d,
+                analysisAccepted7d,
+                consentChanges24h,
+                activeSessions,
+                latestVersion
+            ] = await Promise.all([
+                (prisma as any).consentLog.count({
+                    where: { timestamp: { gte: last7Days } }
+                }),
+                (prisma as any).consentLog.count({
+                    where: { 
+                        timestamp: { gte: last7Days },
+                        analysis: true 
+                    }
+                }),
+                (prisma as any).consentLog.count({
+                    where: { timestamp: { gte: last24Hours } }
+                }),
+                (prisma as any).privacySession.count({
+                    where: { hasConsent: true }
+                }),
+                (prisma as any).consentLog.findFirst({
+                    orderBy: { timestamp: 'desc' },
+                    select: { consentVersion: true }
+                })
+            ])
+
+            const consentRate = consents7d > 0 ? Math.round((analysisAccepted7d / consents7d) * 100) : 0
+
+            privacyStats = {
+                consentRate7d: consentRate,
+                consentChanges24h,
+                activeSessions,
+                policyVersion: latestVersion?.consentVersion || 'v1'
+            }
+        }
     } catch (e) {
-        console.warn('[Dashboard] Could not fetch admin logs, model might be missing:', e)
+        console.warn('[Dashboard] Could not fetch drift stats:', e)
     }
 
     const cacheStats = await getCacheStats()
@@ -61,6 +109,7 @@ export async function getDriftStatus() {
         lastCacheClear,
         lastPreload,
         cacheStats,
+        privacyStats,
         lighthouse: {
             mobile: 92,
             desktop: 98,
