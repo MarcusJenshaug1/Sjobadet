@@ -221,6 +221,8 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
         flexibleHours: true,
         hoursMessage: true,
         stengeArsak: true,
+        seoTitle: true,
+        seoDescription: true,
     };
 
     try {
@@ -295,6 +297,8 @@ export const getSaunaBySlug = async (slug: string) => {
                 hasDropinAvailability: true,
                 availabilityData: true,
                 lastScrapedAt: true,
+                seoTitle: true,
+                seoDescription: true,
                 openingHours: {
                     where: { active: true },
                     orderBy: { weekday: 'asc' }
