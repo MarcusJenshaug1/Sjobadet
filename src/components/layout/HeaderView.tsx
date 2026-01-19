@@ -10,9 +10,10 @@ import logoImg from '@/app/public/sjobadet-logo.png';
 
 interface HeaderViewProps {
     isAdmin: boolean;
+    isMaintenanceMode?: boolean;
 }
 
-export function HeaderView({ isAdmin }: HeaderViewProps) {
+export function HeaderView({ isAdmin, isMaintenanceMode = false }: HeaderViewProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [clientIsAdmin, setClientIsAdmin] = useState(isAdmin);
@@ -70,11 +71,17 @@ export function HeaderView({ isAdmin }: HeaderViewProps) {
 
                 {/* Desktop Nav */}
                 <nav className={styles.nav}>
-                    {navLinks.map((link) => (
-                        <Link key={link.href} href={link.href} className={styles.navLink}>
-                            {link.label}
-                        </Link>
-                    ))}
+                    {navLinks.map((link) => 
+                        isMaintenanceMode ? (
+                            <div key={link.href} className={styles.navLink} style={{ opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' as const }}>
+                                {link.label}
+                            </div>
+                        ) : (
+                            <Link key={link.href} href={link.href} className={styles.navLink}>
+                                {link.label}
+                            </Link>
+                        )
+                    )}
                     {adminLink}
                     <Button href="https://minside.periode.no/landing/aZNzpP9Mk1XohfwTswm1/0" external variant="outline" style={{ marginLeft: '1rem' }}>
                         Min Side
@@ -104,11 +111,17 @@ export function HeaderView({ isAdmin }: HeaderViewProps) {
                     </div>
 
                     <div className={styles.mobileLinks}>
-                        {navLinks.map((link) => (
-                            <Link key={link.href} href={link.href} onClick={() => setIsMobileMenuOpen(false)} className={styles.mobileLink}>
-                                {link.label}
-                            </Link>
-                        ))}
+                        {navLinks.map((link) => 
+                            isMaintenanceMode ? (
+                                <div key={link.href} className={styles.mobileLink} style={{ opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' as const }}>
+                                    {link.label}
+                                </div>
+                            ) : (
+                                <Link key={link.href} href={link.href} onClick={() => setIsMobileMenuOpen(false)} className={styles.mobileLink}>
+                                    {link.label}
+                                </Link>
+                            )
+                        )}
                         {clientIsAdmin && (
                             <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.mobileLink} ${styles.mobileAdmin}`}>
                                 <ShieldCheck size={20} />

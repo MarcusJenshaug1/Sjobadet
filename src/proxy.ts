@@ -30,9 +30,10 @@ export async function proxy(request: NextRequest) {
         }
     }
 
+    // NO MORE MAINTENANCE REDIRECTS - handled by banner in layout
     return NextResponse.next()
 }
 
 export const config = {
-    matcher: ['/admin/:path*'],
+    matcher: ['/admin/:path*', '/((?!_next/static|_next/image|favicon.ico).*)'  ],
 }

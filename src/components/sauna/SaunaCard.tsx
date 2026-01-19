@@ -23,7 +23,7 @@ interface SaunaProps {
     nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
 }
 
-export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
+export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaProps; isMaintenanceMode?: boolean }) {
     const router = useRouter();
     const cardRef = useRef<HTMLDivElement | null>(null);
     const prefetchedRef = useRef(false);
@@ -133,24 +133,26 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
 
                 <p className={styles.description}>{sauna.shortDescription}</p>
 
-                <div className={styles.nextSlotRow}>
-                    {nextSlotLabel ? (
-                        <div className={styles.nextSlotBadge}>
-                            <div className={styles.nextSlotMain}>
-                                <Clock size={16} />
-                                <span className={styles.nextSlotText}>
-                                    Neste ledige: {nextSlotLabel.time}
-                                </span>
+                {!isMaintenanceMode && (
+                    <div className={styles.nextSlotRow}>
+                        {nextSlotLabel ? (
+                            <div className={styles.nextSlotBadge}>
+                                <div className={styles.nextSlotMain}>
+                                    <Clock size={16} />
+                                    <span className={styles.nextSlotText}>
+                                        Neste ledige: {nextSlotLabel.time}
+                                    </span>
+                                </div>
+                                <span className={styles.nextSlotSpots}>{nextSlotLabel.availableSpots} plasser</span>
                             </div>
-                            <span className={styles.nextSlotSpots}>{nextSlotLabel.availableSpots} plasser</span>
-                        </div>
-                    ) : (
-                        <div className={styles.nextSlotFallback}>
-                            <Clock size={16} />
-                            <span>Ingen ledige timer nå</span>
-                        </div>
-                    )}
-                </div>
+                        ) : (
+                            <div className={styles.nextSlotFallback}>
+                                <Clock size={16} />
+                                <span>Ingen ledige timer nå</span>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className={styles.actions}>
                     <div className={styles.bookingButtons}>
@@ -195,19 +197,21 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                         )}
                     </div>
 
-                    <Button 
-                        href={`/home/${sauna.slug}`} 
-                        variant="outline" 
-                        fullWidth
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            trackEvent('view_sauna_detail', { saunaId: sauna.id, saunaName: sauna.name });
-                            router.push(targetHref);
-                        }}
-                    >
-                        Se badstuen
-                    </Button>
+                    {!isMaintenanceMode && (
+                        <Button 
+                            href={`/home/${sauna.slug}`}
+                            variant="outline" 
+                            fullWidth
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                trackEvent('view_sauna_detail', { saunaId: sauna.id, saunaName: sauna.name });
+                                router.push(targetHref);
+                            }}
+                        >
+                            Se badstuen
+                        </Button>
+                    )}
                 </div>
             </div>
             <BookingModal

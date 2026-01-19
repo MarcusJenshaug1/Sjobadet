@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/Button';
 import { Clock, MapPin, Sparkles, Droplets, Users } from 'lucide-react';
 import { getActiveSaunas } from '@/lib/sauna-service';
 import { Metadata } from 'next';
+import prisma from '@/lib/prisma';
+import { MaintenanceContent } from '@/components/maintenance/MaintenanceContent';
 
 // Always fetch fresh availability for sauna cards
 export const revalidate = 0;
@@ -25,9 +27,35 @@ export const metadata: Metadata = {
 export default async function Home() {
   let saunas: Awaited<ReturnType<typeof getActiveSaunas>> = [];
   let dbError = false;
+  let isMaintenanceMode = false;
+  let maintenanceSnapshot: any = null;
+  let snapshotGeneratedAt = '';
 
   try {
     saunas = await getActiveSaunas();
+    
+    // Check maintenance mode
+    const maintenanceSetting = await prisma.siteSetting.findUnique({
+      where: { key: 'maintenance_mode' }
+    });
+    isMaintenanceMode = maintenanceSetting?.value === 'true';
+
+    // If in maintenance mode, load snapshot
+    if (isMaintenanceMode) {
+      const snapshotSetting = await prisma.siteSetting.findUnique({
+        where: { key: 'maintenance_snapshot' }
+      });
+      
+      if (snapshotSetting?.value) {
+        try {
+          maintenanceSnapshot = JSON.parse(snapshotSetting.value);
+          saunas = maintenanceSnapshot.saunas || [];
+          snapshotGeneratedAt = maintenanceSnapshot.generatedAt || '';
+        } catch (e) {
+          console.error('Failed to parse maintenance snapshot:', e);
+        }
+      }
+    }
   } catch (error) {
     console.error('Failed to fetch saunas:', error);
     dbError = true;
@@ -37,6 +65,21 @@ export default async function Home() {
     ...s,
   }));
 
+  // If maintenance mode is active, show maintenance content instead
+  if (isMaintenanceMode) {
+    return (
+      <>
+        <Header />
+        <MaintenanceContent 
+          saunas={mappedSaunas} 
+          generatedAt={snapshotGeneratedAt || 'Ukjent tidspunkt'} 
+        />
+        <Footer />
+      </>
+    );
+  }
+
+  // Normal homepage content
   return (
     <>
       <Header />
@@ -67,7 +110,7 @@ export default async function Home() {
               </div>
             ) : mappedSaunas.length > 0 ? (
               mappedSaunas.map((sauna) => (
-                <SaunaCard key={sauna.id} sauna={sauna} />
+                <SaunaCard key={sauna.id} sauna={sauna} isMaintenanceMode={isMaintenanceMode} />
               ))
             ) : (
               <div style={{ 

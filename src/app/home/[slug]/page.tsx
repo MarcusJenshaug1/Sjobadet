@@ -13,6 +13,7 @@ import SaunaAvailability from '@/components/sauna/SaunaAvailability';
 import SaunaBookingOptions from '@/components/sauna/SaunaBookingOptions';
 import { getSession } from '@/lib/auth';
 import { SaunaCard } from '@/components/sauna/SaunaCard';
+import prisma from '@/lib/prisma';
 
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -60,6 +61,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     let dbError = false;
     let otherSaunas: Awaited<ReturnType<typeof getActiveSaunas>> = [];
     let settings: Record<string, string> = {};
+    let isMaintenanceMode = false;
 
     try {
         sauna = await getSaunaBySlug(slug);
@@ -68,6 +70,12 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
         const session = await getSession();
         isAdmin = !!session?.user;
         settings = await getGlobalSettings();
+        
+        // Check maintenance mode
+        const maintenanceSetting = await prisma.siteSetting.findUnique({
+            where: { key: 'maintenance_mode' }
+        });
+        isMaintenanceMode = maintenanceSetting?.value === 'true';
     } catch (error) {
         console.error('Failed to fetch sauna detail:', error);
         dbError = true;
@@ -195,7 +203,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                             bookingUrlDropin={sauna.bookingUrlDropin}
                                             capacityDropin={sauna.capacityDropin || 0}
                                             isAdmin={isAdmin}
-                                            showAvailability={(sauna as any).hasDropinAvailability ?? true}
+                                            showAvailability={!isMaintenanceMode && ((sauna as any).hasDropinAvailability ?? true)}
                                         />
                                     </div>
                                 )}
@@ -258,7 +266,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                             bookingUrlDropin={sauna.bookingUrlDropin}
                                             capacityDropin={sauna.capacityDropin || 0}
                                             isAdmin={isAdmin}
-                                            showAvailability={(sauna as any).hasDropinAvailability ?? true}
+                                            showAvailability={!isMaintenanceMode && ((sauna as any).hasDropinAvailability ?? true)}
                                         />
                                     </div>
                                 )}
