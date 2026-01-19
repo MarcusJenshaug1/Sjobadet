@@ -238,6 +238,18 @@ export default function SaunaAvailability({
         );
     }
 
+    // Define currentData first (needed by filtering logic)
+    const currentData = data || { timestamp: null, displayDate: '' };
+
+    const osloFormatter = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Europe/Oslo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+
+    const todayOslo = osloFormatter.format(new Date());
+
     // Filter based on toggle: only available shows only bookable slots, vis alle timer shows all with lead time applied
     const getDisplaySlots = () => {
         const slots = data?.displaySlots || [];
@@ -249,20 +261,13 @@ export default function SaunaAvailability({
         // "Vis bare ledige" - filter by availability and apply lead time for today
         const now = new Date();
         const currentTime = now.getHours() * 60 + now.getMinutes();
-        const osloFormatter = new Intl.DateTimeFormat('sv-SE', {
-            timeZone: 'Europe/Oslo',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-        });
-        const todayStr = osloFormatter.format(new Date());
         
         return slots.filter((s: ScrapedSlot) => {
             // Must have available spots
             if (s.availableSpots <= 0) return false;
             
             // If viewing today, apply 15-minute lead time
-            if (currentData.displayDate === todayStr) {
+            if (currentData.displayDate === todayOslo) {
                 const parts = (s.from).split(/[:.]/).map(Number);
                 const slotStartTime = parts[0] * 60 + parts[1];
                 return slotStartTime > currentTime + 15;
@@ -273,16 +278,6 @@ export default function SaunaAvailability({
     };
     
     const availableSlots = getDisplaySlots();
-    const currentData = data || { timestamp: null, displayDate: '' };
-
-    const osloFormatter = new Intl.DateTimeFormat('sv-SE', {
-        timeZone: 'Europe/Oslo',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-    });
-
-    const todayOslo = osloFormatter.format(new Date());
     const tomorrowOslo = (() => {
         const d = new Date();
         d.setDate(d.getDate() + 1);
