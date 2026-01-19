@@ -54,8 +54,9 @@ export function SaunaGallery({ images, saunaName }: SaunaGalleryProps) {
                         alt={`${saunaName} galleri ${currentIndex + 1}`}
                         fill
                         className={styles.mainImage}
-                        priority
                         sizes="(max-width: 1200px) 100vw, 800px"
+                        quality={85}
+                        loading="lazy"
                     />
 
                     {images.length > 1 && (
@@ -89,6 +90,8 @@ export function SaunaGallery({ images, saunaName }: SaunaGalleryProps) {
                                     fill
                                     className={styles.thumbnailImage}
                                     sizes="100px"
+                                    quality={70}
+                                    loading="lazy"
                                 />
                             </button>
                         ))}

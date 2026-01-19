@@ -24,6 +24,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         return {
             title: `${sauna.name} | Sjøbadet Badstue`,
             description: sauna.shortDescription,
+            openGraph: {
+                title: `${sauna.name} | Sjøbadet Badstue`,
+                description: sauna.shortDescription || '',
+                images: sauna.imageUrl ? [sauna.imageUrl] : [],
+                type: 'website',
+            },
         };
     } catch (error) {
         return { title: 'Sjøbadet Badstue' };
@@ -78,6 +84,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                             alt={sauna.name}
                             fill
                             priority
+                            fetchPriority="high"
                             quality={90}
                             style={{ objectFit: 'cover' }}
                             sizes="100vw"
@@ -204,6 +211,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                         <div className={styles.mapWrapper}>
                                             <iframe
                                                 src={sauna.mapEmbedUrl}
+                                                title={`Kart over ${sauna.name}`}
                                                 width="100%"
                                                 height="100%"
                                                 style={{ border: 0 }}

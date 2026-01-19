@@ -10,8 +10,10 @@ export function Hero() {
                 alt="Sjøbadet brygge"
                 fill
                 priority
+                fetchPriority="high"
                 className={styles.backgroundImage}
-                quality={85}
+                quality={90}
+                sizes="100vw"
             />
             <div className={styles.overlay} />
             <div className={styles.content}>

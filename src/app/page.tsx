@@ -4,7 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SaunaCard } from '@/components/sauna/SaunaCard';
 import { Button } from '@/components/ui/Button';
-import { Clock, MapPin, Sparkles, Droplets, Users, AlertTriangle, RotateCw } from 'lucide-react';
+import { Clock, MapPin, Sparkles, Droplets, Users } from 'lucide-react';
 import { getActiveSaunas } from '@/lib/sauna-service';
 import { Metadata } from 'next';
 
@@ -63,32 +63,8 @@ export default async function Home() {
                 borderRadius: '1rem', 
                 border: '1px solid #feb2b2' 
               }} role="alert">
-                <AlertTriangle size={48} color="#f56565" style={{ marginBottom: '1rem' }} aria-hidden="true" />
-                <h3 style={{ color: '#c53030', marginBottom: '0.5rem', fontSize: '1.25rem' }}>Midlertidig utilgjengelig</h3>
+                <h3 style={{ color: '#c53030', marginBottom: '0.5rem', fontSize: '1.25rem' }}>⚠️ Midlertidig utilgjengelig</h3>
                 <p style={{ color: '#9b2c2c', marginBottom: '1.5rem' }}>Vi har problemer med å hente badstue-data akkurat nå. Vennligst prøv igjen senere.</p>
-                <button 
-                  onClick={() => window.location.reload()} 
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#b91c1c')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#dc2626')}
-                  aria-label="Prøv å laste siden på nytt"
-                >
-                  <RotateCw size={18} />
-                  Prøv igjen
-                </button>
               </div>
             ) : mappedSaunas.length > 0 ? (
               mappedSaunas.map((sauna) => (
