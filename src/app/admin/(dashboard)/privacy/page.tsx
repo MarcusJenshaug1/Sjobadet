@@ -52,6 +52,8 @@ interface PrivacySession {
     os: string | null;
     referrer: string | null;
     utmSource: string | null;
+    utmMedium: string | null;
+    utmCampaign: string | null;
     pageviewCount: number;
     eventCount: number;
 }
