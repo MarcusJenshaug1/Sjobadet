@@ -10,7 +10,7 @@ type Props = {
         totalSaunas: number
         users: number
         memberships: number
-        prices: number
+        prices?: number
     }
 }
 

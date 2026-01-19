@@ -150,7 +150,7 @@ export default function UserEditor({ user, onClose }: UserEditorProps) {
                             {avatarUrl && (
                                 <Button
                                     type="button"
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={handleRemoveAvatar}
                                     style={{ color: '#ef4444' }}
