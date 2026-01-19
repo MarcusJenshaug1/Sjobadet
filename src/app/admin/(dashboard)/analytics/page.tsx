@@ -1,6 +1,8 @@
 import prisma from "@/lib/prisma";
-import { Users, MousePointer2, TrendingUp, Monitor, Download, Calendar, Shield } from "lucide-react";
+import { Users, MousePointer2, TrendingUp, Monitor, Download, Calendar, Shield, Info } from "lucide-react";
 import RangeSelector from "./_components/RangeSelector";
+import { KPICardWithTrend } from "./_components/KPICardWithTrend";
+import { SaunaSortableTable } from "./_components/SaunaSortableTable";
 
 export const dynamic = 'force-dynamic';
 
@@ -40,27 +42,42 @@ export default async function AnalyticsPage({
     const now = new Date();
     // If days is 0, we want "all time" (no date filter)
     const startDate = days > 0 ? new Date(now.getTime() - days * 24 * 60 * 60 * 1000) : undefined;
+    const prevStartDate = days > 0 ? new Date(now.getTime() - days * 2 * 24 * 60 * 60 * 1000) : undefined;
+    const prevEndDate = startDate;
 
     // Construct where clauses
     const eventWhere = startDate ? { timestamp: { gte: startDate } } : {};
     const sessionWhere = startDate ? { startTime: { gte: startDate } } : {};
+    
+    // Previous period for comparison
+    const prevEventWhere = prevStartDate && prevEndDate ? { timestamp: { gte: prevStartDate, lt: prevEndDate } } : {};
+    const prevSessionWhere = prevStartDate && prevEndDate ? { startTime: { gte: prevStartDate, lt: prevEndDate } } : {};
 
     // Fetch data directly for the dashboard
     let pageviews = 0;
     let sessions = 0;
+    let prevPageviews = 0;
+    let prevSessions = 0;
     let topPages = [];
     let deviceStats = [];
     let bookingClicks: any[] = [];
     let saunaViews: any[] = [];
     let consentEvents: any[] = [];
+    let lastUpdated = new Date();
 
     try {
-        const [pvCount, sessCount, pages, devices, events, sViews, cEvents] = await Promise.all([
+        const [pvCount, sessCount, prevPvCount, prevSessCount, pages, devices, events, sViews, cEvents] = await Promise.all([
             analytics.analyticsEvent.count({
                 where: { type: 'pageview', ...eventWhere }
             }),
             analytics.analyticsSession.count({
                 where: { ...sessionWhere }
+            }),
+            analytics.analyticsEvent.count({
+                where: { type: 'pageview', ...prevEventWhere }
+            }),
+            analytics.analyticsSession.count({
+                where: { ...prevSessionWhere }
             }),
             analytics.analyticsEvent.groupBy({
                 by: ['path'],
@@ -86,7 +103,7 @@ export default async function AnalyticsPage({
             analytics.analyticsEvent.findMany({
                 where: {
                     type: 'pageview',
-                    path: { startsWith: '/badstue/' },
+                    path: { startsWith: '/home/' },
                     ...eventWhere
                 }
             }),
@@ -101,6 +118,8 @@ export default async function AnalyticsPage({
         ]);
         pageviews = pvCount;
         sessions = sessCount;
+        prevPageviews = prevPvCount;
+        prevSessions = prevSessCount;
         topPages = pages;
         deviceStats = devices;
         bookingClicks = events;
@@ -145,6 +164,18 @@ export default async function AnalyticsPage({
 
     // Process per-sauna metrics
     const saunaMetrics: Record<string, { name: string, views: number, dropinClicks: number, privateClicks: number, uniqueDropinSessions: Set<string>, uniquePrivateSessions: Set<string> }> = {};
+
+    // Initialize all saunas with zero metrics
+    saunas.forEach(s => {
+        saunaMetrics[s.slug] = {
+            name: s.name,
+            views: 0,
+            dropinClicks: 0,
+            privateClicks: 0,
+            uniqueDropinSessions: new Set(),
+            uniquePrivateSessions: new Set()
+        };
+    });
 
     // Process views
     saunaViews.forEach(v => {
@@ -251,78 +282,55 @@ export default async function AnalyticsPage({
 
             {/* KPI Cards Section */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '3rem' }}>
-                <KPICard
+                <KPICardWithTrend
                     title="Sidevisninger"
                     value={pageviews.toLocaleString()}
                     icon={<TrendingUp size={24} color="#3b82f6" />}
                     subtitle={`Siste ${days} dager`}
+                    trend={prevPageviews > 0 ? {
+                        value: Math.round(((pageviews - prevPageviews) / prevPageviews) * 100),
+                        label: `vs forrige periode`
+                    } : undefined}
+                    definition="Totalt antall sidevisninger registrert i perioden"
                 />
-                <KPICard
-                    title="Totalt Samtykke"
+                <KPICardWithTrend
+                    title="Samtykke"
                     value={totalConsentActions.toLocaleString()}
                     icon={<Shield size={24} color="#10b981" />}
-                    subtitle={`Godtatt: ${consentStats.accepted} / Avslått: ${consentStats.declined}`}
+                    subtitle={`Godtatt: ${consentStats.accepted} | Avslått: ${consentStats.declined}`}
+                    definition="Brukere som har valgt analyse-samtykke. Bare godtatte sesjoner telles i statistikken."
                 />
-                <KPICard
+                <KPICardWithTrend
                     title="Booking-klikk"
                     value={bookingClicks.length.toLocaleString()}
                     icon={<MousePointer2 size={24} color="#f59e0b" />}
-                    subtitle="Totalt (Drop-in + Privat)"
+                    subtitle="Drop-in + Private"
+                    definition="Antall ganger en bruker klikket på 'Book Drop-in' eller 'Book Privat'"
                 />
-                <KPICard
+                <KPICardWithTrend
                     title="Unike Sesjoner"
                     value={sessions.toLocaleString()}
                     icon={<Users size={24} color="#8b5cf6" />}
-                    subtitle="Kun godtatt analyse"
+                    subtitle="Med godtatt analyse"
+                    trend={prevSessions > 0 ? {
+                        value: Math.round(((sessions - prevSessions) / prevSessions) * 100),
+                        label: `vs forrige periode`
+                    } : undefined}
+                    definition="Individuelle besøkende som godtok analyse-sporingskonsent"
                 />
-                <KPICard
-                    title="Snitt sidevisninger"
+                <KPICardWithTrend
+                    title="Snitt Visninger"
                     value={sessions ? (pageviews / sessions).toFixed(1) : "0"}
                     icon={<Monitor size={24} color="#64748b" />}
-                    subtitle="Per unik sesjon"
+                    subtitle="Per sesjon"
+                    definition="Gjennomsnittlig antall sider besøkt per unik sesjon"
                 />
             </div>
 
             {/* Per-Sauna Table */}
             <div style={{ ...cardStyle, marginBottom: '3rem' }}>
                 <h2 style={cardTitleStyle}>Badstue-statistikk</h2>
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
-                                <th style={thStyle}>Badstue</th>
-                                <th style={{ ...thStyle, textAlign: 'right' }}>Visninger</th>
-                                <th style={{ ...thStyle, textAlign: 'right' }}>Privat booking</th>
-                                <th style={{ ...thStyle, textAlign: 'right' }}>Enkel booking</th>
-                                <th style={{ ...thStyle, textAlign: 'right' }}>Konvertering</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {saunaStats.map((s) => (
-                                <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td style={{ ...tdStyle, fontWeight: 600 }}>{s.name}</td>
-                                    <td style={{ ...tdStyle, textAlign: 'right' }}>{s.views.toLocaleString()}</td>
-                                    <td style={{ ...tdStyle, textAlign: 'right', color: '#7c3aed', fontWeight: 500 }}>
-                                        Privat ({s.uniquePrivate})
-                                        {s.privateClicks > s.uniquePrivate && <span style={{ fontSize: '0.7rem', opacity: 0.6, display: 'block' }}>({s.privateClicks} totalt)</span>}
-                                    </td>
-                                    <td style={{ ...tdStyle, textAlign: 'right', color: '#059669', fontWeight: 500 }}>
-                                        Drop-in ({s.uniqueDropin})
-                                        {s.dropinClicks > s.uniqueDropin && <span style={{ fontSize: '0.7rem', opacity: 0.6, display: 'block' }}>({s.dropinClicks} totalt)</span>}
-                                    </td>
-                                    <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700 }}>{s.conversion}%</td>
-                                </tr>
-                            ))}
-                            {saunaStats.length === 0 && (
-                                <tr>
-                                    <td colSpan={5} style={{ ...tdStyle, textAlign: 'center', paddingTop: '2rem', paddingBottom: '2rem', color: '#94a3b8' }}>
-                                        Ingen spesifikk badstue-data tilgjengelig ennå.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <SaunaSortableTable data={saunaStats} />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
@@ -406,7 +414,8 @@ export default async function AnalyticsPage({
 }
 
 /**
- * Reusable KPI Component
+ * Reusable KPI Component (Legacy - kept for reference)
+ * Use KPICardWithTrend for new implementations
  */
 function KPICard({ title, value, icon, subtitle }: any) {
     return (
