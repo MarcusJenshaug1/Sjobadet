@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 
 import Image from 'next/image';
-import { MapPin } from 'lucide-react';
+import { MapPin, Clock } from 'lucide-react';
 import styles from './SaunaCard.module.css';
 import { Button } from '../ui/Button';
 import { trackEvent } from '@/lib/analytics/tracking';
@@ -19,6 +19,7 @@ interface SaunaProps {
     bookingUrlDropin?: string;
     bookingUrlPrivat?: string;
     driftStatus?: string;
+    nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
 }
 
 export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
@@ -37,7 +38,9 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                 if (entry.isIntersecting && !prefetchedRef.current) {
                     try {
                         router.prefetch(targetHref);
-                    } catch (_) { }
+                    } catch {
+                        /* ignore prefetch errors */
+                    }
                     prefetchedRef.current = true;
                     observer.disconnect();
                 }
@@ -52,9 +55,19 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
         if (prefetchedRef.current) return;
         try {
             router.prefetch(targetHref);
-        } catch (_) { }
+        } catch {
+            /* ignore prefetch errors */
+        }
         prefetchedRef.current = true;
     };
+
+    const formatNextSlotLabel = () => {
+        if (!sauna.nextAvailableSlot) return null;
+        const { time, availableSpots } = sauna.nextAvailableSlot;
+        return { time, availableSpots };
+    };
+
+    const nextSlotLabel = formatNextSlotLabel();
 
     return (
         <div className={styles.card} ref={cardRef} onMouseEnter={handleHover}>
@@ -93,6 +106,25 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                 </div>
 
                 <p className={styles.description}>{sauna.shortDescription}</p>
+
+                <div className={styles.nextSlotRow}>
+                    {nextSlotLabel ? (
+                        <div className={styles.nextSlotBadge}>
+                            <div className={styles.nextSlotMain}>
+                                <Clock size={16} />
+                                <span className={styles.nextSlotText}>
+                                    Neste ledige: {nextSlotLabel.time}
+                                </span>
+                            </div>
+                            <span className={styles.nextSlotSpots}>{nextSlotLabel.availableSpots} plasser</span>
+                        </div>
+                    ) : (
+                        <div className={styles.nextSlotFallback}>
+                            <Clock size={16} />
+                            <span>Ingen ledige timer nå</span>
+                        </div>
+                    )}
+                </div>
 
                 <div className={styles.actions}>
                     <Button href={`/home/${sauna.slug}`} variant="outline" fullWidth>

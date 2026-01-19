@@ -1,5 +1,6 @@
 import prisma from './prisma'
 import type { OpeningHour } from '@prisma/client'
+import saunasJson from '@/data/saunas.json'
 
 const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let settingsCache: { data: Record<string, string>; expiresAt: number } | null = null;
@@ -23,6 +24,9 @@ type ActiveSauna = {
     hoursMessage?: string | null;
     stengeArsak?: string | null;
     openingHours?: OpeningHour[];
+    availabilityData?: string | null;
+    lastScrapedAt?: Date | null;
+    nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
 };
 
 type SaunaDetail = ActiveSauna & {
@@ -38,6 +42,130 @@ type SaunaDetail = ActiveSauna & {
 
 const activeSaunaCache = new Map<string, { data: ActiveSauna[]; expiresAt: number }>();
 const saunaBySlugCache = new Map<string, { data: SaunaDetail; expiresAt: number }>();
+
+type StaticSauna = {
+    id: string;
+    slug: string;
+    name: string;
+    location: string;
+    shortDescription: string;
+    description?: string;
+    imageUrl?: string;
+    gallery?: unknown[];
+    facilities?: unknown[];
+    address?: string;
+    mapEmbedUrl?: string;
+    capacity?: { dropin?: number; privat?: number };
+    bookingUrls?: { dropin?: string; privat?: string };
+    active: boolean;
+};
+
+function mapStaticSaunaBase() {
+    return (saunasJson as StaticSauna[])
+        .filter((s) => s.active)
+        .map<ActiveSauna>((s) => ({
+            id: s.id,
+            slug: s.slug,
+            name: s.name,
+            location: s.location,
+            shortDescription: s.shortDescription,
+            imageUrl: s.imageUrl,
+            driftStatus: 'open',
+            capacityDropin: s.capacity?.dropin ?? 0,
+            capacityPrivat: s.capacity?.privat ?? 0,
+            bookingUrlDropin: s.bookingUrls?.dropin ?? null,
+            bookingUrlPrivat: s.bookingUrls?.privat ?? null,
+            hasDropinAvailability: true,
+            kundeMelding: null,
+            flexibleHours: null,
+            hoursMessage: null,
+            stengeArsak: null,
+            availabilityData: null,
+            lastScrapedAt: null,
+            nextAvailableSlot: null,
+        }));
+}
+
+function mapStaticSaunaDetail(slug: string): SaunaDetail | null {
+    const match = (saunasJson as StaticSauna[]).find((s) => s.slug === slug);
+    if (!match || !match.active) return null;
+    return {
+        id: match.id,
+        slug: match.slug,
+        name: match.name,
+        location: match.location,
+        shortDescription: match.shortDescription,
+        description: match.description,
+        imageUrl: match.imageUrl,
+        gallery: JSON.stringify(match.gallery || []),
+        facilities: JSON.stringify(match.facilities || []),
+        address: match.address,
+        mapEmbedUrl: match.mapEmbedUrl,
+        driftStatus: 'open',
+        capacityDropin: match.capacity?.dropin ?? 0,
+        capacityPrivat: match.capacity?.privat ?? 0,
+        bookingUrlDropin: match.bookingUrls?.dropin ?? null,
+        bookingUrlPrivat: match.bookingUrls?.privat ?? null,
+        status: 'active',
+        stengtFra: null,
+        stengtTil: null,
+        kundeMelding: null,
+        flexibleHours: null,
+        hoursMessage: null,
+        hasDropinAvailability: true,
+        availabilityData: null,
+        lastScrapedAt: null,
+        nextAvailableSlot: null,
+        openingHours: [],
+    };
+}
+
+function computeNextAvailableSlot(availabilityData?: string | null): { time: string; availableSpots: number; date: string } | null {
+    if (!availabilityData) return null;
+    try {
+        const parsed = JSON.parse(availabilityData) as { days?: Record<string, { from: string; to: string; availableSpots: number }[]> };
+        const days = parsed.days || {};
+        const dayKeys = Object.keys(days).filter(Boolean).sort();
+        if (dayKeys.length === 0) return null;
+
+        const osloNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
+        const todayKey = new Intl.DateTimeFormat('sv-SE', {
+            timeZone: 'Europe/Oslo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).format(osloNow);
+
+        const parseMinutes = (timeStr: string) => {
+            const [h, m] = timeStr.split(/[:.]/).map((v) => parseInt(v, 10));
+            if (Number.isFinite(h) && Number.isFinite(m)) return h * 60 + m;
+            return null;
+        };
+
+        for (const day of dayKeys) {
+            const slots = (days[day] || [])
+                .filter((s) => Number.isFinite(s.availableSpots) && s.availableSpots > 0)
+                .sort((a, b) => (a.from || '').localeCompare(b.from || ''));
+
+            for (const slot of slots) {
+                const endTime = slot.to || slot.from;
+                const endMinutes = endTime ? parseMinutes(endTime) : null;
+
+                if (day === todayKey && endMinutes !== null) {
+                    const nowMinutes = osloNow.getHours() * 60 + osloNow.getMinutes();
+                    if (endMinutes <= nowMinutes) continue;
+                }
+
+                if (slot.from) {
+                    return { time: slot.from, availableSpots: slot.availableSpots ?? 0, date: day };
+                }
+            }
+        }
+    } catch (err) {
+        console.error('[SaunaService] Failed to compute next available slot:', err);
+    }
+    return null;
+}
 
 export const getActiveSaunas = async (options: { includeOpeningHours?: boolean } = {}) => {
     const { includeOpeningHours = false } = options;
@@ -60,39 +188,51 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
         bookingUrlDropin: true,
         bookingUrlPrivat: true,
         hasDropinAvailability: true,
+        availabilityData: true,
+        lastScrapedAt: true,
         kundeMelding: true,
         flexibleHours: true,
         hoursMessage: true,
         stengeArsak: true,
     };
 
-    return await prisma.sauna.findMany({
-        where: { status: 'active' },
-        orderBy: { sorting: 'asc' },
-        select: {
-            ...baseSelect,
-            ...(includeOpeningHours
-                ? {
-                    openingHours: {
-                        where: { active: true },
-                        orderBy: { weekday: 'asc' },
-                        select: {
-                            id: true,
-                            weekday: true,
-                            opens: true,
-                            closes: true,
-                            active: true,
-                            type: true,
+    try {
+        const result = await prisma.sauna.findMany({
+            where: { status: 'active' },
+            orderBy: { sorting: 'asc' },
+            select: {
+                ...baseSelect,
+                ...(includeOpeningHours
+                    ? {
+                        openingHours: {
+                            where: { active: true },
+                            orderBy: { weekday: 'asc' },
+                            select: {
+                                id: true,
+                                weekday: true,
+                                opens: true,
+                                closes: true,
+                                active: true,
+                                type: true,
+                            }
                         }
                     }
-                }
-                : {}),
-        }
-    })
-        .then((result) => {
-            activeSaunaCache.set(cacheKey, { data: result, expiresAt: now + SAUNA_CACHE_TTL_MS });
-            return result;
-        })
+                    : {}),
+            }
+        });
+        const withNext = result.map((sauna) => ({
+            ...sauna,
+            nextAvailableSlot: computeNextAvailableSlot(sauna.availabilityData),
+        }));
+
+        activeSaunaCache.set(cacheKey, { data: withNext, expiresAt: now + SAUNA_CACHE_TTL_MS });
+        return withNext;
+    } catch (error) {
+        console.error('[SaunaService] Falling back to static saunas.json due to DB error:', error);
+        const fallback = mapStaticSaunaBase();
+        activeSaunaCache.set(cacheKey, { data: fallback, expiresAt: now + SAUNA_CACHE_TTL_MS });
+        return fallback;
+    }
 }
 
 export const getSaunaBySlug = async (slug: string) => {
@@ -102,45 +242,60 @@ export const getSaunaBySlug = async (slug: string) => {
         return cached.data;
     }
 
-    const result = await prisma.sauna.findUnique({
-        where: { slug },
-        select: {
-            id: true,
-            slug: true,
-            name: true,
-            shortDescription: true,
-            description: true,
-            location: true,
-            imageUrl: true,
-            gallery: true,
-            address: true,
-            mapEmbedUrl: true,
-            facilities: true,
-            capacityDropin: true,
-            capacityPrivat: true,
-            bookingUrlDropin: true,
-            bookingUrlPrivat: true,
-            status: true,
-            driftStatus: true,
-            stengeArsak: true,
-            stengtFra: true,
-            stengtTil: true,
-            kundeMelding: true,
-            flexibleHours: true,
-            hoursMessage: true,
-            hasDropinAvailability: true,
-            openingHours: {
-                where: { active: true },
-                orderBy: { weekday: 'asc' }
+    try {
+        const result = await prisma.sauna.findUnique({
+            where: { slug },
+            select: {
+                id: true,
+                slug: true,
+                name: true,
+                shortDescription: true,
+                description: true,
+                location: true,
+                imageUrl: true,
+                gallery: true,
+                address: true,
+                mapEmbedUrl: true,
+                facilities: true,
+                capacityDropin: true,
+                capacityPrivat: true,
+                bookingUrlDropin: true,
+                bookingUrlPrivat: true,
+                status: true,
+                driftStatus: true,
+                stengeArsak: true,
+                stengtFra: true,
+                stengtTil: true,
+                kundeMelding: true,
+                flexibleHours: true,
+                hoursMessage: true,
+                hasDropinAvailability: true,
+                availabilityData: true,
+                lastScrapedAt: true,
+                openingHours: {
+                    where: { active: true },
+                    orderBy: { weekday: 'asc' }
+                }
             }
+        });
+
+        if (result) {
+            const withNext = {
+                ...(result as SaunaDetail),
+                nextAvailableSlot: computeNextAvailableSlot(result.availabilityData ?? null),
+            };
+            saunaBySlugCache.set(slug, { data: withNext, expiresAt: now + SAUNA_CACHE_TTL_MS });
+            return withNext;
         }
-    });
-
-    if (result) {
-        saunaBySlugCache.set(slug, { data: result as SaunaDetail, expiresAt: now + SAUNA_CACHE_TTL_MS });
+        return result;
+    } catch (error) {
+        console.error('[SaunaService] Falling back to static sauna detail due to DB error:', error);
+        const fallback = mapStaticSaunaDetail(slug);
+        if (fallback) {
+            saunaBySlugCache.set(slug, { data: fallback, expiresAt: now + SAUNA_CACHE_TTL_MS });
+        }
+        return fallback;
     }
-
-    return result;
 }
 
 export function clearSaunaCaches(slug?: string) {

@@ -132,20 +132,35 @@ export default function SaunaAvailability({
                 let activeDate = todayStr;
 
                 if (json.days) {
-                    const todaySlots = (json.days[todayStr] || []);
-                    const filteredToday = todaySlots.filter((s: ScrapedSlot) => {
-                        const parts = (s.to || s.from).split(/[:.]/).map(Number);
-                        const slotEndTime = parts[0] * 60 + parts[1];
-                        return slotEndTime > currentTime;
-                    });
+                    const dayKeys = Object.keys(json.days).sort();
 
-                    // By default show dagens dato; switch to i morgen først etter kl 22
-                    if (now.getHours() >= 22) {
-                        slotsToShow = json.days[tomorrowStr] || [];
-                        activeDate = tomorrowStr;
+                    const pickDateKey = () => {
+                        if (dayKeys.includes(todayStr)) return todayStr;
+                        const future = dayKeys.find((d) => d >= todayStr);
+                        if (future) return future;
+                        return dayKeys[dayKeys.length - 1];
+                    };
+
+                    const targetDate = pickDateKey();
+                    const targetSlots = json.days[targetDate] || [];
+
+                    if (targetDate === todayStr) {
+                        const filteredToday = targetSlots.filter((s: ScrapedSlot) => {
+                            const parts = (s.to || s.from).split(/[:.]/).map(Number);
+                            const slotEndTime = parts[0] * 60 + parts[1];
+                            return slotEndTime > currentTime;
+                        });
+
+                        if (now.getHours() >= 22) {
+                            slotsToShow = json.days[tomorrowStr] || [];
+                            activeDate = tomorrowStr;
+                        } else {
+                            slotsToShow = filteredToday;
+                            activeDate = todayStr;
+                        }
                     } else {
-                        slotsToShow = filteredToday;
-                        activeDate = todayStr;
+                        slotsToShow = targetSlots;
+                        activeDate = targetDate;
                     }
                 }
 
@@ -231,7 +246,41 @@ export default function SaunaAvailability({
     // Filter available slots
     const availableSlots = (data?.displaySlots || []).filter((s: ScrapedSlot) => !onlyAvailable || s.availableSpots > 0);
     const currentData = data || { timestamp: null, displayDate: '' };
-    const isTomorrow = currentData.displayDate !== new Date().toISOString().split('T')[0];
+
+    const osloFormatter = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Europe/Oslo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+
+    const todayOslo = osloFormatter.format(new Date());
+    const tomorrowOslo = (() => {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return osloFormatter.format(d);
+    })();
+
+    const headingText = (() => {
+        const displayDate = currentData.displayDate;
+        if (!displayDate) return 'Drop-in ledighet';
+        if (displayDate === todayOslo) return 'Drop-in ledighet i dag';
+        if (displayDate === tomorrowOslo) return 'Drop-in ledighet i morgen';
+
+        try {
+            const [y, m, d] = displayDate.split('-').map(Number);
+            const pretty = new Intl.DateTimeFormat('nb-NO', {
+                weekday: 'long',
+                day: '2-digit',
+                month: '2-digit',
+            }).format(new Date(Date.UTC(y, (m ?? 1) - 1, d)));
+            return `Drop-in ledighet ${pretty}`;
+        } catch {
+            return `Drop-in ledighet ${displayDate}`;
+        }
+    })();
+
+    const isTomorrow = currentData.displayDate === tomorrowOslo;
 
     // Find next available slot
     const nextSlot = (data?.displaySlots || []).find((s: ScrapedSlot) => s.availableSpots > 0);
@@ -241,9 +290,7 @@ export default function SaunaAvailability({
             <div className={styles.header}>
                 <div>
                     <div className={styles.titleWrapper}>
-                        <h3 className={styles.title}>
-                            {isTomorrow ? 'Drop-in ledighet i morgen' : 'Drop-in ledighet i dag'}
-                        </h3>
+                        <h3 className={styles.title}>{headingText}</h3>
                         <div className={styles.badge} title="Denne hentes automatisk hvert minutt">
                             <div className={refreshing ? styles.dotRefreshing : styles.dot} />
                             <span className={styles.badgeText}>
@@ -251,7 +298,7 @@ export default function SaunaAvailability({
                             </span>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         {(mounted && currentData.timestamp) && (
                             <p className={styles.updatedAt}>
                                 Oppdatert {new Date(currentData.timestamp).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })}
@@ -278,12 +325,15 @@ export default function SaunaAvailability({
                         )}
                     </div>
                 </div>
-                <button
-                    onClick={() => setOnlyAvailable(!onlyAvailable)}
-                    className={`${styles.toggleButton} ${onlyAvailable ? styles.toggleActive : ''}`}
-                >
-                    {onlyAvailable ? 'Vis alle timer' : 'Vis bare ledige'}
-                </button>
+
+                <div className={styles.actions}>
+                    <button
+                        className={`${styles.toggleButton} ${onlyAvailable ? styles.toggleActive : ''}`}
+                        onClick={() => setOnlyAvailable((v) => !v)}
+                    >
+                        {onlyAvailable ? 'Vis alle timer' : 'Vis bare ledige'}
+                    </button>
+                </div>
             </div>
 
             {nextSlot && (

@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer-core';
+import puppeteer, { Browser, ConsoleMessage, HTTPRequest } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium-min';
 
 export interface ScrapedSlot {
@@ -14,35 +14,43 @@ export interface AvailabilityResponse {
 
 export async function fetchAvailability(url: string): Promise<AvailabilityResponse> {
     console.log(`[Scraper] Starting fetch for ${url}`);
+    let browser: Browser | null = null;
 
-    let browser = null;
     try {
-        let executablePath = '';
+        let executablePath: string | undefined;
+        let useChromiumBundle = true;
 
         try {
             executablePath = await chromium.executablePath();
-        } catch {
-            console.log('[Scraper] sparticuz/chromium-min failed, using local Chrome path');
+        } catch (err) {
+            useChromiumBundle = false;
+            console.log('[Scraper] sparticuz/chromium-min failed, using fallback executable path', err);
         }
 
-        // Local Windows fallback
+        // Accept any valid path returned by chromium; only fallback if empty
         const isWindows = process.platform === 'win32';
-        if (!executablePath || executablePath.includes('node_modules')) {
+        const isMac = process.platform === 'darwin';
+        if (!executablePath) {
+            useChromiumBundle = false;
             if (isWindows) {
                 executablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+            } else if (process.env.CHROME_PATH) {
+                executablePath = process.env.CHROME_PATH;
+            } else if (isMac) {
+                executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
             } else {
-                // On Linux/Vercel, if chromium.executablePath() failed, 
-                // we should NOT fallback to a Windows path.
-                console.error('[Scraper] Chromium path is missing on Linux environment!');
+                console.error('[Scraper] Chromium path is missing on this environment; set CHROME_PATH to a valid binary.');
                 throw new Error('Chromium executable not found');
             }
         }
 
+        const launchArgs = useChromiumBundle ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox'];
+
         browser = await puppeteer.launch({
-            args: [...chromium.args, '--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox'],
+            args: launchArgs,
             // @ts-expect-error chromium typings in sparticuz package omit defaultViewport
-            defaultViewport: chromium.defaultViewport,
-            executablePath: executablePath,
+            defaultViewport: useChromiumBundle ? chromium.defaultViewport : undefined,
+            executablePath,
             headless: true,
             // @ts-expect-error puppeteer LaunchOptions typing omits ignoreHTTPSErrors here
             ignoreHTTPSErrors: true,
@@ -51,10 +59,10 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        page.on('console', msg => console.log('[Browser Console]:', msg.text()));
+    page.on('console', (msg: ConsoleMessage) => console.log('[Browser Console]:', msg.text()));
 
         await page.setRequestInterception(true);
-        page.on('request', (req) => {
+        page.on('request', (req: HTTPRequest) => {
             if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
                 req.abort();
             } else {
@@ -94,7 +102,7 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
 
         await new Promise(r => setTimeout(r, 2000));
 
-        const scrapedData = await page.evaluate(() => {
+    const scrapedData = await page.evaluate(() => {
             const normalizeTime = (value: string) => value.replace('.', ':');
             const timeRangeRegex = /(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/;
             const availableRegex = /(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i;
@@ -157,7 +165,20 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
                 return slot;
             });
 
-            return { date: null, slots: normalized };
+            const today = new Date();
+            const parts = new Intl.DateTimeFormat('sv-SE', {
+                timeZone: 'Europe/Oslo',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            }).formatToParts(today);
+
+            const year = parts.find(p => p.type === 'year')?.value ?? '';
+            const month = parts.find(p => p.type === 'month')?.value ?? '';
+            const day = parts.find(p => p.type === 'day')?.value ?? '';
+            const dateKey = `${year}-${month}-${day}`;
+
+            return { date: dateKey, slots: normalized };
         });
 
         await browser.close();

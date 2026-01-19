@@ -74,6 +74,58 @@
     flex: 1;
 }
 
+.nextSlotRow {
+    margin-bottom: 1rem;
+}
+
+.nextSlotBadge,
+.nextSlotFallback {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0.7rem 1rem;
+    border-radius: 14px;
+    border: 1px solid #1fb6ff;
+    background: #e6f6ff;
+    color: #0b1826;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+}
+
+.nextSlotBadge svg,
+.nextSlotFallback svg {
+    color: #0b8dd8;
+}
+
+.nextSlotMain {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.nextSlotText {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nextSlotExtra {
+    color: #4b5563;
+    white-space: nowrap;
+}
+
+.nextSlotSpots {
+    color: #0b1826;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 .actions {
     display: flex;
     flex-direction: column;
