@@ -250,30 +250,36 @@ export default function SaunaAvailability({
 
     const todayOslo = osloFormatter.format(new Date());
 
-    // Filter based on toggle: only available shows only bookable slots, vis alle timer shows all with lead time applied
+    const isToday = currentData.displayDate === todayOslo;
+    const osloNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
+    const nowMinutes = osloNow.getHours() * 60 + osloNow.getMinutes();
+    const parseMinutes = (timeStr?: string) => {
+        if (!timeStr) return null;
+        const [h, m] = timeStr.split(/[:.]/).map((v) => parseInt(v, 10));
+        if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+        return h * 60 + m;
+    };
+
+    // Filter based on toggle: only available shows future slots with spots > 0; vis alle timer hides slots that are already past today
     const getDisplaySlots = () => {
         const slots = data?.displaySlots || [];
         if (!onlyAvailable) {
-            // "Vis alle timer" - show all slots for the day
-            return slots;
+            // "Vis alle timer" - hide slots that have already ended today
+            return slots.filter((s: ScrapedSlot) => {
+                if (!isToday) return true;
+                const endMinutes = parseMinutes(s.to || s.from);
+                if (endMinutes === null) return true;
+                return endMinutes > nowMinutes;
+            });
         }
-        
-        // "Vis bare ledige" - filter by availability and apply lead time for today
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-        
+
+        // "Vis bare ledige" - filter by availability and hide slots whose start time is passed today
         return slots.filter((s: ScrapedSlot) => {
-            // Must have available spots
             if (s.availableSpots <= 0) return false;
-            
-            // If viewing today, apply 15-minute lead time
-            if (currentData.displayDate === todayOslo) {
-                const parts = (s.from).split(/[:.]/).map(Number);
-                const slotStartTime = parts[0] * 60 + parts[1];
-                return slotStartTime > currentTime + 15;
-            }
-            
-            return true;
+            if (!isToday) return true;
+            const startMinutes = parseMinutes(s.from);
+            if (startMinutes === null) return true;
+            return startMinutes > nowMinutes;
         });
     };
     
@@ -305,22 +311,20 @@ export default function SaunaAvailability({
 
     const isTomorrow = currentData.displayDate === tomorrowOslo;
 
-    // Find next available slot (considering lead time if today)
+    // Find next available slot (skip slots that have already started today)
     const nextSlot = (() => {
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-        
-        return (data?.displaySlots || []).find((s: ScrapedSlot) => {
+        const slots = data?.displaySlots || [];
+        const futureSlots = slots.filter((s: ScrapedSlot) => {
             if (s.availableSpots <= 0) return false;
-            
-            if (currentData.displayDate === todayOslo) {
-                const parts = (s.from).split(/[:.]/).map(Number);
-                const slotStartTime = parts[0] * 60 + parts[1];
-                return slotStartTime > currentTime + 15;
-            }
-            
-            return true;
+            if (!isToday) return true;
+
+            const startMinutes = parseMinutes(s.from);
+            if (startMinutes === null) return true;
+
+            return startMinutes > nowMinutes;
         });
+
+        return futureSlots[0] || null;
     })();
 
     return (

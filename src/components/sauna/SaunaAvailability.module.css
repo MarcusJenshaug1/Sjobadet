@@ -247,6 +247,19 @@
     color: #22543d;
 }
 
+.statePast {
+    background-color: #f7fafc;
+    border-color: #e2e8f0;
+    color: #a0aec0;
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+.statePast .slotTime,
+.statePast .slotCapacity {
+    color: #a0aec0;
+}
+
 .empty {
     grid-column: 1 / -1;
     padding: 1.5rem;
