@@ -12,7 +12,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant = 'primary', size = 'default', fullWidth, href, external, children, disabled, ...props }, ref) => {
+    ({ className, variant = 'primary', size = 'default', fullWidth, href, external, children, disabled, onClick, ...props }, ref) => {
         const rootClassName = clsx(
             styles.button,
             styles[variant],
@@ -24,20 +24,20 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         if (href && !disabled) {
             if (external) {
                 return (
-                    <a href={href} className={rootClassName} target="_blank" rel="noopener noreferrer">
+                    <a href={href} className={rootClassName} target="_blank" rel="noopener noreferrer" onClick={onClick}>
                         {children}
                     </a>
                 );
             }
             return (
-                <Link href={href} className={rootClassName}>
+                <Link href={href} className={rootClassName} onClick={onClick}>
                     {children}
                 </Link>
             );
         }
 
         return (
-            <button ref={ref} className={rootClassName} disabled={disabled} {...props}>
+            <button ref={ref} className={rootClassName} disabled={disabled} onClick={onClick} {...props}>
                 {children}
             </button>
         );

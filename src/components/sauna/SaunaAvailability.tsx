@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './SaunaAvailability.module.css';
+import { BookingModal } from './BookingModal';
 
 interface ScrapedSlot {
     from: string;
@@ -37,6 +38,7 @@ export default function SaunaAvailability({
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(false);
     const [onlyAvailable, setOnlyAvailable] = useState(true);
+    const [bookingUrl, setBookingUrl] = useState<string | null>(null);
     const hasDataRef = useRef(false);
     const [mounted, setMounted] = useState(false);
     const abortRef = useRef<AbortController | null>(null);
@@ -250,31 +252,30 @@ export default function SaunaAvailability({
 
     const todayOslo = osloFormatter.format(new Date());
 
-    const isToday = currentData.displayDate === todayOslo;
-    const osloNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
-    const nowMinutes = osloNow.getHours() * 60 + osloNow.getMinutes();
-    const parseMinutes = (timeStr?: string) => {
-        if (!timeStr) return null;
-        const [h, m] = timeStr.split(/[:.]/).map((v) => parseInt(v, 10));
-        if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
-        return h * 60 + m;
-    };
-
-    // Filter based on toggle: only available shows future slots with spots > 0; vis alle timer shows alt (inkl. passerte)
+    // Filter based on toggle: only available shows only bookable slots, vis alle timer shows all with lead time applied
     const getDisplaySlots = () => {
         const slots = data?.displaySlots || [];
         if (!onlyAvailable) {
-            // "Vis alle timer" - vis alle slots, vi markerer passerte som grå og ikke-klikkbare
+            // "Vis alle timer" - show all slots for the day
             return slots;
         }
-
-        // "Vis bare ledige" - filter by availability and hide slots whose start time is passed today
+        
+        // "Vis bare ledige" - filter by availability and apply lead time for today
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        
         return slots.filter((s: ScrapedSlot) => {
+            // Must have available spots
             if (s.availableSpots <= 0) return false;
-            if (!isToday) return true;
-            const startMinutes = parseMinutes(s.from);
-            if (startMinutes === null) return true;
-            return startMinutes > nowMinutes;
+            
+            // If viewing today, apply 15-minute lead time
+            if (currentData.displayDate === todayOslo) {
+                const parts = (s.from).split(/[:.]/).map(Number);
+                const slotStartTime = parts[0] * 60 + parts[1];
+                return slotStartTime > currentTime + 15;
+            }
+            
+            return true;
         });
     };
     
@@ -306,20 +307,22 @@ export default function SaunaAvailability({
 
     const isTomorrow = currentData.displayDate === tomorrowOslo;
 
-    // Find next available slot (skip slots that have already started today)
+    // Find next available slot (considering lead time if today)
     const nextSlot = (() => {
-        const slots = data?.displaySlots || [];
-        const futureSlots = slots.filter((s: ScrapedSlot) => {
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        
+        return (data?.displaySlots || []).find((s: ScrapedSlot) => {
             if (s.availableSpots <= 0) return false;
-            if (!isToday) return true;
-
-            const startMinutes = parseMinutes(s.from);
-            if (startMinutes === null) return true;
-
-            return startMinutes > nowMinutes;
+            
+            if (currentData.displayDate === todayOslo) {
+                const parts = (s.from).split(/[:.]/).map(Number);
+                const slotStartTime = parts[0] * 60 + parts[1];
+                return slotStartTime > currentTime + 15;
+            }
+            
+            return true;
         });
-
-        return futureSlots[0] || null;
     })();
 
     return (
@@ -384,20 +387,16 @@ export default function SaunaAvailability({
 
             <div className={styles.grid}>
                 {availableSlots.length > 0 ? (
-                    availableSlots.map((slot: ScrapedSlot, i: number) => {
-                        const startMinutes = parseMinutes(slot.from);
-                        const isPast = isToday && startMinutes !== null && startMinutes <= nowMinutes;
-                        return (
-                            <SlotCard
-                                key={i}
-                                slot={slot}
-                                totalCapacity={capacityDropin}
-                                baseBookingUrl={bookingUrlDropin}
-                                isTomorrow={isTomorrow}
-                                isPast={isPast}
-                            />
-                        );
-                    })
+                    availableSlots.map((slot: ScrapedSlot, i: number) => (
+                        <SlotCard
+                            key={i}
+                            slot={slot}
+                            totalCapacity={capacityDropin}
+                            baseBookingUrl={bookingUrlDropin}
+                            isTomorrow={isTomorrow}
+                            onOpenBooking={(url) => setBookingUrl(url)}
+                        />
+                    ))
                 ) : (
                     <div className={styles.empty}>
                         <p className={styles.emptyText}>Ingen ledige timer funnet akkurat nå</p>
@@ -407,20 +406,24 @@ export default function SaunaAvailability({
                     </div>
                 )}
             </div>
+            <BookingModal
+                open={Boolean(bookingUrl)}
+                url={bookingUrl || ''}
+                onClose={() => setBookingUrl(null)}
+                title="Booking"
+            />
         </div>
     );
 }
 
-function SlotCard({ slot, totalCapacity, baseBookingUrl, isTomorrow, isPast }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null, isTomorrow: boolean, isPast: boolean }) {
+function SlotCard({ slot, totalCapacity, baseBookingUrl, isTomorrow, onOpenBooking }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null, isTomorrow: boolean, onOpenBooking: (url: string) => void }) {
     const isFull = slot.availableSpots === 0;
     const availablePlaces = slot.availableSpots;
 
     let stateClass = styles.stateMany;
     const availablePercentage = totalCapacity > 0 ? (availablePlaces / totalCapacity) : 0;
 
-    if (isPast) {
-        stateClass = styles.statePast;
-    } else if (isFull) {
+    if (isFull) {
         stateClass = styles.stateFull;
     } else if (availablePercentage <= 0.7) {
         stateClass = styles.stateFew;
@@ -428,7 +431,7 @@ function SlotCard({ slot, totalCapacity, baseBookingUrl, isTomorrow, isPast }: {
 
     // Construct booking link: [Base URL]/[YYYY-MM-DD]/[HH:MM]
     let bookingLink = '';
-    if (baseBookingUrl && baseBookingUrl.includes('periode.no') && !isFull && !isPast) {
+    if (baseBookingUrl && baseBookingUrl.includes('periode.no') && !isFull) {
         const targetDate = new Date();
         if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
 
@@ -448,16 +451,17 @@ function SlotCard({ slot, totalCapacity, baseBookingUrl, isTomorrow, isPast }: {
         </>
     );
 
-    if (bookingLink) {
+    const isClickable = Boolean(bookingLink) && !isFull;
+
+    if (isClickable && bookingLink) {
         return (
-            <a
-                href={bookingLink}
-                target="_blank"
-                rel="noopener noreferrer"
+            <button
+                type="button"
                 className={`${styles.slotCard} ${styles.slotCardClickable} ${stateClass}`}
+                onClick={() => onOpenBooking(bookingLink)}
             >
                 {cardContent}
-            </a>
+            </button>
         );
     }
 

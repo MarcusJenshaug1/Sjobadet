@@ -8,11 +8,9 @@ import { Clock, MapPin, Sparkles, Droplets, Users } from 'lucide-react';
 import { getActiveSaunas } from '@/lib/sauna-service';
 import { Metadata } from 'next';
 
-// Revalidate this page every 5 minutes (ISR)
-export const revalidate = 300;
-
-// Cache strategy: Tag-based for fine-grained control
-export const dynamic = 'force-static';
+// Always fetch fresh availability for sauna cards
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: "Sjøbadet Badstue | Badstue i Tønsberg",

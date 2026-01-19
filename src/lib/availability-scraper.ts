@@ -127,16 +127,9 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
 
                 // Check if the slot is available (not grayed out/disabled)
                 const style = window.getComputedStyle(label);
-                const hasDisabledClass = label.classList.contains('ant-radio-button-wrapper-disabled');
-                const ariaDisabled = label.getAttribute('aria-disabled') === 'true';
-                const inputDisabled = !!label.querySelector('input[disabled]');
-                const pointerBlocked = style.pointerEvents === 'none';
-                const opacityValue = parseFloat(style.opacity || '1');
-                const zeroOpacity = opacityValue === 0;
-                const dimmedOpacity = opacityValue > 0 && opacityValue < 0.6; // treat dimmed buttons as disabled
-                const notAllowed = style.cursor === 'not-allowed';
-                const isDisabled = hasDisabledClass || ariaDisabled || inputDisabled || pointerBlocked || zeroOpacity || dimmedOpacity || notAllowed;
-                const isAvailable = !isDisabled;
+                const isDisabled = label.hasAttribute('aria-disabled') && label.getAttribute('aria-disabled') === 'true';
+                const isGrayedOut = style.opacity === '0' || style.pointerEvents === 'none' || isDisabled;
+                const isAvailable = !isGrayedOut;
 
                 const fromTime = timeMatch[1].replace('.', ':');
                 const toTime = timeMatch[2].replace('.', ':');

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import Image from 'next/image';
 import { MapPin, Clock } from 'lucide-react';
@@ -8,6 +8,7 @@ import styles from './SaunaCard.module.css';
 import { Button } from '../ui/Button';
 import { trackEvent } from '@/lib/analytics/tracking';
 import { useRouter } from 'next/navigation';
+import { BookingModal } from './BookingModal';
 
 interface SaunaProps {
     id: string;
@@ -26,6 +27,7 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
     const router = useRouter();
     const cardRef = useRef<HTMLDivElement | null>(null);
     const prefetchedRef = useRef(false);
+    const [bookingUrl, setBookingUrl] = useState<string | null>(null);
     const targetHref = `/home/${sauna.slug}`;
 
     useEffect(() => {
@@ -62,6 +64,17 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
         prefetchedRef.current = true;
     };
 
+    const handleCardClick = () => {
+        router.push(targetHref);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCardClick();
+        }
+    };
+
     const formatNextSlotLabel = () => {
         if (!sauna.nextAvailableSlot) return null;
         const { time, availableSpots } = sauna.nextAvailableSlot;
@@ -71,7 +84,16 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
     const nextSlotLabel = formatNextSlotLabel();
 
     return (
-        <div className={styles.card} ref={cardRef} onMouseEnter={handleHover} role="article" aria-label={`Badstue: ${sauna.name}`}>
+        <div
+            className={styles.card}
+            ref={cardRef}
+            onMouseEnter={handleHover}
+            role="link"
+            tabIndex={0}
+            aria-label={`Badstue: ${sauna.name}`}
+            onClick={handleCardClick}
+            onKeyDown={handleKeyDown}
+        >
             <div className={styles.imageContainer}>
                 {sauna.imageUrl ? (
                     <Image
@@ -131,23 +153,18 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                 </div>
 
                 <div className={styles.actions}>
-                    <Button 
-                        href={`/home/${sauna.slug}`} 
-                        variant="outline" 
-                        fullWidth
-                        onClick={() => trackEvent('view_sauna_detail', { saunaId: sauna.id, saunaName: sauna.name })}
-                    >
-                        Se badstuen
-                    </Button>
-
                     <div className={styles.bookingButtons}>
                         {sauna.bookingUrlDropin ? (
                             <Button
-                                href={sauna.bookingUrlDropin}
-                                external
+                                href={sauna.bookingUrlDropin || '#'}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setBookingUrl(sauna.bookingUrlDropin || null);
+                                    trackEvent('booking_click', { type: 'drop-in', saunaId: sauna.id, saunaName: sauna.name });
+                                }}
                                 variant="primary"
                                 style={{ fontSize: '0.9rem', padding: '0.5rem' }}
-                                onClick={() => trackEvent('booking_click', { type: 'drop-in', saunaId: sauna.id, saunaName: sauna.name })}
                             >
                                 Book Drop-in
                             </Button>
@@ -159,11 +176,15 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
 
                         {sauna.bookingUrlPrivat ? (
                             <Button
-                                href={sauna.bookingUrlPrivat}
-                                external
+                                href={sauna.bookingUrlPrivat || '#'}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setBookingUrl(sauna.bookingUrlPrivat || null);
+                                    trackEvent('booking_click', { type: 'private', saunaId: sauna.id, saunaName: sauna.name });
+                                }}
                                 variant="secondary"
                                 style={{ fontSize: '0.9rem', padding: '0.5rem' }}
-                                onClick={() => trackEvent('booking_click', { type: 'private', saunaId: sauna.id, saunaName: sauna.name })}
                             >
                                 Book Privat
                             </Button>
@@ -173,8 +194,28 @@ export function SaunaCard({ sauna }: { sauna: SaunaProps }) {
                             </Button>
                         )}
                     </div>
+
+                    <Button 
+                        href={`/home/${sauna.slug}`} 
+                        variant="outline" 
+                        fullWidth
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            trackEvent('view_sauna_detail', { saunaId: sauna.id, saunaName: sauna.name });
+                            router.push(targetHref);
+                        }}
+                    >
+                        Se badstuen
+                    </Button>
                 </div>
             </div>
+            <BookingModal
+                open={Boolean(bookingUrl)}
+                url={bookingUrl || ''}
+                onClose={() => setBookingUrl(null)}
+                title={`${sauna.name} booking`}
+            />
         </div>
     );
 }

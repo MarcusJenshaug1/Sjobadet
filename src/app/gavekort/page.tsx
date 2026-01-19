@@ -39,7 +39,7 @@ export default function GiftCardPage() {
                         <span style={{ fontStyle: 'italic', fontSize: '0.9rem' }}>Vær oppmerksom på at gavekortet ikke kan brukes på medlemskap.</span>
                     </p>
 
-                    <Button href="#" external size="lg" style={{ minWidth: '250px' }}>
+                    <Button href="https://minside.periode.no/gift-card/s4t6WWP6bYfM4myt4mcd" external size="lg" style={{ minWidth: '250px' }}>
                         Kjøp gavekort
                     </Button>
                 </div>

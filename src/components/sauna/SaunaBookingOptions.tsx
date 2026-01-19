@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '@/app/home/[slug]/SaunaDetail.module.css';
 import { ExternalLink } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/tracking';
+import { BookingModal } from './BookingModal';
 
 interface SaunaBookingOptionsProps {
     saunaId: string;
@@ -22,6 +23,7 @@ export default function SaunaBookingOptions({
     bookingUrlDropin,
     bookingUrlPrivat
 }: SaunaBookingOptionsProps) {
+    const [bookingUrl, setBookingUrl] = useState<string | null>(null);
     const handleTrack = (type: 'drop-in' | 'private') => {
         trackEvent('booking_click', {
             type,
@@ -37,12 +39,13 @@ export default function SaunaBookingOptions({
                 {/* Drop-in Card */}
                 {capacityDropin > 0 && (
                     bookingUrlDropin ? (
-                        <a
-                            href={bookingUrlDropin}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <button
+                            type="button"
                             className={`${styles.bookingOptionCard} ${styles.dropinCard}`}
-                            onClick={() => handleTrack('drop-in')}
+                            onClick={() => {
+                                handleTrack('drop-in');
+                                setBookingUrl(bookingUrlDropin);
+                            }}
                         >
                             <div className={styles.cardHeader}>
                                 <div className={styles.optionTitle}>Enkeltbillett (drop-in)</div>
@@ -52,7 +55,7 @@ export default function SaunaBookingOptions({
                                 <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Kapasitet: {capacityDropin} pers.</div>
                                 <ExternalLink size={20} />
                             </div>
-                        </a>
+                        </button>
                     ) : (
                         <div className={`${styles.bookingOptionCard} ${styles.dropinCard}`} style={{ opacity: 0.7, cursor: 'not-allowed' }}>
                             <div className={styles.cardHeader}>
@@ -66,12 +69,13 @@ export default function SaunaBookingOptions({
                 {/* Privat Booking Card */}
                 {capacityPrivat > 0 && (
                     bookingUrlPrivat ? (
-                        <a
-                            href={bookingUrlPrivat}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <button
+                            type="button"
                             className={`${styles.bookingOptionCard} ${styles.privateCard}`}
-                            onClick={() => handleTrack('private')}
+                            onClick={() => {
+                                handleTrack('private');
+                                setBookingUrl(bookingUrlPrivat);
+                            }}
                         >
                             <div className={styles.cardHeader}>
                                 <div className={styles.optionTitle}>Privat booking</div>
@@ -81,7 +85,7 @@ export default function SaunaBookingOptions({
                                 <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Kapasitet: {capacityPrivat} pers.</div>
                                 <ExternalLink size={20} color="#719898" />
                             </div>
-                        </a>
+                        </button>
                     ) : (
                         <div className={`${styles.bookingOptionCard} ${styles.privateCard}`} style={{ opacity: 0.7, cursor: 'not-allowed' }}>
                             <div className={styles.cardHeader}>
@@ -92,6 +96,12 @@ export default function SaunaBookingOptions({
                     )
                 )}
             </div>
+            <BookingModal
+                open={Boolean(bookingUrl)}
+                url={bookingUrl || ''}
+                onClose={() => setBookingUrl(null)}
+                title={`${saunaName} booking`}
+            />
         </div>
     );
 }

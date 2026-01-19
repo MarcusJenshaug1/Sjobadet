@@ -1,12 +1,15 @@
+import { revalidatePath } from 'next/cache';
 import prisma from './prisma';
 import { fetchAvailability } from './availability-scraper';
 import { logAdminAction } from './admin-log';
+import { clearSaunaCaches } from './sauna-service';
 
 export async function updateSaunaAvailability(saunaId: string) {
     const sauna = await prisma.sauna.findUnique({
         where: { id: saunaId },
         select: {
             id: true,
+            slug: true,
             availabilityData: true,
             bookingAvailabilityUrlDropin: true,
             name: true,
@@ -67,6 +70,19 @@ export async function updateSaunaAvailability(saunaId: string) {
                 lastScrapedAt: new Date(),
             }
         });
+
+        // Bust in-memory caches so the homepage cards and detail pages pick up fresh availability immediately
+        clearSaunaCaches(sauna.slug);
+
+        // Trigger ISR revalidation for pages that surface next available slot info
+        try {
+            revalidatePath('/');
+            if (sauna.slug) {
+                revalidatePath(`/home/${sauna.slug}`);
+            }
+        } catch (revalidateError) {
+            console.warn('[AvailabilityService] Failed to revalidate paths:', revalidateError);
+        }
 
         console.log(`[AvailabilityService] Success for ${sauna.name}`);
 

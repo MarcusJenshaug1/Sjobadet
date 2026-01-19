@@ -310,10 +310,15 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                         <CreditCard size={18} style={{ marginRight: '0.5rem' }} />
                                         Se medlemskap
                                     </Link>
-                                    <Link href="/gavekort" className={styles.actionButton}>
+                                    <a
+                                        href="https://minside.periode.no/gift-card/s4t6WWP6bYfM4myt4mcd"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={styles.actionButton}
+                                    >
                                         <Gift size={18} style={{ marginRight: '0.5rem' }} />
                                         Kjøp gavekort
-                                    </Link>
+                                    </a>
                                 </div>
 
                             </div>
