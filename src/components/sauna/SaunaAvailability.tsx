@@ -145,18 +145,12 @@ export default function SaunaAvailability({
                     const targetSlots = json.days[targetDate] || [];
 
                     if (targetDate === todayStr) {
-                        const filteredToday = targetSlots.filter((s: ScrapedSlot) => {
-                            const parts = (s.from).split(/[:.]/).map(Number);
-                            const slotStartTime = parts[0] * 60 + parts[1];
-                            // Lead time: 60 minutes
-                            return slotStartTime > currentTime + 60;
-                        });
-
                         if (now.getHours() >= 22) {
                             slotsToShow = json.days[tomorrowStr] || [];
                             activeDate = tomorrowStr;
                         } else {
-                            slotsToShow = filteredToday;
+                            // Show all slots for today (filtering by lead time happens in render based on toggle)
+                            slotsToShow = targetSlots;
                             activeDate = todayStr;
                         }
                     } else {
@@ -244,8 +238,41 @@ export default function SaunaAvailability({
         );
     }
 
-    // Filter available slots
-    const availableSlots = (data?.displaySlots || []).filter((s: ScrapedSlot) => !onlyAvailable || s.availableSpots > 0);
+    // Filter based on toggle: only available shows only bookable slots, vis alle timer shows all with lead time applied
+    const getDisplaySlots = () => {
+        const slots = data?.displaySlots || [];
+        if (!onlyAvailable) {
+            // "Vis alle timer" - show all slots for the day
+            return slots;
+        }
+        
+        // "Vis bare ledige" - filter by availability and apply lead time for today
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        const osloFormatter = new Intl.DateTimeFormat('sv-SE', {
+            timeZone: 'Europe/Oslo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        });
+        const todayStr = osloFormatter.format(new Date());
+        
+        return slots.filter((s: ScrapedSlot) => {
+            // Must have available spots
+            if (s.availableSpots <= 0) return false;
+            
+            // If viewing today, apply 15-minute lead time
+            if (currentData.displayDate === todayStr) {
+                const parts = (s.from).split(/[:.]/).map(Number);
+                const slotStartTime = parts[0] * 60 + parts[1];
+                return slotStartTime > currentTime + 15;
+            }
+            
+            return true;
+        });
+    };
+    
+    const availableSlots = getDisplaySlots();
     const currentData = data || { timestamp: null, displayDate: '' };
 
     const osloFormatter = new Intl.DateTimeFormat('sv-SE', {
@@ -283,8 +310,23 @@ export default function SaunaAvailability({
 
     const isTomorrow = currentData.displayDate === tomorrowOslo;
 
-    // Find next available slot
-    const nextSlot = (data?.displaySlots || []).find((s: ScrapedSlot) => s.availableSpots > 0);
+    // Find next available slot (considering lead time if today)
+    const nextSlot = (() => {
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        
+        return (data?.displaySlots || []).find((s: ScrapedSlot) => {
+            if (s.availableSpots <= 0) return false;
+            
+            if (currentData.displayDate === todayOslo) {
+                const parts = (s.from).split(/[:.]/).map(Number);
+                const slotStartTime = parts[0] * 60 + parts[1];
+                return slotStartTime > currentTime + 15;
+            }
+            
+            return true;
+        });
+    })();
 
     return (
         <div className={styles.container}>

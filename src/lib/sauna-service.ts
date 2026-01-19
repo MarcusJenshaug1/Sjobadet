@@ -172,11 +172,11 @@ function computeNextAvailableSlot(availabilityData?: string | null): { time: str
 
                 if (day === todayKey && endMinutes !== null) {
                     const nowMinutes = osloNow.getHours() * 60 + osloNow.getMinutes();
-                    // Buffer: Must be at least 60 mins before start of slot (or end of slot to be safe, but start is more precise for "lead time")
+                    // Buffer: Must be at least 15 mins before start of slot (matches frontend lead time)
                     const startMinutes = slot.from ? parseMinutes(slot.from) : (endMinutes - 60);
 
-                    // Disallow if slot has already ended OR if it starts within the next 60 minutes
-                    if (endMinutes <= nowMinutes || (startMinutes !== null && startMinutes < nowMinutes + 60)) continue;
+                    // Disallow if slot has already ended OR if it starts within the next 15 minutes
+                    if (endMinutes <= nowMinutes || (startMinutes !== null && startMinutes < nowMinutes + 15)) continue;
                 }
 
                 if (slot.from) {
