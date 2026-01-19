@@ -192,6 +192,9 @@ function StatusBadge({ status }: { status: string }) {
     if (status === 'SUCCESS') {
         color = '#16a34a'
         bg = '#dcfce7'
+    } else if (status === 'OK') {
+        color = '#0ea5e9'
+        bg = '#e0f2fe'
     } else if (status === 'FAILURE') {
         color = '#dc2626'
         bg = '#fee2e2'

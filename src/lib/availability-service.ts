@@ -54,6 +54,9 @@ export async function updateSaunaAvailability(saunaId: string) {
             timestamp: new Date().toISOString(),
         });
 
+        // Check if data has changed compared to previous
+        const dataHasChanged = sauna.availabilityData !== payload;
+
         const updated = await prisma.sauna.update({
             where: { id: saunaId },
             data: {
@@ -68,19 +71,31 @@ export async function updateSaunaAvailability(saunaId: string) {
         // Add log entry for the individual scrape
         if (shouldMergeFresh) {
             const slotSummary = fresh.slots.slice(0, 3).map(s => `${s.from}: ${s.availableSpots}`).join(', ');
-            const status = fresh.slots.some(s => s.availableSpots > 0) ? 'SUCCESS' : 'INFO';
-            await logAdminAction(
-                'SCRAPER_RUN',
-                `${sauna.name}: Oppdatert ${fresh.date}. Totalt ${fresh.slots.length} tider. (Eks: ${slotSummary}...)`,
-                status,
-                'System'
-            );
+            
+            if (dataHasChanged) {
+                // Data has changed - log as SUCCESS with details
+                const status = fresh.slots.some(s => s.availableSpots > 0) ? 'SUCCESS' : 'INFO';
+                await logAdminAction(
+                    'AVAILABILITY_CHECK',
+                    `${sauna.name}: Oppdatert ${fresh.date}. Totalt ${fresh.slots.length} tider. (Eks: ${slotSummary}...)`,
+                    status,
+                    'System'
+                );
+            } else {
+                // Data is unchanged - log as OK
+                await logAdminAction(
+                    'AVAILABILITY_CHECK',
+                    `${sauna.name}: ${fresh.date}. Ingen endringer siden sist (${fresh.slots.length} tider, samme som før)`,
+                    'OK',
+                    'System'
+                );
+            }
         } else {
             // No slots found in scrape result
             console.warn(`[AvailabilityService] No slots found for ${sauna.name} on the expected date`);
             await logAdminAction(
-                'SCRAPER_RUN',
-                `${sauna.name}: Fant ingen tider på siden. Mulig URL-endring, nettsted ute, eller alle tider booket. Sjekk manuelt: ${sauna.bookingAvailabilityUrlDropin}`,
+                'AVAILABILITY_CHECK',
+                `${sauna.name}: Fant ingen tider på siden. Mulig URL-endring, nettsted ute, eller alle tider booket.`,
                 'WARNING',
                 'System'
             );
@@ -90,7 +105,7 @@ export async function updateSaunaAvailability(saunaId: string) {
     } catch (error) {
         console.error(`[AvailabilityService] Failed for ${sauna.name}:`, error);
         await logAdminAction(
-            'SCRAPER_RUN',
+            'AVAILABILITY_CHECK',
             `Feilet for ${sauna.name}: ${error instanceof Error ? error.message : String(error)}`,
             'FAILURE',
             'System'

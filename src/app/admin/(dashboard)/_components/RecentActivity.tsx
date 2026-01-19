@@ -72,12 +72,14 @@ export default function RecentActivity({ logs }: Props) {
 
 function getStatusColor(status: string) {
     if (status === 'SUCCESS') return '#16a34a'
+    if (status === 'OK') return '#0ea5e9'
     if (status === 'FAILURE') return '#dc2626'
     return '#d97706'
 }
 
 function getStatusIcon(status: string) {
     if (status === 'SUCCESS') return <CheckCircle size={16} />
+    if (status === 'OK') return <CheckCircle size={16} />
     if (status === 'FAILURE') return <XCircle size={16} />
     return <AlertTriangle size={16} />
 }
@@ -89,7 +91,9 @@ function formatAction(action: string) {
         'SETTINGS_UPDATE': 'Innstillinger Endret',
         'PRELOAD_START': 'Preload Startet',
         'LOGIN': 'Innlogging',
-        'LOGOUT': 'Utlogging'
+        'LOGOUT': 'Utlogging',
+        'AVAILABILITY_CHECK': 'Ledighetssjekk',
+        'SCRAPER_RUN': 'Ledighetssjekk'
     }
     return map[action] || action
 }
