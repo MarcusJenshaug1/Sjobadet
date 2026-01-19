@@ -74,6 +74,13 @@ export async function updateSaunaAvailability(saunaId: string) {
                 'SUCCESS',
                 'System'
             );
+        } else {
+            await logAdminAction(
+                'SCRAPER_RUN',
+                `${sauna.name}: Fant ingen ledige tider på siden. Sjekk URL og dato.`,
+                'WARNING',
+                'System'
+            );
         }
 
         return JSON.parse(payload);

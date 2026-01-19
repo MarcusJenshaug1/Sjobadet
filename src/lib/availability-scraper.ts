@@ -70,38 +70,30 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
             }
         });
 
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-        await new Promise((r) => setTimeout(r, 4000));
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+        await new Promise((r) => setTimeout(r, 2000));
 
-        // Scroll to force lazy load
-        await page.evaluate(async () => {
-            await new Promise<void>((resolve) => {
-                let totalHeight = 0;
-                const distance = 150;
-                const timer = setInterval(() => {
-                    const scrollHeight = document.body.scrollHeight;
-                    window.scrollBy(0, distance);
-                    totalHeight += distance;
-                    if (totalHeight >= scrollHeight || totalHeight > 4000) {
-                        clearInterval(timer);
-                        resolve();
-                    }
-                }, 120);
+        // Detect if we are already on a specific date URL (e.g. ends in /2026-01-19)
+        const hasDateInUrl = /\/\d{4}-\d{2}-\d{2}$/.test(url);
+
+        if (!hasDateInUrl) {
+            console.log('[Scraper] No date in URL, clicking "Today"...');
+            await page.evaluate(() => {
+                const todayNum = new Date().getDate().toString();
+                const elements = Array.from(document.querySelectorAll('div, span, button, td, a'));
+                const todayEl = elements.find(el => {
+                    const text = (el as HTMLElement).innerText?.trim();
+                    return text === todayNum && el.getBoundingClientRect().width < 80;
+                });
+                if (todayEl) (todayEl as HTMLElement).click();
             });
-        });
+            await new Promise((r) => setTimeout(r, 3000));
+        } else {
+            console.log('[Scraper] Date already in URL, skipping day click.');
+        }
 
-        // Click Today
-        await page.evaluate(() => {
-            const todayNum = new Date().getDate().toString();
-            const elements = Array.from(document.querySelectorAll('div, span, button, td, a'));
-            const todayEl = elements.find(el => {
-                const text = (el as HTMLElement).innerText?.trim();
-                return text === todayNum && el.getBoundingClientRect().width < 80;
-            });
-            if (todayEl) (todayEl as HTMLElement).click();
-        });
-
-        await new Promise((r) => setTimeout(r, 3500));
+        // Wait for a few more seconds for the grid to render
+        await new Promise((r) => setTimeout(r, 2000));
 
         const scrapedData = await page.evaluate(() => {
             const normalizeTime = (value: string) => value.replace('.', ':');
@@ -141,7 +133,18 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
                 // OR: [total] / [available]
                 const availMatch = betterText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
 
-                if (!availMatch) return;
+                if (!availMatch) {
+                    // Fallback for just a number followed by nothing or something else if we have "ledig" nearby
+                    const simpleNumberMatch = betterText.match(/\d+/);
+                    if (simpleNumberMatch && /ledig/i.test(betterText)) {
+                        const val = parseInt(simpleNumberMatch[0], 10);
+                        // Only use if it's not a year or time
+                        if (val > 0 && val < 50 && !betterText.includes(val + ':')) {
+                            // potential match
+                        }
+                    }
+                    return;
+                }
 
                 const availableSpots = parseInt(availMatch[1], 10);
                 const visible = isVisible(sourceEl);
