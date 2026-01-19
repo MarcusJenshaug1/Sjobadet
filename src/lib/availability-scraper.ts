@@ -106,112 +106,49 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
 
         console.log('[Scraper] About to extract data from page...');
         const scrapedData = await page.evaluate(() => {
-            console.log('[Scraper In-Page] Starting evaluation...');
-            const normalizeTime = (value: string) => value.replace('.', ':');
+            const slots: Record<string, { from: string; to: string; availableSpots: number }> = {};
             const timeRangeRegex = /(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/;
-            const availableRegex = /(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i;
 
-            const slots = new Map<string, { from: string; to: string; availableSpots: number }>();
+            // Target specifically the ant-radio-button-wrapper labels
+            const labelList = document.querySelectorAll('label.ant-radio-button-wrapper');
 
-            const isVisible = (el: HTMLElement) => {
-                const style = window.getComputedStyle(el);
-                return style.display !== 'none' &&
-                    style.visibility !== 'hidden' &&
-                    style.opacity !== '0' &&
-                    el.getClientRects().length > 0;
-            };
+            // Collect all labels with their times and availability
+            const labelData: Array<{ time: string; toTime: string; spots: number }> = [];
 
-            const parseRowText = function (text: string, sourceEl: HTMLElement, target: Map<string, { from: string; to: string; availableSpots: number }>) {
-                // Improve text extraction: Add spaces between children to prevent "20:006"
-                function getBetterInnerText(el: HTMLElement) {
-                    if (el.children.length === 0) return el.innerText;
-                    return Array.from(el.childNodes)
-                        .map(node => node.textContent || '')
-                        .join(' ')
-                        .replace(/\s+/g, ' ')
-                        .trim();
+            for (let i = 0; i < labelList.length; i++) {
+                const label = labelList[i] as HTMLElement;
+                const fullText = label.innerText?.trim() || '';
+                const timeMatch = fullText.match(timeRangeRegex);
+                
+                if (!timeMatch) continue;
+
+                const availMatch = fullText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
+                if (!availMatch) continue;
+
+                const fromTime = timeMatch[1].replace('.', ':');
+                const toTime = timeMatch[2].replace('.', ':');
+                const spots = parseInt(availMatch[1], 10);
+
+                labelData.push({ time: fromTime, toTime: toTime, spots: spots });
+            }
+
+            // Keep only first occurrence of each time
+            for (const entry of labelData) {
+                if (!slots[entry.time]) {
+                    slots[entry.time] = { from: entry.time, to: entry.toTime, availableSpots: entry.spots };
                 }
+            }
 
-                const betterText = getBetterInnerText(sourceEl);
-                const timeMatch = betterText.match(timeRangeRegex);
-                if (!timeMatch) return;
-
-                const fromTime = normalizeTime(timeMatch[1]);
-                const toTime = normalizeTime(timeMatch[2]);
-
-                // More robust availability regex:
-                // Look for: [number] [separator?] [ledige?] [plasser]
-                // OR: [total] / [available]
-                const availMatch = betterText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
-
-                console.log(`[Scraper Debug] Processing: "${betterText.substring(0, 100)}"`);
-                console.log(`[Scraper Debug] Time match: ${fromTime} - ${toTime}, Avail match: ${availMatch ? availMatch[1] : 'NONE'}`);
-
-                if (!availMatch) {
-                    // Fallback for just a number followed by nothing or something else if we have "ledig" nearby
-                    const simpleNumberMatch = betterText.match(/\d+/);
-                    if (simpleNumberMatch && /ledig/i.test(betterText)) {
-                        const val = parseInt(simpleNumberMatch[0], 10);
-                        // Only use if it's not a year or time
-                        if (val > 0 && val < 50 && !betterText.includes(val + ':')) {
-                            // potential match
-                        }
-                    }
-                    return;
-                }
-
-                const availableSpots = parseInt(availMatch[1], 10);
-                const visible = isVisible(sourceEl);
-
-                // LOGGING for debugging discrepancy
-                console.log(`[Scraper Debug] Row: "${betterText}" -> Time: ${fromTime}, Spots: ${availableSpots}, Visible: ${visible}`);
-
-                const existing = target.get(fromTime);
-                if (!existing) {
-                    target.set(fromTime, { from: fromTime, to: toTime, availableSpots });
-                } else {
-                    const existingVisible = (existing as any)._visible;
-                    if (visible && !existingVisible) {
-                        target.set(fromTime, { from: fromTime, to: toTime, availableSpots });
-                    } else if (visible === existingVisible) {
-                        // Prefere FEWER spots as it's more conservative/likely real
-                        if (availableSpots < existing.availableSpots) {
-                            target.set(fromTime, { from: fromTime, to: toTime, availableSpots });
-                        }
-                    }
-                }
-
-                const entry = target.get(fromTime)!;
-                (entry as any)._visible = visible;
-            };
-
-            // Preferred: elements with explicit availability text
-            // We search broad and then filter for rows that contain both a time and "ledig"
-            const allElements = Array.from(document.querySelectorAll('tr, div, button, li, label, .booking-slot, td, .time-slot'));
-            console.log(`[Scraper In-Page] Found ${allElements.length} total elements to check`);
-
-            allElements.forEach(el => {
-                const htmlEl = el as HTMLElement;
-                // Only process elements that aren't too large (avoid container divs) and contain a time
-                if (htmlEl.innerText && htmlEl.children.length < 15) {
-                    const text = htmlEl.innerText;
-                    if (/ledig/i.test(text) && timeRangeRegex.test(text)) {
-                        parseRowText(text, htmlEl, slots);
-                    }
-                }
-            });
-
-            console.log(`[Scraper In-Page] Extracted ${slots.size} slots`);
-
-
-            const ordered = Array.from(slots.values()).sort((a, b) => a.from.localeCompare(b.from));
+            // Convert to array and sort
+            const ordered = Object.values(slots).sort((a, b) => a.from.localeCompare(b.from));
 
             return {
                 slots: ordered,
                 debug: {
-                    totalElements: allElements.length,
-                    slotsExtracted: slots.size,
-                    sampleTexts: ordered.slice(0, 3).map(s => `${s.from}: ${s.availableSpots}`)
+                    totalLabels: labelList.length,
+                    processedCount: labelData.length,
+                    slotsExtracted: ordered.length,
+                    sampleTexts: ordered.slice(0, 5).map(s => `${s.from}: ${s.availableSpots}`)
                 }
             };
         });

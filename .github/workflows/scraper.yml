@@ -2,7 +2,7 @@ name: Sauna Scraper
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # Kjører hvert 15. minutt
+    - cron: '*/5 * * * *' # Kjører hvert 5. minutt
   workflow_dispatch: # Tillater manuell kjøring
 
 jobs:
