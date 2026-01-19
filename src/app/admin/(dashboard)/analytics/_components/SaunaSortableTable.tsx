@@ -58,7 +58,7 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
         );
     };
 
-    const SortHeader = ({ column, label }: { column: SortColumn; label: string }) => (
+    const SortHeader = ({ column, label, title }: { column: SortColumn; label: string; title?: string }) => (
         <th
             style={{
                 ...thStyle,
@@ -69,7 +69,7 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
                 fontWeight: sortColumn === column ? '700' : '500'
             }}
             onClick={() => handleSort(column)}
-            title="Klikk for å sortere"
+            title={title || "Klikk for å sortere"}
         >
             {label} <SortIcon column={column} />
         </th>
