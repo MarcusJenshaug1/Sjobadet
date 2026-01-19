@@ -38,9 +38,53 @@ export async function POST(request: NextRequest) {
     };
 
     // Start scan in background using npm script with options
-    exec('npm run lighthouse:scan', {
+    const child = exec('npm run lighthouse:scan', {
       cwd: process.cwd(),
       env,
+    });
+
+    if (!child.pid) {
+      await prisma.lighthouseScan.update({
+        where: { id: scan.id },
+        data: {
+          status: 'failed',
+          completedAt: new Date(),
+          error: 'Failed to start Lighthouse scan process',
+        },
+      });
+      return NextResponse.json({ error: 'Failed to start Lighthouse scan process' }, { status: 500 });
+    }
+
+    child.on('error', async (err) => {
+      console.error('Lighthouse scan process error:', err);
+      try {
+        await prisma.lighthouseScan.update({
+          where: { id: scan.id },
+          data: {
+            status: 'failed',
+            completedAt: new Date(),
+            error: err.message,
+          },
+        });
+      } catch (updateError) {
+        console.error('Failed to update scan error status:', updateError);
+      }
+    });
+
+    child.on('exit', async (code) => {
+      if (code === 0) return;
+      try {
+        await prisma.lighthouseScan.update({
+          where: { id: scan.id },
+          data: {
+            status: 'failed',
+            completedAt: new Date(),
+            error: `Scan process exited with code ${code}`,
+          },
+        });
+      } catch (updateError) {
+        console.error('Failed to update scan exit status:', updateError);
+      }
     });
 
     // Return immediately - scan runs in background
