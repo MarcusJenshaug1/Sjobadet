@@ -4,6 +4,17 @@ import Link from 'next/link'
 import styles from './AdminLayout.module.css'
 import { redirect } from 'next/navigation'
 
+const navLinks = [
+    { href: '/', label: 'Gå til nettsted', accent: true },
+    { href: '/admin', label: 'Oversikt' },
+    { href: '/admin/badstuer', label: 'Badstuer' },
+    { href: '/admin/apningstider', label: 'Åpningstider' },
+    { href: '/admin/medlemskap', label: 'Medlemskap' },
+    { href: '/admin/brukere', label: 'Brukere' },
+    { href: '/admin/settings', label: 'Innstillinger' },
+    { href: '/admin/analytics', label: 'Analyse', accent: true },
+]
+
 export default function AdminLayout({
     children,
 }: {
@@ -15,18 +26,32 @@ export default function AdminLayout({
                 <div className={styles.logo}>
                     Sjøbadet Admin
                 </div>
-                <nav className={styles.nav}>
-                    <Link href="/" className={styles.link} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#10b981', fontWeight: 'bold' }}>
-                        ← Gå til nettsted
-                    </Link>
-                    <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '0.5rem 0' }}></div>
-                    <Link href="/admin" className={styles.link}>Oversikt</Link>
-                    <Link href="/admin/badstuer" className={styles.link}>Badstuer</Link>
-                    <Link href="/admin/apningstider" className={styles.link}>Åpningstider</Link>
-                    <Link href="/admin/medlemskap" className={styles.link}>Medlemskap</Link>
-                    <Link href="/admin/brukere" className={styles.link}>Brukere</Link>
-                    <Link href="/admin/settings" className={styles.link}>Innstillinger</Link>
-                    <Link href="/admin/analytics" className={styles.link} style={{ color: 'var(--primary)', fontWeight: '600' }}>Analyse</Link>
+
+                <details className={styles.mobileNav}>
+                    <summary>≡ Meny</summary>
+                    <div className={styles.mobileNavContent}>
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className={`${styles.link} ${link.accent ? styles.linkAccent : ''}`}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+                    </div>
+                </details>
+
+                <nav className={styles.navDesktop}>
+                    {navLinks.map((link) => (
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            className={`${styles.link} ${link.accent ? styles.linkAccent : ''}`}
+                        >
+                            {link.label}
+                        </Link>
+                    ))}
                 </nav>
                 <div className={styles.footer}>
                     <form action={async () => {

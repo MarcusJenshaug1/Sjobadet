@@ -14,8 +14,8 @@ export default async function SettingsPage() {
     const getVal = (key: string) => settingsMap[key] || ''
 
     return (
-        <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>Innstillinger</h1>
+        <div style={{ maxWidth: '100%' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Innstillinger</h1>
 
             <form action={clearPublicCaches} style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', border: '1px solid #e5e7eb', borderRadius: '0.5rem', background: '#f8fafc' }}>
                 <div style={{ flex: 1 }}>
@@ -33,7 +33,7 @@ export default async function SettingsPage() {
                 <Button type="submit" variant="primary">Preload nå</Button>
             </form>
 
-            <form action={saveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
+            <form action={saveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', maxWidth: '960px', width: '100%' }}>
 
                 {/* Alert Bar Section */}
                 <section style={sectionStyle}>
@@ -68,7 +68,7 @@ export default async function SettingsPage() {
                 {/* Contact Info Section */}
                 <section style={sectionStyle}>
                     <h2 style={sectionTitleStyle}>Kontaktinformasjon</h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                         <div>
                             <label style={labelStyle}>E-post</label>
                             <input
@@ -102,7 +102,7 @@ export default async function SettingsPage() {
                 {/* Social Media Section */}
                 <section style={sectionStyle}>
                     <h2 style={sectionTitleStyle}>Sosiale Medier</h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                         <div>
                             <label style={labelStyle}>Instagram URL</label>
                             <input

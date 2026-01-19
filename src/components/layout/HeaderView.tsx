@@ -74,20 +74,40 @@ export function HeaderView({ isAdmin }: HeaderViewProps) {
 
                 {/* Mobile Nav */}
                 <nav className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.open : ''}`}>
-                    {navLinks.map((link) => (
-                        <Link key={link.href} href={link.href} onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '1.25rem' }}>
-                            {link.label}
+                    <div className={styles.mobileTopRow}>
+                        <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={styles.mobileLogo}>
+                            <Image
+                                src={logoImg}
+                                alt="Sjøbadet Logo"
+                                height={34}
+                                style={{ objectFit: 'contain', width: 'auto' }}
+                                priority
+                            />
                         </Link>
-                    ))}
-                    {isAdmin && (
-                        <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '1.25rem', color: '#2563eb', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <ShieldCheck size={22} />
-                            Admin
-                        </Link>
-                    )}
-                    <Button href="https://minside.periode.no/landing/aZNzpP9Mk1XohfwTswm1/0" external variant="outline" fullWidth>
-                        Min Side
-                    </Button>
+                        <button className={styles.closeBtn} onClick={toggleMenu} aria-label="Lukk meny">
+                            <X size={26} />
+                        </button>
+                    </div>
+
+                    <div className={styles.mobileLinks}>
+                        {navLinks.map((link) => (
+                            <Link key={link.href} href={link.href} onClick={() => setIsMobileMenuOpen(false)} className={styles.mobileLink}>
+                                {link.label}
+                            </Link>
+                        ))}
+                        {isAdmin && (
+                            <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.mobileLink} ${styles.mobileAdmin}`}>
+                                <ShieldCheck size={20} />
+                                Admin
+                            </Link>
+                        )}
+                    </div>
+
+                    <div className={styles.mobileCta}>
+                        <Button href="https://minside.periode.no/landing/aZNzpP9Mk1XohfwTswm1/0" external variant="outline" fullWidth>
+                            Min Side
+                        </Button>
+                    </div>
                 </nav>
             </div>
         </header>

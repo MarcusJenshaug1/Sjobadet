@@ -1,6 +1,9 @@
 import { getSession } from '@/lib/auth';
 import { HeaderView } from './HeaderView';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function Header() {
     let isAdmin = false;
     try {

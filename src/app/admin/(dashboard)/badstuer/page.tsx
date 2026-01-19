@@ -12,16 +12,17 @@ export default async function AdminSaunasPage() {
     })
 
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Badstuer</h1>
-                <Link href="/admin/badstuer/ny">
+        <div style={{ maxWidth: '100%', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <h1 style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>Badstuer</h1>
+                <Link href="/admin/badstuer/ny" style={{ width: 'fit-content' }}>
                     <Button>Ny Badstue</Button>
                 </Link>
             </div>
 
-            <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+                <div style={{ width: '100%', overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                     <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                         <tr>
                             <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Navn</th>
@@ -57,7 +58,7 @@ export default async function AdminSaunasPage() {
                                     )}
                                 </td>
                                 <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', flexWrap: 'wrap' }}>
                                         <form action={toggleSaunaStatus.bind(null, sauna.id, sauna.status)}>
                                             <Button size="sm" variant="outline">
                                                 {sauna.status === 'active' ? 'Deaktiver' : 'Aktiver'}
@@ -76,7 +77,8 @@ export default async function AdminSaunasPage() {
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
         </div>
     )

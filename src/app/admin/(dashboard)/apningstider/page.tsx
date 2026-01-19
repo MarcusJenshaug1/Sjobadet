@@ -76,42 +76,44 @@ export default async function OpeningHoursPage() {
     const saunasWithHours = allSaunas.filter((s: any) => !s.flexibleHours)
 
     return (
-        <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>Åpningstider (Ukentlig)</h1>
+        <div style={{ maxWidth: '100%' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Åpningstider (Ukentlig)</h1>
 
             {saunasWithHours.map((sauna: any) => (
-                <div key={sauna.id} style={{ marginBottom: '3rem', backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+                <div key={sauna.id} style={{ marginBottom: '2rem', backgroundColor: 'white', padding: '1.25rem', borderRadius: '0.75rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', border: '1px solid #e5e7eb' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>{sauna.name}</h2>
                     <form action={updateHours}>
-                        <table style={{ width: '100%' }}>
-                            <thead>
-                                <tr>
-                                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Dag</th>
-                                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Åpner</th>
-                                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Stenger</th>
-                                    <th style={{ textAlign: 'center', padding: '0.5rem' }}>Åpen?</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {sauna.openingHours
-                                    .sort((a: any, b: any) => (a.weekday ?? 0) - (b.weekday ?? 0))
-                                    .map((hour: any) => (
-                                        <tr key={hour.id}>
-                                            <td style={{ padding: '0.5rem' }}>{['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'][hour.weekday ?? 0]}</td>
-                                            <td style={{ padding: '0.5rem' }}>
-                                                <input name={`opens_${hour.id}`} defaultValue={hour.opens || ''} style={{ padding: '0.25rem', border: '1px solid #ccc', borderRadius: '4px' }} />
-                                            </td>
-                                            <td style={{ padding: '0.5rem' }}>
-                                                <input name={`closes_${hour.id}`} defaultValue={hour.closes || ''} style={{ padding: '0.25rem', border: '1px solid #ccc', borderRadius: '4px' }} />
-                                            </td>
-                                            <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                                                <input type="checkbox" name={`active_${hour.id}`} defaultChecked={hour.active} />
-                                            </td>
-                                        </tr>
-                                    ))}
-                            </tbody>
-                        </table>
-                        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                        <div style={{ width: '100%', overflowX: 'auto' }}>
+                            <table style={{ width: '100%', minWidth: '520px' }}>
+                                <thead>
+                                    <tr>
+                                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Dag</th>
+                                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Åpner</th>
+                                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Stenger</th>
+                                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Åpen?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sauna.openingHours
+                                        .sort((a: any, b: any) => (a.weekday ?? 0) - (b.weekday ?? 0))
+                                        .map((hour: any) => (
+                                            <tr key={hour.id}>
+                                                <td style={{ padding: '0.5rem' }}>{['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'][hour.weekday ?? 0]}</td>
+                                                <td style={{ padding: '0.5rem' }}>
+                                                    <input name={`opens_${hour.id}`} defaultValue={hour.opens || ''} style={{ padding: '0.35rem', border: '1px solid #cbd5e1', borderRadius: '6px', width: '100%' }} />
+                                                </td>
+                                                <td style={{ padding: '0.5rem' }}>
+                                                    <input name={`closes_${hour.id}`} defaultValue={hour.closes || ''} style={{ padding: '0.35rem', border: '1px solid #cbd5e1', borderRadius: '6px', width: '100%' }} />
+                                                </td>
+                                                <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                                                    <input type="checkbox" name={`active_${hour.id}`} defaultChecked={hour.active} />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
                             <Button type="submit">Lagre endringer for {sauna.name}</Button>
                         </div>
                     </form>

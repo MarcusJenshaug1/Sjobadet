@@ -49,20 +49,70 @@
 
 .mobileMenu {
     position: fixed;
-    top: 80px;
+    top: 0;
     left: 0;
     width: 100%;
-    height: calc(100vh - 80px);
-    background-color: var(--background);
-    padding: 2rem;
+    height: 100vh;
+    background-color: #ffffff;
+    padding: 1.25rem 1.5rem 2rem;
+    display: none;
     flex-direction: column;
     gap: 1.5rem;
-    display: none;
-    border-top: 1px solid var(--border);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    z-index: 1200;
 }
 
 .mobileMenu.open {
     display: flex;
+}
+
+.mobileTopRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mobileLogo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.closeBtn {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 999px;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.mobileLinks {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    margin-top: 0.25rem;
+}
+
+.mobileLink {
+    font-size: 1.2rem;
+    color: #0f172a;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.mobileAdmin {
+    color: #2563eb;
+}
+
+.mobileCta {
+    margin-top: auto;
 }
 
 @media (min-width: 768px) {
