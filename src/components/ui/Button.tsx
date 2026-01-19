@@ -3,12 +3,13 @@ import styles from './Button.module.css';
 import { clsx } from 'clsx';
 import Link from 'next/link';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
     variant?: 'primary' | 'secondary' | 'outline' | 'danger';
     size?: 'default' | 'sm' | 'lg';
     fullWidth?: boolean;
     href?: string;
     external?: boolean;
+    onClick?: React.MouseEventHandler<HTMLButtonElement | HTMLAnchorElement>;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
