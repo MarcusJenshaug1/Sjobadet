@@ -119,37 +119,51 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
             };
 
             const parseRowText = (text: string, sourceEl: HTMLElement, target: Map<string, { from: string; to: string; availableSpots: number }>) => {
-                const condensed = text.replace(/\s+/g, ' ').trim();
-                const timeMatch = condensed.match(timeRangeRegex);
+                // Improve text extraction: Add spaces between children to prevent "20:006"
+                const getBetterInnerText = (el: HTMLElement) => {
+                    if (el.children.length === 0) return el.innerText;
+                    return Array.from(el.childNodes)
+                        .map(node => node.textContent || '')
+                        .join(' ')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                };
+
+                const betterText = getBetterInnerText(sourceEl);
+                const timeMatch = betterText.match(timeRangeRegex);
                 if (!timeMatch) return;
 
                 const fromTime = normalizeTime(timeMatch[1]);
                 const toTime = normalizeTime(timeMatch[2]);
-                const availMatch = condensed.match(availableRegex);
-                const availableSpots = availMatch ? parseInt(availMatch[1], 10) : 0;
 
-                // Priority logic: 
-                // 1. Prefer visible elements
-                // 2. If same time, prefer the one with FEWER spots (usually more "real" than a placeholder capacity)
-                const existing = target.get(fromTime);
+                // More robust availability regex:
+                // Look for: [number] [separator?] [ledige?] [plasser]
+                // OR: [total] / [available]
+                const availMatch = betterText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
+
+                if (!availMatch) return;
+
+                const availableSpots = parseInt(availMatch[1], 10);
                 const visible = isVisible(sourceEl);
 
+                // LOGGING for debugging discrepancy
+                console.log(`[Scraper Debug] Row: "${betterText}" -> Time: ${fromTime}, Spots: ${availableSpots}, Visible: ${visible}`);
+
+                const existing = target.get(fromTime);
                 if (!existing) {
                     target.set(fromTime, { from: fromTime, to: toTime, availableSpots });
                 } else {
-                    // Overwrite if new one is visible and old wasn't
                     const existingVisible = (existing as any)._visible;
                     if (visible && !existingVisible) {
                         target.set(fromTime, { from: fromTime, to: toTime, availableSpots });
                     } else if (visible === existingVisible) {
-                        // Both same visibility, take the one with fewer spots (more likely real)
+                        // Prefere FEWER spots as it's more conservative/likely real
                         if (availableSpots < existing.availableSpots) {
                             target.set(fromTime, { from: fromTime, to: toTime, availableSpots });
                         }
                     }
                 }
 
-                // Track visibility for priority
                 const entry = target.get(fromTime)!;
                 (entry as any)._visible = visible;
             };
