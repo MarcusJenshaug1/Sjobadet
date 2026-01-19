@@ -36,7 +36,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     let sauna = null;
     let isAdmin = false;
     let dbError = false;
-    let otherSaunas = [];
+    let otherSaunas: Awaited<ReturnType<typeof getActiveSaunas>> = [];
 
     try {
         sauna = await getSaunaBySlug(slug);
