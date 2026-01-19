@@ -1,6 +1,6 @@
 import prisma from './prisma';
 
-export type LogStatus = 'SUCCESS' | 'FAILURE' | 'WARNING';
+export type LogStatus = 'SUCCESS' | 'FAILURE' | 'WARNING' | 'INFO' | 'OK';
 
 /**
  * Logs an administrative or background action to the AdminLog table.
