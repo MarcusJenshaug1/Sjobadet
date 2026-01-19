@@ -3,35 +3,17 @@ import { Footer } from '@/components/layout/Footer';
 import styles from './SaunaDetail.module.css';
 import { MapPin, Users, Check, AlertTriangle, Gift, CreditCard } from 'lucide-react';
 import { Metadata } from 'next';
-import { getSaunaBySlug } from '@/lib/sauna-service';
+import { getSaunaBySlug, getActiveSaunas } from '@/lib/sauna-service';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import ReactMarkdown from 'react-markdown';
 import { SaunaGallery } from '@/components/sauna/SaunaGallery';
 import Image from 'next/image';
 import SaunaAvailability from '@/components/sauna/SaunaAvailability';
 import SaunaBookingOptions from '@/components/sauna/SaunaBookingOptions';
 import { getSession } from '@/lib/auth';
+import { SaunaCard } from '@/components/sauna/SaunaCard';
 
-const ReactMarkdown = dynamic(() => import('react-markdown'), {
-    loading: () => <p>Laster inn innhold...</p>,
-    ssr: true,
-});
-
-
-// Revalidate every 10 minutes (ISR)
-export const revalidate = 600;
-export const dynamicParams = true;
-
-// Generate static params for all active saunas
-export async function generateStaticParams() {
-    const prisma = (await import('@/lib/prisma')).default;
-    const saunas = await prisma.sauna.findMany({
-        where: { status: 'active' },
-        select: { slug: true }
-    });
-    return saunas.map((sauna: { slug: string }) => ({ slug: sauna.slug }));
-}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
@@ -43,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             title: `${sauna.name} | Sjøbadet Badstue`,
             description: sauna.shortDescription,
         };
-    } catch {
+    } catch (error) {
         return { title: 'Sjøbadet Badstue' };
     }
 }
@@ -54,9 +36,12 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     let sauna = null;
     let isAdmin = false;
     let dbError = false;
+    let otherSaunas = [];
 
     try {
         sauna = await getSaunaBySlug(slug);
+        const allSaunas = await getActiveSaunas();
+        otherSaunas = allSaunas.filter(s => s.slug !== slug).slice(0, 3);
         const session = await getSession();
         isAdmin = !!session?.user;
     } catch (error) {
@@ -69,7 +54,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     }
 
     // Parse JSON fields
-    const parseJSON = (str: string | null | undefined) => {
+    const parseJSON = (str: string | null) => {
         try {
             return str ? JSON.parse(str) : [];
         } catch (e) {
@@ -177,9 +162,10 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                         <SaunaAvailability
                                             saunaId={sauna.id}
                                             bookingUrlDropin={sauna.bookingUrlDropin}
+                                            bookingUrlPrivat={sauna.bookingUrlPrivat}
                                             capacityDropin={sauna.capacityDropin || 0}
                                             isAdmin={isAdmin}
-                                            showAvailability={sauna.hasDropinAvailability ?? true}
+                                            showAvailability={(sauna as any).hasDropinAvailability ?? true}
                                         />
                                     </div>
                                 )}
@@ -191,13 +177,13 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                         {/* Markdown rendering */}
                                         <ReactMarkdown
                                             components={{
-                                                p: (props) => <p style={{ marginBottom: '1rem', lineHeight: '1.7' }} {...props} />,
-                                                ul: (props) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'disc' }} {...props} />,
-                                                ol: (props) => <ol style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'decimal' }} {...props} />,
-                                                li: (props) => <li style={{ marginBottom: '0.5rem' }} {...props} />,
-                                                h1: (props) => <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '1rem' }} {...props} />,
-                                                h2: (props) => <h4 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1.25rem', marginBottom: '0.75rem' }} {...props} />,
-                                                h3: (props) => <h5 style={{ fontSize: '1.1rem', fontWeight: 600, marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
+                                                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', lineHeight: '1.7' }} {...props} />,
+                                                ul: ({ node, ...props }) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'disc' }} {...props} />,
+                                                ol: ({ node, ...props }) => <ol style={{ marginLeft: '1.5rem', marginBottom: '1rem', listStyle: 'decimal' }} {...props} />,
+                                                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem' }} {...props} />,
+                                                h1: ({ node, ...props }) => <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '1rem' }} {...props} />,
+                                                h2: ({ node, ...props }) => <h4 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1.25rem', marginBottom: '0.75rem' }} {...props} />,
+                                                h3: ({ node, ...props }) => <h5 style={{ fontSize: '1.1rem', fontWeight: 600, marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
                                             }}
                                         >
                                             {sauna.description}
@@ -239,9 +225,10 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                         <SaunaAvailability
                                             saunaId={sauna.id}
                                             bookingUrlDropin={sauna.bookingUrlDropin}
+                                            bookingUrlPrivat={sauna.bookingUrlPrivat}
                                             capacityDropin={sauna.capacityDropin || 0}
                                             isAdmin={isAdmin}
-                                            showAvailability={sauna.hasDropinAvailability ?? true}
+                                            showAvailability={(sauna as any).hasDropinAvailability ?? true}
                                         />
                                     </div>
                                 )}
@@ -303,6 +290,20 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                         </div>
                     )}
                 </div>
+
+                {/* Other Saunas Section */}
+                {otherSaunas.length > 0 && (
+                    <div className={styles.contentContainer}>
+                        <div style={{ marginBottom: '2rem' }}>
+                            <h2 className={styles.sectionTitle} style={{ marginBottom: '1.5rem' }}>Andre badstuer</h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+                                {otherSaunas.map((s) => (
+                                    <SaunaCard key={s.id} sauna={s} />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
             <Footer />
         </>
