@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 import { exec } from 'child_process';
 
 export async function POST(request: NextRequest) {
@@ -18,12 +19,22 @@ export async function POST(request: NextRequest) {
     }
     const { homepage = true, saunas = true, subpages = true } = body;
 
+  const scan = await prisma.lighthouseScan.create({
+      data: {
+        status: 'running',
+        totalUrls: 0,
+        completedUrls: 0,
+        failedUrls: 0,
+      },
+    });
+
     // Build environment variables for the scan script
     const env = {
       ...process.env,
       SCAN_HOMEPAGE: homepage.toString(),
       SCAN_SAUNAS: saunas.toString(),
       SCAN_SUBPAGES: subpages.toString(),
+      SCAN_ID: scan.id,
     };
 
     // Start scan in background using npm script with options
@@ -35,7 +46,8 @@ export async function POST(request: NextRequest) {
     // Return immediately - scan runs in background
     return NextResponse.json({ 
       success: true,
-      message: 'Lighthouse scan startet i bakgrunn. Sjekk progresjon på denne siden.'
+      message: 'Lighthouse scan startet i bakgrunn. Sjekk progresjon på denne siden.',
+      scanId: scan.id,
     });
   } catch (error) {
     console.error('Lighthouse scan error:', error);
