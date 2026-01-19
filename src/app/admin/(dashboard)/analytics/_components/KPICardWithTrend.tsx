@@ -48,6 +48,11 @@ export function KPICardWithTrend({
                                 style={{ position: 'relative', cursor: 'pointer' }}
                                 onMouseEnter={() => setShowTooltip(true)}
                                 onMouseLeave={() => setShowTooltip(false)}
+                                   onFocus={() => setShowTooltip(true)}
+                                   onBlur={() => setShowTooltip(false)}
+                                   tabIndex={0}
+                                   role="button"
+                                   aria-label={`Info: ${definition}`}
                             >
                                 <HelpCircle size={16} color="#94a3b8" />
                                 {showTooltip && (

@@ -151,9 +151,9 @@ export const trackPageview = (path?: string) => track('pageview', { path });
 export const trackEvent = (eventName: string, payload?: any) => track('event', { eventName, payload });
 
 /**
- * Specifically for tracking consent choices anonymously.
+ * Specifically for tracking consent choices.
  * Bypasses the consent check since it's the action of giving/denying consent itself.
- * Does NOT send a sessionId to ensure total anonymity.
+ * Includes sessionId to allow the dashboard to count unique users per consent choice.
  */
 export async function trackConsentChoice(choice: 'accepted' | 'declined' | 'custom') {
     // Skip tracking for admin sessions
@@ -162,15 +162,17 @@ export async function trackConsentChoice(choice: 'accepted' | 'declined' | 'cust
     }
 
     try {
+        const session = getSessionData();
         await fetch('/api/analytics/ingest', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                sessionId: session.id,
                 type: 'event',
                 eventName: 'consent_choice',
                 payload: { choice },
                 path: typeof window !== 'undefined' ? window.location.pathname : '',
-                metadata: {} // No UTMs or session bits for extra privacy
+                metadata: {}
             }),
             keepalive: true,
         });

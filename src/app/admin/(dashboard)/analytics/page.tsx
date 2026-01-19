@@ -1,8 +1,12 @@
 import prisma from "@/lib/prisma";
-import { Users, MousePointer2, TrendingUp, Monitor, Download, Calendar, Shield, Info } from "lucide-react";
+import { Users, MousePointer2, TrendingUp, Monitor, Download, Calendar, Shield, Info, Trash2, ChevronDown } from "lucide-react";
 import RangeSelector from "./_components/RangeSelector";
 import { KPICardWithTrend } from "./_components/KPICardWithTrend";
 import { SaunaSortableTable } from "./_components/SaunaSortableTable";
+import { getSession } from "@/lib/auth";
+import { ActionMenu } from "./_components/ActionMenu";
+import { DataQualityBox } from "./_components/DataQualityBox";
+import { PopularPagesCard } from "./_components/PopularPagesCard";
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +21,15 @@ export default async function AnalyticsPage({
 }) {
     const params = await searchParams;
     const days = parseInt(params.days || '30');
+
+    // Get current user session
+    let currentUser: any = null;
+    try {
+        const session = await getSession();
+        currentUser = session?.user;
+    } catch (e) {
+        console.error('Failed to get session:', e);
+    }
 
     // Note: Using any here because prisma client might not be generate-ready yet
     const analytics = prisma as any;
@@ -129,23 +142,37 @@ export default async function AnalyticsPage({
         console.error("Analytics fetch error:", e);
     }
 
-    // Process consent stats
+    // Process consent stats - count UNIQUE sessions with accepted/declined consent
     const consentStats = {
         accepted: 0,
         declined: 0,
-        custom: 0
+        notChosenYet: 0
     };
+    
+    const acceptedSessions = new Set<string>();
+    const declinedSessions = new Set<string>();
+    
     consentEvents.forEach(e => {
         try {
             const choice = JSON.parse(e.payload || '{}').choice;
-            if (choice === 'accepted') consentStats.accepted++;
-            else if (choice === 'declined') consentStats.declined++;
-            else if (choice === 'custom') consentStats.custom++;
+            // Track sessionId to count unique users, not events
+            if (choice === 'accepted' && e.sessionId) {
+                acceptedSessions.add(e.sessionId);
+            } else if (choice === 'declined' && e.sessionId) {
+                declinedSessions.add(e.sessionId);
+            }
         } catch (e) { }
     });
+    
+    consentStats.accepted = acceptedSessions.size;
+    consentStats.declined = declinedSessions.size;
+    
+    // Sessions without explicit consent choice (haven't interacted with banner)
+    const totalSessionsTracked = sessions;
+    const sessionsWithChoice = acceptedSessions.size + declinedSessions.size;
+    consentStats.notChosenYet = Math.max(0, totalSessionsTracked - sessionsWithChoice);
 
-    const totalConsentActions = consentStats.accepted + consentStats.declined + consentStats.custom;
-    const totalPossibleVisitors = totalConsentActions; // Approximated by consent banner interactions
+    const totalConsentActions = consentStats.accepted + consentStats.declined;
 
     // Map sauna IDs to slugs and names dynamically
     let saunas: any[] = [];
@@ -257,27 +284,30 @@ export default async function AnalyticsPage({
                         <RangeSelector currentDays={days} />
                     </div>
                 </div>
-                <a
-                    href={`/api/analytics/export?days=${days}`}
-                    download
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        backgroundColor: 'white',
-                        padding: '0.75rem 1.25rem',
-                        borderRadius: '0.75rem',
-                        border: '1px solid #e2e8f0',
-                        color: '#475569',
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                        fontSize: '0.9rem',
-                        boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
-                    }}
-                >
-                    <Download size={18} />
-                    Last ned CSV-eksport
-                </a>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <a
+                        href={`/api/analytics/export?days=${days}`}
+                        download
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            backgroundColor: 'white',
+                            padding: '0.75rem 1.25rem',
+                            borderRadius: '0.75rem',
+                            border: '1px solid #e2e8f0',
+                            color: '#475569',
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                            fontSize: '0.9rem',
+                            boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+                        }}
+                    >
+                        <Download size={18} />
+                        Last ned CSV-eksport
+                    </a>
+                        <ActionMenu username={currentUser?.username || currentUser?.email} />
+                </div>
             </div>
 
             {/* KPI Cards Section */}
@@ -294,11 +324,12 @@ export default async function AnalyticsPage({
                     definition="Totalt antall sidevisninger registrert i perioden"
                 />
                 <KPICardWithTrend
-                    title="Samtykke"
-                    value={totalConsentActions.toLocaleString()}
+                    title="Samtykke Status"
+                       title="Analysesamtykke"
+                    value={consentStats.accepted.toLocaleString()}
                     icon={<Shield size={24} color="#10b981" />}
-                    subtitle={`Godtatt: ${consentStats.accepted} | Avslått: ${consentStats.declined}`}
-                    definition="Brukere som har valgt analyse-samtykke. Bare godtatte sesjoner telles i statistikken."
+                    subtitle={`Godtatt: ${consentStats.accepted} | Avslått: ${consentStats.declined} | Ikke valgt: ${consentStats.notChosenYet}`}
+                    definition={`Unike brukere: Godtatt=${consentStats.accepted}, Avslått=${consentStats.declined}. Ikke valgt=sesjoner som ikke har interagert med samtykkebanneret ennå.`}
                 />
                 <KPICardWithTrend
                     title="Booking-klikk"
@@ -327,7 +358,7 @@ export default async function AnalyticsPage({
                 />
             </div>
 
-            {/* Per-Sauna Table */}
+            <DataQualityBox consentStats={consentStats} sessions={sessions} />
             <div style={{ ...cardStyle, marginBottom: '3rem' }}>
                 <h2 style={cardTitleStyle}>Badstue-statistikk</h2>
                 <SaunaSortableTable data={saunaStats} />
@@ -335,36 +366,7 @@ export default async function AnalyticsPage({
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
                 {/* Popular Pages Table */}
-                <div style={cardStyle}>
-                    <h2 style={cardTitleStyle}>Populære Sider</h2>
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
-                                    <th style={thStyle}>Sti / URL</th>
-                                    <th style={{ ...thStyle, textAlign: 'right' }}>Visninger</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {topPages.map((p: any) => (
-                                    <tr key={p.path} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                        <td style={{ ...tdStyle, fontWeight: 500 }}>{p.path}</td>
-                                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: 'var(--primary)' }}>
-                                            {p._count.id.toLocaleString()}
-                                        </td>
-                                    </tr>
-                                ))}
-                                {topPages.length === 0 && (
-                                    <tr>
-                                        <td colSpan={2} style={{ ...tdStyle, textAlign: 'center', paddingTop: '2rem', paddingBottom: '2rem', color: '#94a3b8' }}>
-                                            Ingen data tilgjengelig ennå.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                    <PopularPagesCard pages={topPages} />
 
                 {/* Device Information */}
                 <div style={cardStyle}>

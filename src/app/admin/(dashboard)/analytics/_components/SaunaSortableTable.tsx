@@ -39,7 +39,6 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
         let aVal: any = a[sortColumn];
         let bVal: any = b[sortColumn];
 
-        // Handle numeric conversion
         if (sortColumn === 'conversion') {
             aVal = parseFloat(aVal);
             bVal = parseFloat(bVal);
@@ -77,13 +76,13 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
     );
 
     const tdStyle = {
-        padding: '1rem 0',
+        padding: '1rem',
         fontSize: '0.9rem',
         color: '#334155'
-    };
+    } as const;
 
     const thStyle = {
-        padding: '1rem 0',
+        padding: '1rem',
         fontSize: '0.75rem',
         fontWeight: '500',
         color: '#64748b',
@@ -91,31 +90,32 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
         letterSpacing: '0.025em',
         borderBottom: '2px solid #f1f5f9',
         transition: 'all 0.2s'
-    };
+    } as const;
 
     return (
-        <div style={{ overflowX: 'auto' }}>
+        <div style={{ overflowX: 'auto', borderRadius: '0.75rem', border: '1px solid #f1f5f9' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                    <tr>
+                    <tr style={{ backgroundColor: '#f8fafc' }}>
                         <SortHeader column="name" label="Badstue" />
                         <SortHeader column="views" label="Visninger" />
                         <SortHeader column="dropinClicks" label="Drop-in bookinger" />
                         <SortHeader column="privateClicks" label="Private bookinger" />
-                        <SortHeader column="conversion" label="Konvertering" />
+                        <SortHeader column="conversion" label="Konvertering %" title="Andel av visninger som endte i booking (drop-in eller private)" />
                     </tr>
                 </thead>
                 <tbody>
-                    {sortedData.map((s) => (
+                    {sortedData.map((s, idx) => (
                         <tr
                             key={s.id}
                             style={{
+                                backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9fafb',
                                 borderBottom: '1px solid #f1f5f9',
                                 transition: 'background-color 0.2s',
                                 cursor: 'pointer'
                             }}
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#ffffff' : '#f9fafb')}
                         >
                             <td style={{ ...tdStyle, fontWeight: '600', color: '#1e293b' }}>
                                 <Link
@@ -135,7 +135,7 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
                                 {s.views.toLocaleString()}
                             </td>
                             <td style={{ ...tdStyle, textAlign: 'right', color: '#059669', fontWeight: '500' }}>
-                                {s.uniqueDropin}
+                                {s.uniqueDropin > 0 ? s.uniqueDropin : '—'}
                                 {s.dropinClicks > s.uniqueDropin && (
                                     <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'block' }}>
                                         ({s.dropinClicks} totalt)
@@ -143,7 +143,7 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
                                 )}
                             </td>
                             <td style={{ ...tdStyle, textAlign: 'right', color: '#7c3aed', fontWeight: '500' }}>
-                                {s.uniquePrivate}
+                                {s.uniquePrivate > 0 ? s.uniquePrivate : '—'}
                                 {s.privateClicks > s.uniquePrivate && (
                                     <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'block' }}>
                                         ({s.privateClicks} totalt)
@@ -155,8 +155,9 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
                                     ...tdStyle,
                                     textAlign: 'right',
                                     fontWeight: '700',
-                                    color: parseFloat(s.conversion as string) > 5 ? '#10b981' : '#f59e0b'
+                                    color: parseFloat(s.conversion as string) > 5 ? '#10b981' : parseFloat(s.conversion as string) > 0 ? '#f59e0b' : '#cbd5e1'
                                 }}
+                                title="Andel av visninger som endte i booking (drop-in eller private)"
                             >
                                 {s.conversion}%
                             </td>

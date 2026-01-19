@@ -80,6 +80,10 @@ export function ConsentBanner() {
                                 Sjøbadet bruker infokapsler (cookies) for å gi deg en bedre opplevelse, analysere trafikk og forbedre våre tjenester.
                                 Vi lagrer ingen personopplysninger i våre <strong>analyser</strong>, men kontaktinformasjon du oppgir i booking behandles iht. vår <a href="/info/personvern" className={styles.link}>personvernerklæring</a>.
                             </p>
+                            <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem', fontWeight: 500 }}>
+                                <strong>⚠️ Viktig:</strong> Vi sporer IKKE din aktivitet med mindre du aktivt godtar "Analyse" og "Funksjonelt" nedenfor. 
+                                Om du klikker "Avslå" eller lukker denne meldingen uten å klikke "Godta alle", vil vi bare bruke nødvendige cookies.
+                            </p>
                         </div>
                         <div className={styles.actions}>
                             <Button variant="outline" size="sm" onClick={() => setShowModal(true)}>
@@ -101,7 +105,7 @@ export function ConsentBanner() {
                     <div className={styles.modal} onClick={e => e.stopPropagation()}>
                         <div className={styles.modalHeader}>
                             <h2 className={styles.modalTitle}>Innstillinger for infokapsler</h2>
-                            <p className={styles.categoryDesc}>Velg hvilke kategorier du ønsker å tillate for ditt besøk hos Sjøbadet Badstue.</p>
+                            <p className={styles.categoryDesc}><strong>Velg hvilke kategorier du ønsker å tillate.</strong> Vi sporer IKKE din aktivitet hvis du ikke godtar "Analyse".</p>
                         </div>
 
                         <div className={styles.categories}>
@@ -128,7 +132,10 @@ export function ConsentBanner() {
                                         <span className={styles.slider}></span>
                                     </label>
                                 </div>
-                                <p className={styles.categoryDesc}>Hjelper oss å se hvordan besøkende bruker siden, slik at vi kan forbedre brukeropplevelsen.</p>
+                                <p className={styles.categoryDesc}>
+                                    <strong>🔴 PÅKREVD for sporing:</strong> Uten denne vil vi IKKE registrere noen informasjon om din aktivitet. 
+                                    Hjelper oss å se hvordan besøkende bruker siden, slik at vi kan forbedre brukeropplevelsen.
+                                </p>
                             </div>
 
                             <div className={styles.category}>
