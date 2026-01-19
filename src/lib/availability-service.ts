@@ -143,7 +143,7 @@ export async function updateAllSaunasAvailability() {
     for (const sauna of allActiveSaunas.filter(s => !s.bookingAvailabilityUrlDropin?.trim())) {
         console.log(`[AvailabilityService] Skipping ${sauna.name} - no booking URL configured`);
         await logAdminAction(
-            'SCRAPER_RUN',
+            'AVAILABILITY_CHECK',
             `${sauna.name}: Ingen booking-URL konfigurert. Kan ikke hente ledighet.`,
             'INFO',
             'System'
