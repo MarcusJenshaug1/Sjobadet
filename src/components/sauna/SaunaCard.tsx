@@ -15,10 +15,10 @@ interface SaunaProps {
     location: string;
     slug: string;
     shortDescription: string;
-    imageUrl?: string;
-    bookingUrlDropin?: string;
-    bookingUrlPrivat?: string;
-    driftStatus?: string;
+    imageUrl?: string | null;
+    bookingUrlDropin?: string | null;
+    bookingUrlPrivat?: string | null;
+    driftStatus?: string | null;
     nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
 }
 
