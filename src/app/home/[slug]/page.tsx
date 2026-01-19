@@ -224,7 +224,6 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                         <SaunaAvailability
                                             saunaId={sauna.id}
                                             bookingUrlDropin={sauna.bookingUrlDropin}
-                                            bookingUrlPrivat={sauna.bookingUrlPrivat}
                                             capacityDropin={sauna.capacityDropin || 0}
                                             isAdmin={isAdmin}
                                             showAvailability={(sauna as any).hasDropinAvailability ?? true}
