@@ -17,6 +17,7 @@ type LogEntry = {
 export default function HistoryLog() {
     const [logs, setLogs] = useState<LogEntry[]>([])
     const [loading, setLoading] = useState(true)
+    const [filter, setFilter] = useState<string>('ALL')
 
     const fetchLogs = async () => {
         setLoading(true)
@@ -29,13 +30,36 @@ export default function HistoryLog() {
         fetchLogs()
     }, [])
 
+    const uniqueActions = ['ALL', ...Array.from(new Set(logs.map(l => l.action)))]
+    const filteredLogs = filter === 'ALL' ? logs : logs.filter(l => l.action === filter)
+
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a' }}>Siste aktivitet</h3>
-                <Button size="sm" variant="secondary" onClick={fetchLogs} disabled={loading}>
-                    <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                </Button>
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <select
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        style={{
+                            fontSize: '0.875rem',
+                            padding: '0.3rem 0.5rem',
+                            borderRadius: '0.375rem',
+                            border: '1px solid #e2e8f0',
+                            background: 'white',
+                            color: '#4b5563'
+                        }}
+                    >
+                        {uniqueActions.map(action => (
+                            <option key={action} value={action}>{action === 'ALL' ? 'Alle typer' : action}</option>
+                        ))}
+                    </select>
+
+                    <Button size="sm" variant="secondary" onClick={fetchLogs} disabled={loading}>
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                    </Button>
+                </div>
             </div>
 
             <div style={{ border: '1px solid #e2e8f0', borderRadius: '0.5rem', overflow: 'hidden' }}>
@@ -43,20 +67,21 @@ export default function HistoryLog() {
                     <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                         <tr>
                             <th style={thStyle}>Tid</th>
+                            <th style={thStyle}>Kilde</th>
                             <th style={thStyle}>Handling</th>
                             <th style={thStyle}>Detaljer</th>
                             <th style={thStyle}>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {logs.length === 0 ? (
+                        {filteredLogs.length === 0 ? (
                             <tr>
-                                <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
-                                    Ingen historikk enda.
+                                <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                                    Ingen historikk funnet for dette filteret.
                                 </td>
                             </tr>
                         ) : (
-                            logs.map(log => (
+                            filteredLogs.map(log => (
                                 <tr key={log.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                     <td style={tdStyle}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -65,6 +90,9 @@ export default function HistoryLog() {
                                                 day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
                                             })}
                                         </div>
+                                    </td>
+                                    <td style={tdStyle}>
+                                        <SourceBadge source={log.performedBy || 'System'} />
                                     </td>
                                     <td style={{ ...tdStyle, fontWeight: 500 }}>{log.action}</td>
                                     <td style={tdStyle}>{log.details}</td>
@@ -79,6 +107,24 @@ export default function HistoryLog() {
             </div>
         </div>
     )
+}
+
+function SourceBadge({ source }: { source: string }) {
+    const isAdmin = source === 'Admin';
+    return (
+        <span style={{
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            padding: '0.1rem 0.4rem',
+            borderRadius: '4px',
+            background: isAdmin ? '#e0f2fe' : '#f1f5f9',
+            color: isAdmin ? '#0369a1' : '#64748b',
+            border: `1px solid ${isAdmin ? '#bae6fd' : '#e2e8f0'}`,
+            textTransform: 'uppercase'
+        }}>
+            {source}
+        </span>
+    );
 }
 
 function StatusBadge({ status }: { status: string }) {

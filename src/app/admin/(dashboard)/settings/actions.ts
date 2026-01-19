@@ -5,27 +5,10 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth-guard'
 import { clearSaunaCaches, getCacheStats } from '@/lib/sauna-service'
 import { headers } from 'next/headers'
+import { logAdminAction } from '@/lib/admin-log'
 
 // --- Types ---
 export type CacheType = 'all' | 'public' | 'sauna-details' | 'availability'
-
-// --- Helpers ---
-async function logAction(action: string, details: string, status: 'SUCCESS' | 'FAILURE' | 'WARNING' = 'SUCCESS') {
-    try {
-        if ((prisma as any).adminLog) {
-            await (prisma as any).adminLog.create({
-                data: {
-                    action,
-                    details,
-                    status,
-                    performedBy: 'Admin'
-                }
-            })
-        }
-    } catch (e) {
-        console.error('Failed to create admin log:', e)
-    }
-}
 
 // --- Settings Actions ---
 export async function saveSettings(formData: FormData) {
@@ -50,7 +33,7 @@ export async function saveSettings(formData: FormData) {
         })
     }
 
-    await logAction('SETTINGS_UPDATE', `Updated ${changesCount} settings keys`)
+    await logAdminAction('SETTINGS_UPDATE', `Updated ${changesCount} settings keys`, 'SUCCESS', 'Admin')
 
     revalidatePath('/', 'layout')
     revalidatePath('/admin/settings')
@@ -91,11 +74,11 @@ export async function clearCacheAction(type: CacheType) {
         }
 
         const duration = Date.now() - startTime
-        await logAction('CACHE_CLEAR', `${message} (${duration}ms)`)
+        await logAdminAction('CACHE_CLEAR', `${message} (${duration}ms)`, 'SUCCESS', 'Admin')
         return { success: true, message, timestamp: new Date().toISOString() }
 
     } catch (e) {
-        await logAction('CACHE_CLEAR', `Failed to clear ${type}: ${e}`, 'FAILURE')
+        await logAdminAction('CACHE_CLEAR', `Failed to clear ${type}: ${e}`, 'FAILURE', 'Admin')
         return { success: false, message: 'Feilet å tømme cache', error: String(e) }
     }
 }
@@ -133,7 +116,7 @@ export async function logPreloadResult(successCount: number, failCount: number, 
     const details = `Preload ferdig. Suksess: ${successCount}. Feil: ${failCount}. ${errors.length > 0 ? 'Feil: ' + errors.slice(0, 3).join(', ') : ''}`
     const status = failCount > 0 ? (successCount > 0 ? 'WARNING' : 'FAILURE') : 'SUCCESS'
 
-    await logAction('PRELOAD_RUN', details, status)
+    await logAdminAction('PRELOAD_RUN', details, status, 'Admin')
     revalidatePath('/admin/settings')
 }
 

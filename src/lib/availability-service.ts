@@ -1,5 +1,6 @@
 import prisma from './prisma';
 import { fetchAvailability } from './availability-scraper';
+import { logAdminAction } from './admin-log';
 
 export async function updateSaunaAvailability(saunaId: string) {
     const sauna = await prisma.sauna.findUnique({
@@ -63,9 +64,27 @@ export async function updateSaunaAvailability(saunaId: string) {
         });
 
         console.log(`[AvailabilityService] Success for ${sauna.name}`);
+
+        // Add log entry for the individual scrape
+        if (shouldMergeFresh) {
+            const slotSummary = fresh.slots.slice(0, 3).map(s => `${s.from}: ${s.availableSpots}`).join(', ');
+            await logAdminAction(
+                'SCRAPER_RUN',
+                `${sauna.name}: Oppdatert ${fresh.date}. Totalt ${fresh.slots.length} tider. (Eks: ${slotSummary}...)`,
+                'SUCCESS',
+                'System'
+            );
+        }
+
         return JSON.parse(payload);
     } catch (error) {
         console.error(`[AvailabilityService] Failed for ${sauna.name}:`, error);
+        await logAdminAction(
+            'SCRAPER_RUN',
+            `Feilet for ${sauna.name}: ${error instanceof Error ? error.message : String(error)}`,
+            'FAILURE',
+            'System'
+        );
         throw error;
     }
 }
