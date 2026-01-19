@@ -70,7 +70,7 @@ export async function getDriftStatus() {
     }
 }
 
-export async function getRecentActivity(limit = 7) {
+export async function getRecentActivity(limit = 5) {
     await requireAdmin()
     try {
         if ((prisma as any).adminLog) {

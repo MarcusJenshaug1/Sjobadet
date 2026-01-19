@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getAdminLogs } from '../actions'
-import { RefreshCw, Clock, Activity } from 'lucide-react'
+import { RefreshCw, Clock, Activity, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 type LogEntry = {
@@ -14,29 +14,38 @@ type LogEntry = {
     performedBy: string | null
 }
 
+type LogsResponse = {
+    logs: LogEntry[]
+    total: number
+    page: number
+    pageSize: number
+}
+
 export default function HistoryLog() {
-    const [logs, setLogs] = useState<LogEntry[]>([])
+    const [data, setData] = useState<LogsResponse>({ logs: [], total: 0, page: 1, pageSize: 10 })
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState<string>('ALL')
 
-    const fetchLogs = async () => {
+    const fetchLogs = async (page = 1) => {
         setLoading(true)
-        const data = await getAdminLogs()
-        setLogs(data)
+        const result = await getAdminLogs(page)
+        setData(result)
         setLoading(false)
     }
 
     useEffect(() => {
-        fetchLogs()
+        fetchLogs(1)
     }, [])
 
+    const logs = data.logs
     const uniqueActions = ['ALL', ...Array.from(new Set(logs.map(l => l.action)))]
     const filteredLogs = filter === 'ALL' ? logs : logs.filter(l => l.action === filter)
+    const totalPages = Math.ceil(data.total / data.pageSize)
 
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a' }}>Siste aktivitet</h3>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a' }}>Siste aktivitet ({data.total} totalt)</h3>
 
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     <select
@@ -56,7 +65,7 @@ export default function HistoryLog() {
                         ))}
                     </select>
 
-                    <Button size="sm" variant="secondary" onClick={fetchLogs} disabled={loading}>
+                    <Button size="sm" variant="secondary" onClick={() => fetchLogs(data.page)} disabled={loading}>
                         <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                     </Button>
                 </div>
@@ -105,6 +114,55 @@ export default function HistoryLog() {
                     </tbody>
                 </table>
             </div>
+
+            {totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => fetchLogs(Math.max(1, data.page - 1))}
+                        disabled={loading || data.page === 1}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                    >
+                        <ChevronLeft size={16} />
+                        Forrige
+                    </Button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <button
+                                key={page}
+                                onClick={() => fetchLogs(page)}
+                                disabled={loading}
+                                style={{
+                                    padding: '0.25rem 0.5rem',
+                                    borderRadius: '0.375rem',
+                                    border: page === data.page ? '1px solid #3b82f6' : '1px solid #e2e8f0',
+                                    background: page === data.page ? '#3b82f6' : 'white',
+                                    color: page === data.page ? 'white' : '#334155',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    cursor: loading ? 'not-allowed' : 'pointer',
+                                    opacity: loading ? 0.5 : 1
+                                }}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
+
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => fetchLogs(Math.min(totalPages, data.page + 1))}
+                        disabled={loading || data.page === totalPages}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                    >
+                        Neste
+                        <ChevronRight size={16} />
+                    </Button>
+                </div>
+            )}
         </div>
     )
 }

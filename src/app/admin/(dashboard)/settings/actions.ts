@@ -120,20 +120,25 @@ export async function logPreloadResult(successCount: number, failCount: number, 
     revalidatePath('/admin/settings')
 }
 
-export async function getAdminLogs(limit = 50) {
+export async function getAdminLogs(page = 1, limit = 10) {
     await requireAdmin()
     try {
         if ((prisma as any).adminLog) {
-            const logs = await (prisma as any).adminLog.findMany({
-                take: limit,
-                orderBy: { createdAt: 'desc' }
-            })
-            return logs
+            const skip = (page - 1) * limit
+            const [logs, total] = await Promise.all([
+                (prisma as any).adminLog.findMany({
+                    skip,
+                    take: limit,
+                    orderBy: { createdAt: 'desc' }
+                }),
+                (prisma as any).adminLog.count()
+            ])
+            return { logs, total, page, pageSize: limit }
         }
     } catch (e) {
         console.error('Failed to fetch logs', e)
     }
-    return []
+    return { logs: [], total: 0, page: 1, pageSize: limit }
 }
 
 export async function getCacheStatsAction() {
