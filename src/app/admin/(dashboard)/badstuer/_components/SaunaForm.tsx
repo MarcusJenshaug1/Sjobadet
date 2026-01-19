@@ -39,6 +39,7 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
         basic: true,
         content: true,
         images: true,
+        seo: false,
         booking: true,
         address: true,
         hours: true,
@@ -188,6 +189,39 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                                 saunaId={id}
                                 initialAssets={sauna?.mediaAssets || []}
                             />
+                        </div>
+                    </div>
+
+                    {/* 3b. SEO & Social */}
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeader} onClick={() => toggleSection('seo')}>
+                            <span>SEO & Nettsted (Link Preview)</span>
+                            <ChevronDown style={{ transform: sections.seo ? 'rotate(180deg)' : 'rotate(0)' }} />
+                        </div>
+                        <div className={`${styles.sectionBody} ${!sections.seo && styles.sectionBodyHidden}`}>
+                            <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#64748b' }}>
+                                Her kan du overstyre hvordan badstuen ser ut når den deles på sosiale medier eller dukker opp i Google-søk.
+                            </p>
+                            <div className={styles.fieldGroup}>
+                                <LabelInput
+                                    label="SEO Tittel (Meta Title)"
+                                    name="seoTitle"
+                                    defaultValue={sauna?.seoTitle}
+                                    placeholder={sauna?.name}
+                                    maxLength={60}
+                                />
+                                <div className={styles.helperText}>Optimal lengde: 50-60 tegn. La stå tom for å bruke badstuens navn.</div>
+                            </div>
+                            <div className={styles.fieldGroup}>
+                                <LabelInput
+                                    label="SEO Beskrivelse (Meta Description)"
+                                    name="seoDescription"
+                                    defaultValue={sauna?.seoDescription}
+                                    placeholder={sauna?.shortDescription}
+                                    maxLength={160}
+                                />
+                                <div className={styles.helperText}>Optimal lengde: 120-160 tegn. La stå tom for å bruke den korte beskrivelsen.</div>
+                            </div>
                         </div>
                     </div>
 

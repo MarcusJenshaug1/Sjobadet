@@ -20,7 +20,10 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Sjøbadet Badstue | Badstue i Tønsberg",
+  title: {
+    default: "Sjøbadet Badstue | Badstue i Tønsberg",
+    template: "%s | Sjøbadet"
+  },
   description: "Book badstue hos Sjøbadet. Avslappende og rolige badstuer på Tønsberg Brygge og Hjemseng Brygge.",
   metadataBase: new URL('https://sjobadet.no'),
   alternates: {
@@ -33,6 +36,12 @@ export const metadata: Metadata = {
     siteName: 'Sjøbadet',
     locale: 'no_NO',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Sjøbadet Badstue",
+    description: "Book badstue hos Sjøbadet. Avslappende og rolige badstuer på Tønsberg Brygge og Hjemseng Brygge.",
+    creator: '@sjobadet', // Assuming a handle or just generic
   },
   robots: {
     index: true,
@@ -48,6 +57,7 @@ export const metadata: Metadata = {
 
 import { TrackingProvider } from '@/components/analytics/TrackingProvider';
 import { getSession } from "@/lib/auth";
+import { AlertBar } from '@/components/layout/AlertBar';
 
 export default async function RootLayout({
   children,
@@ -73,7 +83,6 @@ export default async function RootLayout({
         <ErrorBoundary>
           <TrackingProvider isAdmin={isAdmin}>
             <ScrollToTop />
-            {/* <AlertBar /> */}
             {children}
           </TrackingProvider>
         </ErrorBoundary>

@@ -8,7 +8,12 @@ import prisma from '@/lib/prisma';
 
 export const metadata: Metadata = {
     title: 'Medlemskap | Sjøbadet Badstue',
-    description: 'Bli medlem hos Sjøbadet Badstue og få gode priser på drop-in og privat booking.',
+    description: 'Bli medlem hos Sjøbadet Badstue og få gode priser på drop-in og privat booking. Velg mellom månedsabonnement med eller uten binding.',
+    openGraph: {
+        title: 'Medlemskap | Sjøbadet Badstue',
+        description: 'Bli medlem hos Sjøbadet Badstue og få gode priser på drop-in og privat booking.',
+        type: 'website',
+    }
 };
 
 export default async function MembershipPage() {

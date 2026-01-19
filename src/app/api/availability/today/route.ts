@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { fetchAvailability } from '@/lib/availability-scraper';
+import { updateSaunaAvailability } from '@/lib/availability-service';
 
 // Cache for 5 minutes, revalidate in background
 export const revalidate = 300;
@@ -15,23 +15,17 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        // Only select the fields we need for better performance
         const sauna = await prisma.sauna.findUnique({
             where: { id: saunaId },
             select: {
                 availabilityData: true,
-                previousAvailabilityData: true,
-                bookingAvailabilityUrlDropin: true,
                 lastScrapedAt: true,
+                bookingAvailabilityUrlDropin: true,
             }
         });
 
         if (!sauna) {
-            return NextResponse.json({
-                days: {},
-                timestamp: new Date().toISOString(),
-                isInitial: true
-            });
+            return NextResponse.json({ days: {}, timestamp: new Date().toISOString(), isInitial: true });
         }
 
         const shouldScrape = (() => {
@@ -43,72 +37,23 @@ export async function GET(req: NextRequest) {
 
         if (shouldScrape && sauna.bookingAvailabilityUrlDropin) {
             try {
-                const fresh = await fetchAvailability(sauna.bookingAvailabilityUrlDropin);
-                const existing = (() => {
-                    try {
-                        return sauna.availabilityData ? JSON.parse(sauna.availabilityData) : { days: {} };
-                    } catch {
-                        return { days: {} };
-                    }
-                })();
-
-                const todayKey = new Intl.DateTimeFormat('sv-SE', {
-                    timeZone: 'Europe/Oslo',
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                }).format(new Date());
-
-                const sanitizedExistingDays = Object.entries(existing.days || {})
-                    .filter(([key]) => Boolean(key?.trim()) && key >= todayKey)
-                    .reduce((acc, [key, val]) => ({ ...acc, [key]: val }), {});
-
-                const shouldMergeFresh = Boolean(fresh.date && fresh.slots && fresh.slots.length > 0);
-
-                const mergedDays = {
-                    ...sanitizedExistingDays,
-                    ...(shouldMergeFresh ? { [fresh.date as string]: fresh.slots } : {}),
-                };
-
-                const payload = JSON.stringify({
-                    days: mergedDays,
-                    timestamp: new Date().toISOString(),
-                });
-
-                await prisma.sauna.update({
-                    where: { id: saunaId },
-                    data: {
-                        previousAvailabilityData: sauna.availabilityData,
-                        availabilityData: payload,
-                        lastScrapedAt: new Date(),
-                    }
-                });
-
-                return NextResponse.json(JSON.parse(payload));
+                const refreshedData = await updateSaunaAvailability(saunaId);
+                if (refreshedData) return NextResponse.json(refreshedData);
             } catch (scrapeError) {
                 console.error('[Availability] Scrape failed, falling back to cache:', scrapeError);
             }
         }
 
-        // Parse and return the data from the database
-        let resultData = null;
+        // Return cached data if scraping failed or wasn't needed
         try {
             if (sauna.availabilityData) {
-                resultData = JSON.parse(sauna.availabilityData);
+                return NextResponse.json(JSON.parse(sauna.availabilityData));
             }
         } catch (parseError) {
             console.error('[Availability] JSON parse error:', parseError);
         }
 
-        if (!resultData) {
-            return NextResponse.json({
-                days: {},
-                timestamp: new Date().toISOString(),
-                isInitial: true
-            });
-        }
-
-        return NextResponse.json(resultData);
+        return NextResponse.json({ days: {}, timestamp: new Date().toISOString(), isInitial: true });
     } catch (error) {
         console.error('Error in availability API:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

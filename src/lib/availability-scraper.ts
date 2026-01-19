@@ -57,9 +57,9 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
         });
 
         const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    page.on('console', (msg: ConsoleMessage) => console.log('[Browser Console]:', msg.text()));
+        page.on('console', (msg: ConsoleMessage) => console.log('[Browser Console]:', msg.text()));
 
         await page.setRequestInterception(true);
         page.on('request', (req: HTTPRequest) => {
@@ -70,8 +70,8 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
             }
         });
 
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await new Promise((r) => setTimeout(r, 4000));
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        await new Promise((r) => setTimeout(r, 4000));
 
         // Scroll to force lazy load
         await page.evaluate(async () => {
@@ -101,21 +101,24 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
             if (todayEl) (todayEl as HTMLElement).click();
         });
 
-    await new Promise((r) => setTimeout(r, 3500));
+        await new Promise((r) => setTimeout(r, 3500));
 
-    const scrapedData = await page.evaluate(() => {
+        const scrapedData = await page.evaluate(() => {
             const normalizeTime = (value: string) => value.replace('.', ':');
             const timeRangeRegex = /(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/;
             const availableRegex = /(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i;
 
-            const upsertSlot = (store: Map<string, { from: string; to: string; availableSpots: number }>, from: string, to: string, availableSpots: number) => {
-                const existing = store.get(from);
-                if (!existing || availableSpots !== undefined) {
-                    store.set(from, { from, to, availableSpots: Number.isFinite(availableSpots) ? availableSpots : 0 });
-                }
+            const slots = new Map<string, { from: string; to: string; availableSpots: number }>();
+
+            const isVisible = (el: HTMLElement) => {
+                const style = window.getComputedStyle(el);
+                return style.display !== 'none' &&
+                    style.visibility !== 'hidden' &&
+                    style.opacity !== '0' &&
+                    el.getClientRects().length > 0;
             };
 
-            const parseRowText = (text: string, target: Map<string, { from: string; to: string; availableSpots: number }>) => {
+            const parseRowText = (text: string, sourceEl: HTMLElement, target: Map<string, { from: string; to: string; availableSpots: number }>) => {
                 const condensed = text.replace(/\s+/g, ' ').trim();
                 const timeMatch = condensed.match(timeRangeRegex);
                 if (!timeMatch) return;
@@ -125,32 +128,41 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
                 const availMatch = condensed.match(availableRegex);
                 const availableSpots = availMatch ? parseInt(availMatch[1], 10) : 0;
 
-                upsertSlot(target, fromTime, toTime, availableSpots);
+                // Priority logic: 
+                // 1. Prefer visible elements
+                // 2. If same time, prefer the one with FEWER spots (usually more "real" than a placeholder capacity)
+                const existing = target.get(fromTime);
+                const visible = isVisible(sourceEl);
+
+                if (!existing) {
+                    target.set(fromTime, { from: fromTime, to: toTime, availableSpots });
+                } else {
+                    // Overwrite if new one is visible and old wasn't
+                    const existingVisible = (existing as any)._visible;
+                    if (visible && !existingVisible) {
+                        target.set(fromTime, { from: fromTime, to: toTime, availableSpots });
+                    } else if (visible === existingVisible) {
+                        // Both same visibility, take the one with fewer spots (more likely real)
+                        if (availableSpots < existing.availableSpots) {
+                            target.set(fromTime, { from: fromTime, to: toTime, availableSpots });
+                        }
+                    }
+                }
+
+                // Track visibility for priority
+                const entry = target.get(fromTime)!;
+                (entry as any)._visible = visible;
             };
 
-            const slots = new Map<string, { from: string; to: string; availableSpots: number }>();
-
             // Preferred: table rows with explicit availability text
-            const tableRows = Array.from(document.querySelectorAll('tr'));
-            tableRows.forEach(row => {
-                const text = (row as HTMLElement).innerText || '';
-                if (/ledig/i.test(text)) {
-                    parseRowText(text, slots);
+            const allElements = Array.from(document.querySelectorAll('tr, div[role="row"], .booking-slot, td, .time-slot'));
+            allElements.forEach(el => {
+                const text = (el as HTMLElement).innerText || '';
+                if (/ledig/i.test(text) && timeRangeRegex.test(text)) {
+                    parseRowText(text, el as HTMLElement, slots);
                 }
             });
 
-            // Fallback: generic elements with time ranges and availability wording
-            if (slots.size === 0) {
-                const candidates = Array.from(document.querySelectorAll('*')).filter(el => {
-                    const txt = (el as HTMLElement).innerText;
-                    return txt && timeRangeRegex.test(txt) && /ledig/i.test(txt);
-                });
-
-                candidates.forEach(el => {
-                    const text = (el as HTMLElement).innerText || '';
-                    parseRowText(text, slots);
-                });
-            }
 
             const ordered = Array.from(slots.values()).sort((a, b) => a.from.localeCompare(b.from));
 

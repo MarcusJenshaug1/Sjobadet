@@ -21,15 +21,31 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         const sauna = await getSaunaBySlug(slug);
         if (!sauna) return { title: 'Fant ikke badstue' };
 
+        const title = sauna.seoTitle || `${sauna.name} | Sjøbadet Badstue`;
+        const description = sauna.seoDescription || sauna.shortDescription;
+
         return {
-            title: `${sauna.name} | Sjøbadet Badstue`,
-            description: sauna.shortDescription,
+            title,
+            description,
             openGraph: {
-                title: `${sauna.name} | Sjøbadet Badstue`,
-                description: sauna.shortDescription || '',
-                images: sauna.imageUrl ? [sauna.imageUrl] : [],
+                title,
+                description: description || '',
+                images: sauna.imageUrl ? [
+                    {
+                        url: sauna.imageUrl,
+                        width: 1200,
+                        height: 630,
+                        alt: sauna.name,
+                    }
+                ] : [],
                 type: 'website',
             },
+            twitter: {
+                card: 'summary_large_image',
+                title,
+                description: description || '',
+                images: sauna.imageUrl ? [sauna.imageUrl] : [],
+            }
         };
     } catch (error) {
         return { title: 'Sjøbadet Badstue' };
@@ -172,7 +188,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                 />
 
                                 {/* Real-time Availability (Mobile Only) */}
-                                {(sauna.bookingUrlDropin?.includes('periode.no') || sauna.bookingUrlPrivat?.includes('periode.no')) && (
+                                {(sauna.bookingUrlDropin || sauna.bookingUrlPrivat) && (
                                     <div className={styles.mobileOnly} style={{ marginBottom: '2rem' }}>
                                         <SaunaAvailability
                                             saunaId={sauna.id}
@@ -235,7 +251,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                             {/* Right Column: Sidebar */}
                             <div className={styles.sidebar}>
                                 {/* Real-time Availability (Desktop Sidebar) */}
-                                {(sauna.bookingUrlDropin?.includes('periode.no') || sauna.bookingUrlPrivat?.includes('periode.no')) && (
+                                {(sauna.bookingUrlDropin || sauna.bookingUrlPrivat) && (
                                     <div className={`${styles.sidebarCard} ${styles.desktopOnly}`} style={{ marginBottom: '1.5rem', padding: 0, border: 'none' }}>
                                         <SaunaAvailability
                                             saunaId={sauna.id}

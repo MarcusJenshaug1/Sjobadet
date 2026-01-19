@@ -148,7 +148,8 @@ export default function SaunaAvailability({
                         const filteredToday = targetSlots.filter((s: ScrapedSlot) => {
                             const parts = (s.from).split(/[:.]/).map(Number);
                             const slotStartTime = parts[0] * 60 + parts[1];
-                            return slotStartTime > currentTime;
+                            // Lead time: 60 minutes
+                            return slotStartTime > currentTime + 60;
                         });
 
                         if (now.getHours() >= 22) {

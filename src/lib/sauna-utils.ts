@@ -15,7 +15,8 @@ export function getTodayOpeningHours(openingHours: OpeningHour[]) {
     return todayHours
 }
 
-export function formatSmartOpeningHours(openingHours: OpeningHour[]) {
+export function formatSmartOpeningHours(openingHours: OpeningHour[] | undefined | null) {
+    if (!openingHours || openingHours.length === 0) return 'Kontakt oss for åpningstider';
     const weekly = openingHours
         .filter(h => h.type === 'weekly')
         .sort((a, b) => (a.weekday ?? 0) - (b.weekday ?? 0));

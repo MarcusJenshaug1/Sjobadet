@@ -22,6 +22,8 @@ type ActiveSauna = {
     flexibleHours?: boolean | null;
     hoursMessage?: string | null;
     stengeArsak?: string | null;
+    seoTitle?: string | null;
+    seoDescription?: string | null;
     openingHours?: OpeningHour[];
     availabilityData?: string | null;
     lastScrapedAt?: Date | null;
@@ -170,7 +172,11 @@ function computeNextAvailableSlot(availabilityData?: string | null): { time: str
 
                 if (day === todayKey && endMinutes !== null) {
                     const nowMinutes = osloNow.getHours() * 60 + osloNow.getMinutes();
-                    if (endMinutes <= nowMinutes) continue;
+                    // Buffer: Must be at least 60 mins before start of slot (or end of slot to be safe, but start is more precise for "lead time")
+                    const startMinutes = slot.from ? parseMinutes(slot.from) : (endMinutes - 60);
+
+                    // Disallow if slot has already ended OR if it starts within the next 60 minutes
+                    if (endMinutes <= nowMinutes || (startMinutes !== null && startMinutes < nowMinutes + 60)) continue;
                 }
 
                 if (slot.from) {
@@ -190,8 +196,12 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
     const cached = activeSaunaCache.get(cacheKey);
     const now = Date.now();
     if (cached && cached.expiresAt > now) {
-        return cached.data;
+        return cached.data.map((sauna: any) => ({
+            ...sauna,
+            nextAvailableSlot: computeNextAvailableSlot(sauna.availabilityData),
+        }));
     }
+
     const baseSelect = {
         id: true,
         slug: true,
@@ -224,31 +234,24 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
                         openingHours: {
                             where: { active: true },
                             orderBy: { weekday: 'asc' },
-                            select: {
-                                id: true,
-                                weekday: true,
-                                opens: true,
-                                closes: true,
-                                active: true,
-                                type: true,
-                            }
                         }
                     }
                     : {}),
-            }
+            } as any
         });
-        const withNext = result.map((sauna) => ({
+
+        activeSaunaCache.set(cacheKey, { data: result as any, expiresAt: now + SAUNA_CACHE_TTL_MS });
+
+        return result.map((sauna: any) => ({
             ...sauna,
             nextAvailableSlot: computeNextAvailableSlot(sauna.availabilityData),
         }));
-
-        activeSaunaCache.set(cacheKey, { data: withNext, expiresAt: now + SAUNA_CACHE_TTL_MS });
-        return withNext;
     } catch (error) {
         console.error('[SaunaService] Falling back to static saunas.json due to DB error:', error);
-        const fallback = mapStaticSaunaBase();
-        activeSaunaCache.set(cacheKey, { data: fallback, expiresAt: now + SAUNA_CACHE_TTL_MS });
-        return fallback;
+        return mapStaticSaunaBase().map(sauna => ({
+            ...sauna,
+            nextAvailableSlot: computeNextAvailableSlot(sauna.availabilityData)
+        }));
     }
 }
 
@@ -256,7 +259,10 @@ export const getSaunaBySlug = async (slug: string) => {
     const cached = saunaBySlugCache.get(slug);
     const now = Date.now();
     if (cached && cached.expiresAt > now) {
-        return cached.data;
+        return {
+            ...cached.data,
+            nextAvailableSlot: computeNextAvailableSlot(cached.data.availabilityData)
+        };
     }
 
     try {
@@ -293,13 +299,13 @@ export const getSaunaBySlug = async (slug: string) => {
                     where: { active: true },
                     orderBy: { weekday: 'asc' }
                 }
-            }
+            } as any
         });
 
         if (result) {
             const withNext = {
-                ...(result as SaunaDetail),
-                nextAvailableSlot: computeNextAvailableSlot(result.availabilityData ?? null),
+                ...(result as any),
+                nextAvailableSlot: computeNextAvailableSlot((result as any).availabilityData ?? null),
             };
             saunaBySlugCache.set(slug, { data: withNext, expiresAt: now + SAUNA_CACHE_TTL_MS });
             return withNext;

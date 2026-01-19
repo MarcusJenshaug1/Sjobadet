@@ -39,6 +39,10 @@ export async function saveSauna(formData: FormData) {
         hasDropinAvailability: formData.get('hasDropinAvailability') === 'on',
         hoursMessage: formData.get('hoursMessage') as string,
 
+        // SEO
+        seoTitle: formData.get('seoTitle') as string,
+        seoDescription: formData.get('seoDescription') as string,
+
         // Parse JSON fields from textareas (one per line)
         gallery: formData.get('gallery') as string, // Expecting JSON string directly from SaunaMediaManager
         facilities: JSON.stringify((formData.get('facilities') as string).split('\n').filter(Boolean)),

@@ -12,9 +12,11 @@ export function AlertBarView({ alert_enabled, alert_text }: AlertBarViewProps) {
 
     return (
         <div className={styles.alertBar}>
-            <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.5rem 1rem' }}>
-                <Info size={18} />
-                <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{alert_text}</span>
+            <div className={styles.content}>
+                <div className={styles.iconWrapper}>
+                    <Info size={16} />
+                </div>
+                <span className={styles.text}>{alert_text}</span>
             </div>
         </div>
     );
