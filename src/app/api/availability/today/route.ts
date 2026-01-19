@@ -52,9 +52,15 @@ export async function GET(req: NextRequest) {
                     }
                 })();
 
+                const sanitizedExistingDays = Object.fromEntries(
+                    Object.entries(existing.days || {}).filter(([key]) => Boolean(key?.trim()))
+                );
+
+                const shouldMergeFresh = Boolean(fresh.date && fresh.slots && fresh.slots.length > 0);
+
                 const mergedDays = {
-                    ...(existing.days || {}),
-                    ...(fresh.date ? { [fresh.date]: fresh.slots } : {}),
+                    ...sanitizedExistingDays,
+                    ...(shouldMergeFresh ? { [fresh.date as string]: fresh.slots } : {}),
                 };
 
                 const payload = JSON.stringify({

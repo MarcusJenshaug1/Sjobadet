@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-import { AlertBar } from '@/components/layout/AlertBar';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { ScrollToTop } from '@/components/layout/ScrollToTop';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,6 +41,7 @@ export default async function RootLayout({
     <html lang="no" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
       <body className={`${inter.className} ${outfit.className}`}>
         <TrackingProvider isAdmin={isAdmin}>
+          <ScrollToTop />
           {/* <AlertBar /> */}
           {children}
         </TrackingProvider>

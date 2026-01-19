@@ -57,7 +57,7 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
         });
 
         const page = await browser.newPage();
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
     page.on('console', (msg: ConsoleMessage) => console.log('[Browser Console]:', msg.text()));
 
@@ -70,22 +70,23 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
             }
         });
 
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await new Promise((r) => setTimeout(r, 4000));
 
-        // Scroll
+        // Scroll to force lazy load
         await page.evaluate(async () => {
             await new Promise<void>((resolve) => {
                 let totalHeight = 0;
-                const distance = 100;
+                const distance = 150;
                 const timer = setInterval(() => {
                     const scrollHeight = document.body.scrollHeight;
                     window.scrollBy(0, distance);
                     totalHeight += distance;
-                    if (totalHeight >= scrollHeight || totalHeight > 3000) {
+                    if (totalHeight >= scrollHeight || totalHeight > 4000) {
                         clearInterval(timer);
                         resolve();
                     }
-                }, 100);
+                }, 120);
             });
         });
 
@@ -95,12 +96,12 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
             const elements = Array.from(document.querySelectorAll('div, span, button, td, a'));
             const todayEl = elements.find(el => {
                 const text = (el as HTMLElement).innerText?.trim();
-                return text === todayNum && el.getBoundingClientRect().width < 60;
+                return text === todayNum && el.getBoundingClientRect().width < 80;
             });
             if (todayEl) (todayEl as HTMLElement).click();
         });
 
-        await new Promise(r => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 3500));
 
     const scrapedData = await page.evaluate(() => {
             const normalizeTime = (value: string) => value.replace('.', ':');
