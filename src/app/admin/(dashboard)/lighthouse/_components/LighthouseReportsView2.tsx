@@ -66,6 +66,7 @@ export default function LighthouseReportsView() {
   const [detailedView, setDetailedView] = useState<{ url: string; device: 'mobile' | 'desktop' } | null>(null);
   const [viewMode, setViewMode] = useState<'reports' | 'stats'>('reports');
   const [saunaNames, setSaunaNames] = useState<Record<string, string>>({});
+  const [scanRequestedAt, setScanRequestedAt] = useState<number | null>(null);
 
   useEffect(() => {
     fetchReports();
@@ -75,6 +76,7 @@ export default function LighthouseReportsView() {
     const interval = setInterval(checkScanStatus, 5000);
     return () => clearInterval(interval);
   }, []);
+
 
   const fetchSaunaNames = async () => {
     try {
@@ -151,6 +153,7 @@ export default function LighthouseReportsView() {
   const startScan = async () => {
     if (scanning) return;
     setScanning(true);
+    setScanRequestedAt(Date.now());
     
     try {
       const res = await fetch('/api/lighthouse/scan', {
@@ -179,7 +182,17 @@ export default function LighthouseReportsView() {
 
   const latestScan = scans[0];
   const isScanning = latestScan?.status === 'running';
+  const isStartingScan = Boolean(scanRequestedAt && !isScanning);
+  const scanAgeSeconds = scanRequestedAt ? Math.floor((Date.now() - scanRequestedAt) / 1000) : 0;
   const progress = latestScan ? Math.round((latestScan.completedUrls / latestScan.totalUrls) * 100) : 0;
+  const isScanBusy = scanning || isScanning || isStartingScan;
+
+  useEffect(() => {
+    const currentScan = scans[0];
+    if (currentScan?.status === 'running' || currentScan?.status === 'completed' || currentScan?.status === 'failed') {
+      setScanRequestedAt(null);
+    }
+  }, [scans]);
 
   // Group reports by URL
   const groupedReports = reports.reduce<Map<string, GroupedReport>>((acc, report) => {
@@ -334,12 +347,17 @@ export default function LighthouseReportsView() {
           </p>
         </div>
         <div className={styles.headerRight}>
-          {latestScan && (
+          {(latestScan || isStartingScan) && (
             <div className={styles.statusChip}>
               {isScanning ? (
                 <>
                   <Activity size={16} className={styles.iconPulse} />
                   <span>{Math.floor(latestScan.completedUrls / 2)}/{Math.floor(latestScan.totalUrls / 2)} sider ({latestScan.completedUrls}/{latestScan.totalUrls} scans)</span>
+                </>
+              ) : isStartingScan ? (
+                <>
+                  <Activity size={16} className={styles.iconPulse} />
+                  <span>Starter scan... {scanAgeSeconds}s</span>
                 </>
               ) : latestScan.status === 'completed' ? (
                 <>
@@ -392,13 +410,13 @@ export default function LighthouseReportsView() {
           </button>
           <button 
             onClick={() => setShowScanModal(true)} 
-            disabled={scanning}
-            className={`${styles.scanButton} ${scanning ? styles.scanButtonDisabled : ''}`}
+            disabled={isScanBusy}
+            className={`${styles.scanButton} ${isScanBusy ? styles.scanButtonDisabled : ''}`}
           >
-            {scanning ? (
+            {isScanBusy ? (
               <>
                 <RefreshCw className={styles.spinning} size={20} />
-                Starter...
+                {isScanning ? 'Skanner...' : 'Starter...'}
               </>
             ) : (
               <>
@@ -411,16 +429,16 @@ export default function LighthouseReportsView() {
       </div>
 
       {/* Progress Bar (if scanning) */}
-      {isScanning && (
+      {(isScanning || isStartingScan) && (
         <div className={styles.progressSection}>
           <div className={styles.progressHeader}>
-            <span className={styles.progressLabel}>Pågående skanning</span>
-            <span className={styles.progressPercent}>{progress}%</span>
+            <span className={styles.progressLabel}>{isStartingScan ? 'Starter skanning' : 'Pågående skanning'}</span>
+            <span className={styles.progressPercent}>{isStartingScan ? '...' : `${progress}%`}</span>
           </div>
           <div className={styles.progressBar}>
             <div 
               className={`${styles.progressFill} ${styles.progressAnimated}`}
-              style={{ width: `${progress}%` }}
+              style={{ width: isStartingScan ? '100%' : `${progress}%` }}
             />
           </div>
         </div>
@@ -741,21 +759,23 @@ export default function LighthouseReportsView() {
       </div>
 
       {/* Detailed Progress */}
-      {isScanning && latestScan && (
+      {(isScanning || isStartingScan) && latestScan && (
         <div className={styles.progressSection}>
           <div className={styles.progressHeader}>
             <Activity size={20} className={styles.iconPulse} />
             <div>
-              <h3 className={styles.progressTitle}>Scanning i progress...</h3>
+              <h3 className={styles.progressTitle}>{isStartingScan ? 'Starter skanning...' : 'Scanning i progress...'}</h3>
               <p className={styles.progressMeta}>
-                {Math.floor(latestScan.completedUrls / 2)} av {Math.floor(latestScan.totalUrls / 2)} sider ({latestScan.completedUrls} av {latestScan.totalUrls} scans)
+                {isStartingScan
+                  ? 'Venter på første status...'
+                  : `${Math.floor(latestScan.completedUrls / 2)} av ${Math.floor(latestScan.totalUrls / 2)} sider (${latestScan.completedUrls} av ${latestScan.totalUrls} scans)`}
               </p>
             </div>
           </div>
           <div className={styles.progressBar}>
             <div 
-              className={styles.progressFill}
-              style={{ width: `${(latestScan.completedUrls / latestScan.totalUrls) * 100}%` }}
+              className={`${styles.progressFill} ${isStartingScan ? styles.progressAnimated : ''}`}
+              style={{ width: isStartingScan ? '100%' : `${(latestScan.completedUrls / latestScan.totalUrls) * 100}%` }}
             />
           </div>
         </div>
