@@ -116,39 +116,52 @@ export default function HistoryLog() {
             </div>
 
             {totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.25rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => fetchLogs(1)}
+                        disabled={loading || data.page === 1}
+                        style={{ padding: '0.3rem 0.6rem' }}
+                    >
+                        Første
+                    </Button>
                     <Button
                         size="sm"
                         variant="secondary"
                         onClick={() => fetchLogs(Math.max(1, data.page - 1))}
                         disabled={loading || data.page === 1}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                     >
                         <ChevronLeft size={16} />
-                        Forrige
                     </Button>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                            <button
-                                key={page}
-                                onClick={() => fetchLogs(page)}
-                                disabled={loading}
-                                style={{
-                                    padding: '0.25rem 0.5rem',
-                                    borderRadius: '0.375rem',
-                                    border: page === data.page ? '1px solid #3b82f6' : '1px solid #e2e8f0',
-                                    background: page === data.page ? '#3b82f6' : 'white',
-                                    color: page === data.page ? 'white' : '#334155',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 600,
-                                    cursor: loading ? 'not-allowed' : 'pointer',
-                                    opacity: loading ? 0.5 : 1
-                                }}
-                            >
-                                {page}
-                            </button>
-                        ))}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(p => p === 1 || p === totalPages || Math.abs(p - data.page) <= 2)
+                            .map((page, index, array) => (
+                                <div key={page} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    {index > 0 && array[index - 1] !== page - 1 && <span style={{ color: '#94a3b8' }}>...</span>}
+                                    <button
+                                        onClick={() => fetchLogs(page)}
+                                        disabled={loading}
+                                        style={{
+                                            minWidth: '2rem',
+                                            height: '2rem',
+                                            borderRadius: '0.375rem',
+                                            border: page === data.page ? '1px solid #3b82f6' : '1px solid #e2e8f0',
+                                            background: page === data.page ? '#3b82f6' : 'white',
+                                            color: page === data.page ? 'white' : '#334155',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 600,
+                                            cursor: loading ? 'not-allowed' : 'pointer',
+                                            opacity: loading ? 0.5 : 1
+                                        }}
+                                    >
+                                        {page}
+                                    </button>
+                                </div>
+                            ))
+                        }
                     </div>
 
                     <Button
@@ -156,10 +169,17 @@ export default function HistoryLog() {
                         variant="secondary"
                         onClick={() => fetchLogs(Math.min(totalPages, data.page + 1))}
                         disabled={loading || data.page === totalPages}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                     >
-                        Neste
                         <ChevronRight size={16} />
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => fetchLogs(totalPages)}
+                        disabled={loading || data.page === totalPages}
+                        style={{ padding: '0.3rem 0.6rem' }}
+                    >
+                        Siste
                     </Button>
                 </div>
             )}

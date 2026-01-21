@@ -57,41 +57,49 @@ export async function runScraper(options: ScraperRunOptions) {
         }
 
         // 3. Loop and Scrape
+        let successCount = 0;
+        let failCount = 0;
+
         for (const sauna of saunas) {
             if (!sauna.bookingAvailabilityUrlDropin) {
                 await ScraperService.updateItem(currentRunId, sauna.id, 'skipped', { reason: 'No booking URL' });
                 continue;
             }
 
-            // We know url is string here
             const bookingUrl: string = sauna.bookingAvailabilityUrlDropin;
-
-            // Mark as running (we pass 'running' casted as any because strict type expects valid status, but service handles upsert)
-            // Actually for ScraperService.updateItem we should send a valid status or I should update service type. 
-            // Let's just not update status yet, or send 'empty' as placeholder? No.
-            // Let's assume 'status' is one of: 'success' | 'failed' | 'empty' | 'skipped'.
-            // We'll skip the "in progress" update for the item to avoid type error, just log event.
             await ScraperService.logEvent(currentRunId, 'info', 'sauna', `Starting scrape for ${sauna.name}`, undefined, sauna.id);
 
             const startTime = Date.now();
             try {
                 const result = await fetchAvailability(bookingUrl, { browser });
                 const durationMs = Date.now() - startTime;
-
-                // Analyze result
-                const daysWithSlots = Object.values(result.days).filter(d => d.length > 0).length;
                 const totalSlots = Object.values(result.days).reduce((acc, curr) => acc + curr.length, 0);
 
                 if (totalSlots > 0) {
+                    successCount++;
+                    const dayCount = Object.keys(result.days).length;
+
+                    // Extract a small summary of times
+                    const allSlots = Object.values(result.days).flat().sort((a, b) => a.from.localeCompare(b.from));
+                    const timeSummary = allSlots.slice(0, 3).map(s => s.from).join(', ') + (allSlots.length > 3 ? '...' : '');
+
                     await ScraperService.updateItem(currentRunId, sauna.id, 'success', {
                         durationMs,
                         slotsFound: totalSlots,
-                        daysScraped: Object.keys(result.days).length,
+                        daysScraped: dayCount,
                         targetUrl: bookingUrl,
                         diagnostics: result.diagnostics
                     });
 
-                    // UPDATE SAUNA DATA
+                    await ScraperService.logEvent(
+                        currentRunId,
+                        'info',
+                        'sauna',
+                        `Ferdig med ${sauna.name}. Fant ${totalSlots} ledige tider over ${dayCount} dager. (Tider: ${timeSummary})`,
+                        undefined,
+                        sauna.id
+                    );
+
                     await prisma.sauna.update({
                         where: { id: sauna.id },
                         data: {
@@ -99,29 +107,37 @@ export async function runScraper(options: ScraperRunOptions) {
                             lastScrapedAt: new Date()
                         }
                     });
-
                 } else {
+                    // Empty is considered a successful check if the site loaded correctly
+                    successCount++;
+                    const dayCount = Object.keys(result.days).length;
+
                     await ScraperService.updateItem(currentRunId, sauna.id, 'empty', {
                         durationMs,
-                        daysScraped: Object.keys(result.days).length,
+                        daysScraped: dayCount,
                         reason: 'No slots found',
                         targetUrl: bookingUrl,
                         diagnostics: result.diagnostics
                     });
 
-                    // Log warning
-                    await ScraperService.logEvent(currentRunId, 'warn', 'sauna', `No slots found for ${sauna.name}`, result.diagnostics, sauna.id);
+                    await ScraperService.logEvent(
+                        currentRunId,
+                        'info',
+                        'sauna',
+                        `${sauna.name}: Ingen tider funnet (sjekket ${dayCount} dager). Beholder forrige tilgjengelighet.`,
+                        result.diagnostics,
+                        sauna.id
+                    );
 
-                    // Attempt update, using unchecked if needed or just standard update
                     await prisma.sauna.update({
                         where: { id: sauna.id },
                         data: {
-                            lastScrapedAt: new Date() // Just update timestamp to show we checked
+                            lastScrapedAt: new Date()
                         }
                     });
                 }
-
             } catch (error: any) {
+                failCount++;
                 const durationMs = Date.now() - startTime;
                 await ScraperService.updateItem(currentRunId, sauna.id, 'failed', {
                     durationMs,
@@ -130,7 +146,7 @@ export async function runScraper(options: ScraperRunOptions) {
                     targetUrl: bookingUrl
                 });
 
-                await ScraperService.logEvent(currentRunId, 'error', 'sauna', `Failed to scrape ${sauna.name}: ${error.message}`, undefined, sauna.id);
+                await ScraperService.logEvent(currentRunId, 'error', 'sauna', `FEIL ved scraping av ${sauna.name}: ${error.message}`, undefined, sauna.id);
 
                 await prisma.sauna.update({
                     where: { id: sauna.id },
@@ -144,8 +160,17 @@ export async function runScraper(options: ScraperRunOptions) {
         // 4. Cleanup
         if (browser) await browser.close();
 
-        // 5. Finish
-        await ScraperService.finishRun(currentRunId, 'success');
+        // 5. Determine Final Status
+        let finalStatus: 'success' | 'partial' | 'failed' = 'success';
+        if (failCount > 0) {
+            finalStatus = successCount > 0 ? 'partial' : 'failed';
+        }
+        if (saunas.length === 0) finalStatus = 'success';
+
+        await ScraperService.finishRun(currentRunId, finalStatus);
+
+        const finalMessage = `Kjøring fullført (${finalStatus.toUpperCase()}). Suksess: ${successCount}, Feil: ${failCount}.`;
+        await ScraperService.logEvent(currentRunId, finalStatus === 'failed' ? 'error' : 'info', 'run', finalMessage);
 
     } catch (error: any) {
         console.error('Runner failed', error);

@@ -65,12 +65,14 @@ export async function updateSaunaAvailability(saunaId: string, options: { browse
                 ? JSON.stringify(fresh.diagnostics)
                 : 'Ingen diagnostikk tilgjengelig';
 
+            /*
             await logAdminAction(
                 'AVAILABILITY_CHECK',
-                `${sauna.name}: Ingen tider funnet i scrape. Beholder forrige tilgjengelighet. Diagnostikk: ${emptyDiagnostics}`,
-                'WARNING',
+                `${sauna.name}: Ingen tider funnet i scrape. Beholder forrige tilgjengelighet.`,
+                'INFO', // Valid response, just empty
                 'System'
             );
+            */
 
             return {
                 data: existing.days ? { ...existing, timestamp: existing.timestamp ?? new Date().toISOString() } : { days: {}, timestamp: new Date().toISOString() },
@@ -121,22 +123,22 @@ export async function updateSaunaAvailability(saunaId: string, options: { browse
             .map(s => `${s.from}: ${s.availableSpots}`)
             .join(', ');
 
-        if (dataHasChanged) {
+        if (freshHasSlots) {
+            // We generally don't need to bloat the main Activity Log with every successful scrape anymore
+            // since we have the dedicated Scraper History.
+            // Uncomment if you want major changes logged:
+            /*
             const totalSlots = Object.values(freshDays).reduce((acc, slots) => acc + (slots?.length ?? 0), 0);
-            const status = Object.values(freshDays).flat().some(s => s.availableSpots > 0) ? 'SUCCESS' : 'INFO';
             await logAdminAction(
                 'AVAILABILITY_CHECK',
-                `${sauna.name}: Oppdatert ${Object.keys(freshDays).length} dager. Totalt ${totalSlots} tider. (Eks: ${slotSummary}...)`,
-                status,
+                `${sauna.name}: Oppdatert ${Object.keys(freshDays).length} dager. Totalt ${totalSlots} tider.`,
+                'SUCCESS',
                 'System'
             );
+            */
         } else {
-            await logAdminAction(
-                'AVAILABILITY_CHECK',
-                `${sauna.name}: Ingen endringer siden sist (beholder eksisterende tider).`,
-                'OK',
-                'System'
-            );
+            // If no slots, just do nothing in the main log.
+            // The specific "Empty" status is handled in the Scraper Logs.
         }
 
         return {

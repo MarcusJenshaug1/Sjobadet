@@ -141,39 +141,93 @@ const extractSlotsFromJson = (payload: unknown): ScrapedSlot[] => {
     return slots;
 };
 
+import fs from 'fs';
+
 export async function createScraperBrowser(): Promise<Browser> {
     let executablePath: string | undefined;
     let useChromiumBundle = true;
 
+    // 1. Try sparticuz/chromium-min (Standard for Vercel/Production)
     try {
         executablePath = await chromium.executablePath();
+        if (executablePath) {
+            console.log('[Scraper] Using @sparticuz/chromium-min executable:', executablePath);
+        }
     } catch (err) {
         useChromiumBundle = false;
-        console.log('[Scraper] sparticuz/chromium-min failed, using fallback executable path', err);
+        console.log('[Scraper] @sparticuz/chromium-min failed, falling back to local discovery');
     }
 
-    const isWindows = process.platform === 'win32';
-    const isMac = process.platform === 'darwin';
+    // 2. Local Discovery (Windows, Mac, Linux, WSL)
     if (!executablePath) {
         useChromiumBundle = false;
+
+        const isWindows = process.platform === 'win32';
+        const isMac = process.platform === 'darwin';
+        const isLinux = process.platform === 'linux';
+
+        const possiblePaths: string[] = [];
+
         if (isWindows) {
-            executablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-        } else if (process.env.CHROME_PATH) {
-            executablePath = process.env.CHROME_PATH;
+            possiblePaths.push(
+                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+                'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+                'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'
+            );
         } else if (isMac) {
-            executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-        } else {
-            console.error('[Scraper] Chromium path is missing on this environment; set CHROME_PATH to a valid binary.');
-            throw new Error('Chromium executable not found');
+            possiblePaths.push(
+                '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+                '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge'
+            );
+        } else if (isLinux) {
+            // Check for WSL (Windows Subsystem for Linux)
+            const isWSL = fs.existsSync('/proc/version') && fs.readFileSync('/proc/version', 'utf8').toLowerCase().includes('microsoft');
+            if (isWSL) {
+                console.log('[Scraper] WSL detected, searching Windows paths...');
+                possiblePaths.push(
+                    '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe',
+                    '/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+                    '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
+                );
+            }
+
+            // Standard Linux paths
+            possiblePaths.push(
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/brave-browser'
+            );
+        }
+
+        // Add env-specific path
+        if (process.env.CHROME_PATH) {
+            possiblePaths.unshift(process.env.CHROME_PATH);
+        }
+
+        // Find first existing path
+        for (const p of possiblePaths) {
+            if (fs.existsSync(p)) {
+                executablePath = p;
+                console.log(`[Scraper] Found browser at: ${p}`);
+                break;
+            }
         }
     }
 
-    const launchArgs = useChromiumBundle ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox'];
+    if (!executablePath) {
+        const envInfo = `Platform: ${process.platform}, Arch: ${process.arch}, Node: ${process.version}`;
+        console.error(`[Scraper] FATAL: Browser not found. ${envInfo}`);
+        throw new Error(`Chromium executable not found. Checked ${process.platform} paths. Environment: ${envInfo}`);
+    }
+
+    const launchArgs = useChromiumBundle ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'];
 
     return puppeteer.launch({
         args: launchArgs,
         // @ts-expect-error chromium typings in sparticuz package omit defaultViewport
-        defaultViewport: useChromiumBundle ? chromium.defaultViewport : undefined,
+        defaultViewport: useChromiumBundle ? chromium.defaultViewport : { width: 1280, height: 800 },
         executablePath,
         headless: true,
         // @ts-expect-error puppeteer LaunchOptions typing omits ignoreHTTPSErrors here

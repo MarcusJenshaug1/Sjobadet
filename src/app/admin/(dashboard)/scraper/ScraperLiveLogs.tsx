@@ -11,9 +11,17 @@ interface ScraperLiveLogsProps {
 export default function ScraperLiveLogs({ runId }: ScraperLiveLogsProps) {
     const [logs, setLogs] = useState<any[]>([]);
     const [status, setStatus] = useState<string>('idle'); // idle, connecting, streaming, completed, error
+    const [currentSauna, setCurrentSauna] = useState<string | null>(null);
+    const seenIds = useRef<Set<string>>(new Set());
 
     const logsEndRef = useRef<HTMLDivElement>(null);
     const eventSourceRef = useRef<EventSource | null>(null);
+
+    // Reset deduplication when runId changes
+    useEffect(() => {
+        seenIds.current.clear();
+        setCurrentSauna(null);
+    }, [runId]);
 
     // Fetch initial details and past logs if runId changes
     useEffect(() => {
@@ -22,32 +30,41 @@ export default function ScraperLiveLogs({ runId }: ScraperLiveLogsProps) {
         setLogs([]);
         setStatus('connecting');
 
-        // 1. Fetch run details + existing logs
         const fetchInitial = async () => {
             try {
-                const res = await fetch(`/api/admin/scraper/runs/${runId}`);
+                const res = await fetch(`/api/admin/scraper/runs/${runId}`, { cache: 'no-store' });
                 if (!res.ok) throw new Error('Failed to fetch run');
                 const data = await res.json();
 
                 if (data.run.events) {
-                    // Sort logs if needed
-                    const pastLogs = data.run.events.map((e: any) => ({
-                        id: e.id,
-                        message: e.message,
-                        level: e.level,
-                        timestamp: e.createdAt,
-                        scope: e.scope,
-                        data: e.dataJson ? JSON.parse(e.dataJson) : null
-                    })).sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+                    const pastLogs = data.run.events.map((e: any) => {
+                        seenIds.current.add(e.id);
+                        return {
+                            id: e.id,
+                            message: e.message,
+                            level: e.level,
+                            timestamp: e.createdAt,
+                            scope: e.scope,
+                            data: e.dataJson ? JSON.parse(e.dataJson) : null
+                        };
+                    }).sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
                     setLogs(pastLogs);
+
+                    // Try to guess current sauna from last log if still running
+                    if (data.run.status === 'running') {
+                        const startMsg = [...pastLogs].reverse().find(l => l.message.includes('Starting scrape for'));
+                        if (startMsg) {
+                            const match = startMsg.message.match(/Starting scrape for (.*)/);
+                            if (match) setCurrentSauna(match[1]);
+                        }
+                    }
                 }
 
                 if (['success', 'failed', 'cancelled', 'partial'].includes(data.run.status)) {
                     setStatus('completed');
-                    return; // Don't stream if finished
+                    return;
                 }
 
-                // If running, start SSE
                 startStream(runId);
             } catch (e) {
                 console.error(e);
@@ -67,7 +84,7 @@ export default function ScraperLiveLogs({ runId }: ScraperLiveLogsProps) {
     // Auto-scroll
     useEffect(() => {
         logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [logs]);
+    }, [logs, currentSauna]);
 
     const startStream = (id: string) => {
         if (eventSourceRef.current) eventSourceRef.current.close();
@@ -79,6 +96,10 @@ export default function ScraperLiveLogs({ runId }: ScraperLiveLogsProps) {
             try {
                 const payload = JSON.parse(event.data);
                 if (payload.type === 'log' && payload.data) {
+                    // Deduplicate
+                    if (seenIds.current.has(payload.data.id)) return;
+                    seenIds.current.add(payload.data.id);
+
                     const newLog = {
                         id: payload.data.id,
                         message: payload.data.message,
@@ -87,11 +108,24 @@ export default function ScraperLiveLogs({ runId }: ScraperLiveLogsProps) {
                         scope: payload.data.scope,
                         data: payload.data.dataJson ? JSON.parse(payload.data.dataJson) : null
                     };
+
+                    // Detect current sauna
+                    if (newLog.message.includes('Starting scrape for')) {
+                        const match = newLog.message.match(/Starting scrape for (.*)/);
+                        if (match) setCurrentSauna(match[1]);
+                    } else if (newLog.message.includes('Ferdig med') || newLog.message.includes('Ingen tider funnet')) {
+                        // Keep current until next one starts or it finishes globally
+                    }
+
                     setLogs(prev => [...prev, newLog]);
                 } else if (payload.type === 'status') {
-                    // update status
+                    if (['success', 'failed', 'partial', 'cancelled'].includes(payload.status)) {
+                        setStatus('completed');
+                        setCurrentSauna(null);
+                    }
                 } else if (payload.type === 'done') {
                     setStatus('completed');
+                    setCurrentSauna(null);
                     es.close();
                 }
             } catch (e) {
@@ -102,6 +136,7 @@ export default function ScraperLiveLogs({ runId }: ScraperLiveLogsProps) {
         es.onerror = (e) => {
             console.error('SSE Error', e);
             es.close();
+            // Optional: retry logic
         };
 
         setStatus('streaming');
@@ -111,7 +146,7 @@ export default function ScraperLiveLogs({ runId }: ScraperLiveLogsProps) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', color: '#a0aec0', background: '#f7fafc', border: '1px solid #edf2f7', borderRadius: '0.5rem' }}>
                 <Terminal size={48} style={{ marginBottom: '1rem', color: '#cbd5e0' }} />
-                <p>Select a run to view logs</p>
+                <p>Velg en kjøring for å se live logger</p>
             </div>
         );
     }
@@ -121,10 +156,17 @@ export default function ScraperLiveLogs({ runId }: ScraperLiveLogsProps) {
             {/* Header */}
             <div className={styles.terminalHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span className={`${styles.statusIndicator} ${status === 'streaming' ? styles.statusActive : styles.statusDone}`} />
+                    <span className={`${styles.statusIndicator} ${status === 'streaming' ? styles.statusActive : styles.statusDone} ${status === 'streaming' ? styles.pulse : ''}`} />
                     <span style={{ fontWeight: 600, color: 'white' }}>Live Logs: {runId}</span>
                 </div>
-                {status === 'completed' && <span style={{ fontSize: '0.75rem', background: '#4a5568', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>Finished</span>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    {status === 'streaming' && (
+                        <div style={{ fontSize: '0.75rem', color: '#60a5fa', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            <div className={styles.spinner} /> Koblet til
+                        </div>
+                    )}
+                    {status === 'completed' && <span style={{ fontSize: '0.75rem', background: '#4a5568', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>Ferdig</span>}
+                </div>
             </div>
 
             {/* Terminal Output */}
@@ -153,6 +195,14 @@ export default function ScraperLiveLogs({ runId }: ScraperLiveLogsProps) {
                         </div>
                     </div>
                 ))}
+
+                {status === 'streaming' && currentSauna && (
+                    <div className={styles.terminalProgress}>
+                        <div className={styles.spinner} />
+                        <span>Jobber med: <strong>{currentSauna}</strong>...</span>
+                    </div>
+                )}
+
                 <div ref={logsEndRef} />
             </div>
         </div>

@@ -127,11 +127,14 @@ export async function getAdminLogs(page = 1, limit = 10) {
             const skip = (page - 1) * limit
             const [logs, total] = await Promise.all([
                 (prisma as any).adminLog.findMany({
+                    where: { action: { not: 'AVAILABILITY_CHECK' } },
                     skip,
                     take: limit,
                     orderBy: { createdAt: 'desc' }
                 }),
-                (prisma as any).adminLog.count()
+                (prisma as any).adminLog.count({
+                    where: { action: { not: 'AVAILABILITY_CHECK' } }
+                })
             ])
             return { logs, total, page, pageSize: limit }
         }

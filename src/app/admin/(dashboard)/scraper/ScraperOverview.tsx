@@ -16,7 +16,9 @@ export default function ScraperOverview({ onRequestRunLogs }: { onRequestRunLogs
     const fetchStats = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/admin/scraper/runs?limit=1');
+            const res = await fetch('/api/admin/scraper/runs?limit=1', {
+                cache: 'no-store'
+            });
             const data = await res.json();
             if (data.runs && data.runs.length > 0) {
                 setStats(data.runs[0]);
