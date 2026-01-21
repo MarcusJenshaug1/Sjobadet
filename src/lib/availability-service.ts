@@ -30,10 +30,9 @@ export async function updateSaunaAvailability(saunaId: string, options: { browse
     try {
         console.log(`[AvailabilityService] Updating ${sauna.name}...`);
         const attemptAt = new Date();
-        await prisma.sauna.update({
-            where: { id: saunaId },
-            data: { lastScrapeAttemptAt: attemptAt }
-        });
+        console.log(`[AvailabilityService] Updating ${sauna.name}...`);
+        // lastScrapeAttemptAt removed from schema
+
 
         const fresh = await fetchAvailability(sauna.bookingAvailabilityUrlDropin, { browser: options.browser });
 
@@ -172,7 +171,7 @@ export async function updateAllSaunasAvailability() {
     let successCount = 0;
     let emptyCount = 0;
     let failureCount = 0;
-    
+
     if (saunasWithUrls.length > 0) {
         const browser = await createScraperBrowser();
         try {

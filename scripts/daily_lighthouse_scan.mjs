@@ -180,20 +180,57 @@ async function getAllUrls() {
 }
 
 async function runFullScan() {
-  const scanId = await prisma.lighthouseScan.create({
-    data: {
-      status: 'running',
-      totalUrls: 0,
-      completedUrls: 0,
-      failedUrls: 0,
-    },
-  });
+  let scanId = process.env.SCAN_ID;
+
+  if (scanId) {
+    try {
+      await prisma.lighthouseScan.update({
+        where: { id: scanId },
+        data: {
+          status: 'running',
+          totalUrls: 0,
+          completedUrls: 0,
+          failedUrls: 0,
+          completedAt: null,
+          error: null,
+        },
+      });
+    } catch (error) {
+      console.warn('Failed to reuse SCAN_ID, creating new scan record');
+      scanId = null;
+    }
+  }
+
+  if (!scanId) {
+    const created = await prisma.lighthouseScan.create({
+      data: {
+        status: 'running',
+        totalUrls: 0,
+        completedUrls: 0,
+        failedUrls: 0,
+      },
+    });
+    scanId = created.id;
+  }
 
   try {
     const urls = await getAllUrls();
+
+    if (!urls.length) {
+      await prisma.lighthouseScan.update({
+        where: { id: scanId },
+        data: {
+          status: 'failed',
+          completedAt: new Date(),
+          error: 'Ingen URLer å skanne. Sjekk base-URL og tilgang til sauna-listen.',
+        },
+      });
+      console.error('No URLs found for Lighthouse scan. Aborting.');
+      return;
+    }
     
     await prisma.lighthouseScan.update({
-      where: { id: scanId.id },
+      where: { id: scanId },
       data: { totalUrls: urls.length * 2 },
     });
 
@@ -238,7 +275,7 @@ async function runFullScan() {
       }
 
       await prisma.lighthouseScan.update({
-        where: { id: scanId.id },
+        where: { id: scanId },
         data: { completedUrls: completed, failedUrls: failed },
       });
 
@@ -277,13 +314,13 @@ async function runFullScan() {
       }
 
       await prisma.lighthouseScan.update({
-        where: { id: scanId.id },
+        where: { id: scanId },
         data: { completedUrls: completed, failedUrls: failed },
       });
     }
 
     await prisma.lighthouseScan.update({
-      where: { id: scanId.id },
+      where: { id: scanId },
       data: {
         status: 'completed',
         completedAt: new Date(),
@@ -294,7 +331,7 @@ async function runFullScan() {
   } catch (error) {
     console.error('Full scan error:', error);
     await prisma.lighthouseScan.update({
-      where: { id: scanId.id },
+      where: { id: scanId },
       data: {
         status: 'failed',
         completedAt: new Date(),
