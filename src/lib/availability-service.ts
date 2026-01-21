@@ -1,10 +1,16 @@
 import { revalidatePath } from 'next/cache';
 import prisma from './prisma';
-import { fetchAvailability } from './availability-scraper';
+import { createScraperBrowser, fetchAvailability } from './availability-scraper';
+import type { Browser } from 'puppeteer-core';
 import { logAdminAction } from './admin-log';
 import { clearSaunaCaches } from './sauna-service';
 
-export async function updateSaunaAvailability(saunaId: string) {
+type AvailabilityUpdateResult = {
+    data: { days: Record<string, { from: string; to: string; availableSpots: number }[]>; timestamp: string };
+    status: 'success' | 'empty' | 'unchanged';
+};
+
+export async function updateSaunaAvailability(saunaId: string, options: { browser?: Browser } = {}): Promise<AvailabilityUpdateResult | null> {
     const sauna = await prisma.sauna.findUnique({
         where: { id: saunaId },
         select: {
@@ -23,7 +29,13 @@ export async function updateSaunaAvailability(saunaId: string) {
 
     try {
         console.log(`[AvailabilityService] Updating ${sauna.name}...`);
-        const fresh = await fetchAvailability(sauna.bookingAvailabilityUrlDropin);
+        const attemptAt = new Date();
+        await prisma.sauna.update({
+            where: { id: saunaId },
+            data: { lastScrapeAttemptAt: attemptAt }
+        });
+
+        const fresh = await fetchAvailability(sauna.bookingAvailabilityUrlDropin, { browser: options.browser });
 
         const existing = (() => {
             try {
@@ -45,17 +57,34 @@ export async function updateSaunaAvailability(saunaId: string) {
             .filter(([key]) => Boolean(key?.trim()) && key >= todayKey)
             .reduce((acc, [key, val]) => ({ ...acc, [key]: val }), {});
 
-        const shouldMergeFresh = Boolean(fresh.date && fresh.slots && fresh.slots.length > 0);
+        const freshDays = fresh.days || {};
+        const freshHasSlots = Object.values(freshDays).some((slots) => (slots || []).length > 0);
+
+        if (!freshHasSlots) {
+            console.warn(`[AvailabilityService] Empty scrape for ${sauna.name} - keeping previous availability data`);
+            const emptyDiagnostics = fresh.diagnostics && Object.keys(fresh.diagnostics).length > 0
+                ? JSON.stringify(fresh.diagnostics)
+                : 'Ingen diagnostikk tilgjengelig';
+
+            await logAdminAction(
+                'AVAILABILITY_CHECK',
+                `${sauna.name}: Ingen tider funnet i scrape. Beholder forrige tilgjengelighet. Diagnostikk: ${emptyDiagnostics}`,
+                'WARNING',
+                'System'
+            );
+
+            return {
+                data: existing.days ? { ...existing, timestamp: existing.timestamp ?? new Date().toISOString() } : { days: {}, timestamp: new Date().toISOString() },
+                status: 'empty'
+            };
+        }
 
         const mergedDays = {
             ...sanitizedExistingDays,
-            ...(shouldMergeFresh ? { [fresh.date as string]: fresh.slots } : {}),
+            ...freshDays,
         };
 
-        // Check if availability data has actually changed (compare slots, not timestamp)
-        const existingDateSlots = existing.days?.[fresh.date as string];
-        const dataHasChanged = !existingDateSlots || 
-            JSON.stringify(existingDateSlots) !== JSON.stringify(fresh.slots);
+        const dataHasChanged = JSON.stringify(mergedDays) !== JSON.stringify(existing.days || {});
 
         const payload = JSON.stringify({
             days: mergedDays,
@@ -65,7 +94,7 @@ export async function updateSaunaAvailability(saunaId: string) {
         const updated = await prisma.sauna.update({
             where: { id: saunaId },
             data: {
-                previousAvailabilityData: sauna.availabilityData,
+                ...(dataHasChanged ? { previousAvailabilityData: sauna.availabilityData } : {}),
                 availabilityData: payload,
                 lastScrapedAt: new Date(),
             }
@@ -87,39 +116,34 @@ export async function updateSaunaAvailability(saunaId: string) {
         console.log(`[AvailabilityService] Success for ${sauna.name}`);
 
         // Add log entry for the individual scrape
-        if (shouldMergeFresh) {
-            const slotSummary = fresh.slots.slice(0, 3).map(s => `${s.from}: ${s.availableSpots}`).join(', ');
-            
-            if (dataHasChanged) {
-                // Data has changed - log as SUCCESS with details
-                const status = fresh.slots.some(s => s.availableSpots > 0) ? 'SUCCESS' : 'INFO';
-                await logAdminAction(
-                    'AVAILABILITY_CHECK',
-                    `${sauna.name}: Oppdatert ${fresh.date}. Totalt ${fresh.slots.length} tider. (Eks: ${slotSummary}...)`,
-                    status,
-                    'System'
-                );
-            } else {
-                // Data is unchanged - log as OK
-                await logAdminAction(
-                    'AVAILABILITY_CHECK',
-                    `${sauna.name}: ${fresh.date}. Ingen endringer siden sist (${fresh.slots.length} tider, samme som før)`,
-                    'OK',
-                    'System'
-                );
-            }
-        } else {
-            // No slots found in scrape result
-            console.warn(`[AvailabilityService] No slots found for ${sauna.name} on the expected date`);
+        const slotSummary = Object.values(freshDays)
+            .flat()
+            .slice(0, 3)
+            .map(s => `${s.from}: ${s.availableSpots}`)
+            .join(', ');
+
+        if (dataHasChanged) {
+            const totalSlots = Object.values(freshDays).reduce((acc, slots) => acc + (slots?.length ?? 0), 0);
+            const status = Object.values(freshDays).flat().some(s => s.availableSpots > 0) ? 'SUCCESS' : 'INFO';
             await logAdminAction(
                 'AVAILABILITY_CHECK',
-                `${sauna.name}: Fant ingen tider på siden. Mulig URL-endring, nettsted ute, eller alle tider booket.`,
-                'WARNING',
+                `${sauna.name}: Oppdatert ${Object.keys(freshDays).length} dager. Totalt ${totalSlots} tider. (Eks: ${slotSummary}...)`,
+                status,
+                'System'
+            );
+        } else {
+            await logAdminAction(
+                'AVAILABILITY_CHECK',
+                `${sauna.name}: Ingen endringer siden sist (beholder eksisterende tider).`,
+                'OK',
                 'System'
             );
         }
 
-        return JSON.parse(payload);
+        return {
+            data: JSON.parse(payload),
+            status: dataHasChanged ? 'success' : 'unchanged'
+        };
     } catch (error) {
         console.error(`[AvailabilityService] Failed for ${sauna.name}:`, error);
         await logAdminAction(
@@ -144,16 +168,32 @@ export async function updateAllSaunasAvailability() {
 
     console.log(`[AvailabilityService] Running batch update for ${saunasWithUrls.length}/${allActiveSaunas.length} saunas with URLs...`);
 
-    const results = [];
+    const results = [] as Array<{ saunaId?: string; status?: string; error?: string }>;
+    let successCount = 0;
+    let emptyCount = 0;
+    let failureCount = 0;
     
-    // Process saunas with URLs
-    for (const sauna of saunasWithUrls) {
+    if (saunasWithUrls.length > 0) {
+        const browser = await createScraperBrowser();
         try {
-            results.push(await updateSaunaAvailability(sauna.id));
-        } catch (e) {
-            results.push({ error: String(e) });
+            // Process saunas with URLs
+            for (const sauna of saunasWithUrls) {
+                try {
+                    const result = await updateSaunaAvailability(sauna.id, { browser });
+                    if (result?.status === 'empty') emptyCount += 1;
+                    else successCount += 1;
+                    results.push({ saunaId: sauna.id, status: result?.status });
+                } catch (e) {
+                    failureCount += 1;
+                    results.push({ saunaId: sauna.id, error: String(e) });
+                }
+            }
+        } finally {
+            await browser.close();
         }
     }
+
+    console.log(`[AvailabilityService] Batch summary: total=${saunasWithUrls.length}, success=${successCount}, empty=${emptyCount}, failures=${failureCount}`);
 
     // Log saunas without URLs
     for (const sauna of allActiveSaunas.filter(s => !s.bookingAvailabilityUrlDropin?.trim())) {

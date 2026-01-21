@@ -44,6 +44,7 @@ const navSections: NavSection[] = [
       { href: '/admin', label: 'Oversikt', icon: LayoutDashboard },
       { href: '/admin/badstuer', label: 'Badstuer', icon: Waves },
       { href: '/admin/apningstider', label: 'Åpningstider', icon: Clock },
+      { href: '/admin/scraper', label: 'Scraper', icon: Zap }, // Using Zap icon for now or similar
       { href: '/admin/media', label: 'Bilder', icon: ImageIcon },
     ]
   },

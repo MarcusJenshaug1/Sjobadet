@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         if (shouldScrape && sauna.bookingAvailabilityUrlDropin) {
             try {
                 const refreshedData = await updateSaunaAvailability(saunaId);
-                if (refreshedData) return NextResponse.json(refreshedData);
+                if (refreshedData) return NextResponse.json(refreshedData.data);
             } catch (scrapeError) {
                 console.error('[Availability] Scrape failed, falling back to cache:', scrapeError);
             }

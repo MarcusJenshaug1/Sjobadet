@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateAllSaunasAvailability } from '@/lib/availability-service';
-import { getActiveSaunas } from '@/lib/sauna-service';
+import { runScraper } from '@/lib/scraper-runner';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,20 +13,21 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const results = await updateAllSaunasAvailability();
-        
-        // PRELOAD: Warm up the cache by fetching active saunas with computed next available slots
-        // This ensures data is ready for users without delay
-        console.log('[Cron Scraper] Preloading cache...');
-        await getActiveSaunas({ includeOpeningHours: false });
-        
+        console.log('[Cron Scraper] triggered');
+
+        // Use the new runner to ensure it shows up in history and logs events
+        await runScraper({
+            mode: 'all',
+            trigger: 'cron'
+        });
+
         return NextResponse.json({
             success: true,
-            message: `Processed ${results.length} saunas and preloaded cache`,
+            message: `Scraper run initiated successfully`,
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        console.error('[Cron Scraper] Batch update failed:', error);
+        console.error('[Cron Scraper] Update failed:', error);
         return NextResponse.json({
             success: false,
             error: String(error)

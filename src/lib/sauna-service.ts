@@ -1,6 +1,7 @@
 import prisma from './prisma'
 import type { OpeningHour } from '@prisma/client'
 import saunasJson from '@/data/saunas.json'
+import { getNextAvailableSlot } from './availability-utils'
 
 const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const SAUNA_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes for public content
@@ -140,50 +141,9 @@ function computeNextAvailableSlot(availabilityData?: string | null): { time: str
     if (!availabilityData) return null;
     try {
         const parsed = JSON.parse(availabilityData) as { days?: Record<string, { from: string; to: string; availableSpots: number }[]> };
-        const days = parsed.days || {};
-        const dayKeys = Object.keys(days).filter(Boolean).sort();
-        if (dayKeys.length === 0) return null;
-
-        const osloNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
-        const todayKey = new Intl.DateTimeFormat('sv-SE', {
-            timeZone: 'Europe/Oslo',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-        }).format(osloNow);
-
-        const parseMinutes = (timeStr: string) => {
-            const [h, m] = timeStr.split(/[:.]/).map((v) => parseInt(v, 10));
-            if (Number.isFinite(h) && Number.isFinite(m)) return h * 60 + m;
-            return null;
-        };
-
-        for (const day of dayKeys) {
-            // Skip days in the past
-            if (day < todayKey) continue;
-
-            const slots = (days[day] || [])
-                .filter((s) => Number.isFinite(s.availableSpots) && s.availableSpots > 0)
-                .sort((a, b) => (a.from || '').localeCompare(b.from || ''));
-
-            for (const slot of slots) {
-                const endTime = slot.to || slot.from;
-                const endMinutes = endTime ? parseMinutes(endTime) : null;
-
-                if (day === todayKey && endMinutes !== null) {
-                    const nowMinutes = osloNow.getHours() * 60 + osloNow.getMinutes();
-                    // Buffer: Must be at least 15 mins before start of slot (matches frontend lead time)
-                    const startMinutes = slot.from ? parseMinutes(slot.from) : (endMinutes - 60);
-
-                    // Disallow if slot has already ended OR if it starts within the next 15 minutes
-                    if (endMinutes <= nowMinutes || (startMinutes !== null && startMinutes < nowMinutes + 15)) continue;
-                }
-
-                if (slot.from) {
-                    return { time: slot.from, availableSpots: slot.availableSpots ?? 0, date: day };
-                }
-            }
-        }
+        const next = getNextAvailableSlot(parsed.days ?? {}, new Date(), 'Europe/Oslo');
+        if (!next) return null;
+        return { time: next.slot.from, availableSpots: next.slot.availableSpots ?? 0, date: next.date };
     } catch (err) {
         console.error('[SaunaService] Failed to compute next available slot:', err);
     }

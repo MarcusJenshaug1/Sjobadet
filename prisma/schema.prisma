@@ -56,6 +56,12 @@ model Sauna {
   openingHours                 OpeningHour[]
   priceItems                   PriceItem[]
 
+  // Scraper Health
+  // lastScrapeAttemptAt was removed because it is missing in DB
+  lastScrapeSuccessAt          DateTime?
+  lastScrapeStatus             String?       // "success" | "failed" | "empty"
+
+
   @@index([slug])
   @@index([status, sorting])
   @@index([status])
@@ -266,4 +272,63 @@ model PrivacySession {
   @@index([firstSeen])
   @@index([hasConsent])
   @@index([ipAddressHash])
+}
+
+// Scraper Models
+
+model ScrapeRun {
+  id              String           @id @default(cuid())
+  trigger         String           // "cron" | "on_demand" | "manual"
+  status          String           // "running" | "success" | "partial" | "failed" | "cancelled"
+  startedAt       DateTime         @default(now())
+  finishedAt      DateTime?
+  durationMs      Int?
+  appVersion      String?          // git sha / build id
+  environment     String?          // production/staging
+  totalSaunas     Int              @default(0)
+  successCount    Int              @default(0)
+  failCount       Int              @default(0)
+  emptyCount      Int              @default(0)
+  notes           String?
+  items           ScrapeRunItem[]
+  events          ScrapeLogEvent[]
+  createdAt       DateTime         @default(now())
+
+  @@index([startedAt])
+  @@index([status])
+}
+
+model ScrapeRunItem {
+  id              String    @id @default(cuid())
+  runId           String
+  saunaId         String
+  status          String    // "success" | "failed" | "empty" | "skipped"
+  startedAt       DateTime  @default(now())
+  finishedAt      DateTime?
+  durationMs      Int?
+  targetUrl       String?
+  daysScraped     Int       @default(0)
+  slotsFound      Int       @default(0)
+  reason          String?
+  errorCode       String?
+  diagnosticsJson String?   @db.Text
+  run             ScrapeRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+
+  @@index([runId])
+  @@index([saunaId])
+}
+
+model ScrapeLogEvent {
+  id        String    @id @default(cuid())
+  runId     String
+  level     String    // "debug" | "info" | "warn" | "error"
+  scope     String    // "run" | "sauna" | "scraper" | "db" | "ui"
+  saunaId   String?
+  message   String
+  dataJson  String?   @db.Text
+  createdAt DateTime  @default(now())
+  run       ScrapeRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, createdAt])
 }

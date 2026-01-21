@@ -8,53 +8,189 @@ export interface ScrapedSlot {
 }
 
 export interface AvailabilityResponse {
-    date: string | null;
-    slots: ScrapedSlot[];
+    days: Record<string, ScrapedSlot[]>;
+    timestamp: string;
+    diagnostics?: Record<string, {
+        finalUrl: string;
+        dom: {
+            totalLabels: number;
+            processedCount: number;
+            slotsExtracted: number;
+            sampleTexts: string[];
+        };
+        responses: Array<{ url: string; status: number; contentType: string }>;
+    }>;
 }
 
-export async function fetchAvailability(url: string): Promise<AvailabilityResponse> {
-    console.log(`[Scraper] Starting fetch for ${url}`);
-    let browser: Browser | null = null;
+type FetchAvailabilityOptions = {
+    browser?: Browser;
+    daysToFetch?: number;
+    timeZone?: string;
+};
 
-    try {
-        let executablePath: string | undefined;
-        let useChromiumBundle = true;
+type CapturedResponse = {
+    url: string;
+    status: number;
+    contentType: string;
+    payload: unknown;
+};
 
-        try {
-            executablePath = await chromium.executablePath();
-        } catch (err) {
-            useChromiumBundle = false;
-            console.log('[Scraper] sparticuz/chromium-min failed, using fallback executable path', err);
+const TIME_ZONE_DEFAULT = 'Europe/Oslo';
+
+const getDateKey = (offsetDays: number, timeZone: string) => {
+    const now = new Date();
+    const target = new Date(now);
+    target.setDate(now.getDate() + offsetDays);
+    const parts = new Intl.DateTimeFormat('sv-SE', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(target);
+
+    const year = parts.find(p => p.type === 'year')?.value ?? '';
+    const month = parts.find(p => p.type === 'month')?.value ?? '';
+    const day = parts.find(p => p.type === 'day')?.value ?? '';
+    return `${year}-${month}-${day}`;
+};
+
+const normalizeBaseUrl = (rawUrl: string) => {
+    const urlObj = new URL(rawUrl);
+    const datePathRegex = /\/\d{4}-\d{2}-\d{2}(?:\/[^/]*)?$/;
+    if (datePathRegex.test(urlObj.pathname)) {
+        urlObj.pathname = urlObj.pathname.replace(datePathRegex, '');
+    }
+    urlObj.pathname = urlObj.pathname.replace(/\/$/, '');
+    return urlObj.toString();
+};
+
+const buildDateUrl = (baseUrl: string, date: string) => {
+    const urlObj = new URL(baseUrl);
+    urlObj.pathname = urlObj.pathname.replace(/\/$/, '');
+    urlObj.pathname = `${urlObj.pathname}/${date}`;
+    return urlObj.toString();
+};
+
+const normalizeTime = (value: string | null | undefined) => {
+    if (!value) return null;
+    const match = value.trim().match(/(\d{1,2})[:.](\d{2})/);
+    if (!match) return null;
+    const hh = match[1].padStart(2, '0');
+    const mm = match[2];
+    return `${hh}:${mm}`;
+};
+
+const extractSlotsFromJson = (payload: unknown): ScrapedSlot[] => {
+    const slots: ScrapedSlot[] = [];
+    const timeRegex = /\d{1,2}[:.]\d{2}/;
+
+    const getNumber = (value: unknown) => {
+        if (typeof value === 'number' && Number.isFinite(value)) return value;
+        if (typeof value === 'string') {
+            const parsed = parseInt(value, 10);
+            if (Number.isFinite(parsed)) return parsed;
         }
+        return null;
+    };
 
-        // Accept any valid path returned by chromium; only fallback if empty
-        const isWindows = process.platform === 'win32';
-        const isMac = process.platform === 'darwin';
-        if (!executablePath) {
-            useChromiumBundle = false;
-            if (isWindows) {
-                executablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-            } else if (process.env.CHROME_PATH) {
-                executablePath = process.env.CHROME_PATH;
-            } else if (isMac) {
-                executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-            } else {
-                console.error('[Scraper] Chromium path is missing on this environment; set CHROME_PATH to a valid binary.');
-                throw new Error('Chromium executable not found');
+    const toSlot = (item: any): ScrapedSlot | null => {
+        if (!item || typeof item !== 'object') return null;
+        const fromRaw = item.from ?? item.start ?? item.startTime ?? item.startsAt ?? item.fromTime;
+        const toRaw = item.to ?? item.end ?? item.endTime ?? item.endsAt ?? item.toTime;
+        const from = normalizeTime(typeof fromRaw === 'string' ? fromRaw : null);
+        const to = normalizeTime(typeof toRaw === 'string' ? toRaw : null);
+
+        const available =
+            getNumber(item.availableSpots ?? item.available ?? item.free ?? item.spots ?? item.remaining ?? item.availableSlots ?? item.spotsRemaining) ??
+            (getNumber(item.capacity) !== null && getNumber(item.booked) !== null
+                ? Math.max(0, (getNumber(item.capacity) as number) - (getNumber(item.booked) as number))
+                : null);
+
+        if (!from || !to || available === null) return null;
+        return { from, to, availableSpots: available };
+    };
+
+    const walk = (node: any) => {
+        if (!node) return;
+        if (Array.isArray(node)) {
+            const candidate: ScrapedSlot[] = [];
+            for (const entry of node) {
+                const slot = toSlot(entry);
+                if (slot) candidate.push(slot);
+            }
+            if (candidate.length > slots.length) {
+                slots.splice(0, slots.length, ...candidate);
+            }
+            for (const entry of node) {
+                walk(entry);
+            }
+            return;
+        }
+        if (typeof node === 'object') {
+            const values = Object.values(node);
+            for (const value of values) {
+                if (typeof value === 'string' && timeRegex.test(value)) {
+                    // keep traversing
+                }
+                walk(value);
             }
         }
+    };
 
-        const launchArgs = useChromiumBundle ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox'];
+    walk(payload);
+    return slots;
+};
 
-        browser = await puppeteer.launch({
-            args: launchArgs,
-            // @ts-expect-error chromium typings in sparticuz package omit defaultViewport
-            defaultViewport: useChromiumBundle ? chromium.defaultViewport : undefined,
-            executablePath,
-            headless: true,
-            // @ts-expect-error puppeteer LaunchOptions typing omits ignoreHTTPSErrors here
-            ignoreHTTPSErrors: true,
-        });
+export async function createScraperBrowser(): Promise<Browser> {
+    let executablePath: string | undefined;
+    let useChromiumBundle = true;
+
+    try {
+        executablePath = await chromium.executablePath();
+    } catch (err) {
+        useChromiumBundle = false;
+        console.log('[Scraper] sparticuz/chromium-min failed, using fallback executable path', err);
+    }
+
+    const isWindows = process.platform === 'win32';
+    const isMac = process.platform === 'darwin';
+    if (!executablePath) {
+        useChromiumBundle = false;
+        if (isWindows) {
+            executablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+        } else if (process.env.CHROME_PATH) {
+            executablePath = process.env.CHROME_PATH;
+        } else if (isMac) {
+            executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+        } else {
+            console.error('[Scraper] Chromium path is missing on this environment; set CHROME_PATH to a valid binary.');
+            throw new Error('Chromium executable not found');
+        }
+    }
+
+    const launchArgs = useChromiumBundle ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox'];
+
+    return puppeteer.launch({
+        args: launchArgs,
+        // @ts-expect-error chromium typings in sparticuz package omit defaultViewport
+        defaultViewport: useChromiumBundle ? chromium.defaultViewport : undefined,
+        executablePath,
+        headless: true,
+        // @ts-expect-error puppeteer LaunchOptions typing omits ignoreHTTPSErrors here
+        ignoreHTTPSErrors: true,
+    });
+}
+
+export async function fetchAvailability(url: string, options: FetchAvailabilityOptions = {}): Promise<AvailabilityResponse> {
+    const { browser: sharedBrowser, daysToFetch = 7, timeZone = TIME_ZONE_DEFAULT } = options;
+    console.log(`[Scraper] Starting fetch for ${url}`);
+    let browser: Browser | null = sharedBrowser ?? null;
+    const shouldCloseBrowser = !sharedBrowser;
+
+    try {
+        if (!browser) {
+            browser = await createScraperBrowser();
+        }
 
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
@@ -70,110 +206,146 @@ export async function fetchAvailability(url: string): Promise<AvailabilityRespon
             }
         });
 
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-        await new Promise((r) => setTimeout(r, 2000));
+        const baseUrl = normalizeBaseUrl(url);
+        const days: Record<string, ScrapedSlot[]> = {};
+        const diagnostics: AvailabilityResponse['diagnostics'] = {};
+        let activeCapture: CapturedResponse[] = [];
 
-        // Detect if we are already on a specific date URL (e.g. ends in /2026-01-19)
-        const hasDateInUrl = /\/\d{4}-\d{2}-\d{2}$/.test(url);
-
-        if (!hasDateInUrl) {
-            console.log('[Scraper] No date in URL, clicking "Today"...');
-            await page.evaluate(() => {
-                const todayNum = new Date().getDate().toString();
-                const elements = Array.from(document.querySelectorAll('div, span, button, td, a'));
-                const todayEl = elements.find(el => {
-                    const text = (el as HTMLElement).innerText?.trim();
-                    return text === todayNum && el.getBoundingClientRect().width < 80;
-                });
-                if (todayEl) (todayEl as HTMLElement).click();
-            });
-            await new Promise((r) => setTimeout(r, 3000));
-        } else {
-            console.log('[Scraper] Date already in URL, skipping day click.');
-        }
-
-        // Wait for the availability grid to appear
-        console.log('[Scraper] Waiting for booking slots to load...');
-        try {
-            await page.waitForSelector('label.ant-radio-button-wrapper', { timeout: 10000 });
-            console.log('[Scraper] Booking slots loaded!');
-        } catch (e) {
-            console.log('[Scraper] WARNING: Timeout waiting for slots, proceeding anyway...');
-        }
-
-        // Wait for a few more seconds for the grid to render
-        await new Promise((r) => setTimeout(r, 2000));
-
-        console.log('[Scraper] About to extract data from page...');
-        const scrapedData = await page.evaluate(() => {
-            const slots: Record<string, { from: string; to: string; availableSpots: number }> = {};
-            const timeRangeRegex = /(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/;
-
-            // Target specifically the ant-radio-button-wrapper labels
-            const labelList = document.querySelectorAll('label.ant-radio-button-wrapper');
-
-            // Collect all labels with their times and availability
-            const labelData: Array<{ time: string; toTime: string; spots: number; isAvailable: boolean }> = [];
-
-            for (let i = 0; i < labelList.length; i++) {
-                const label = labelList[i] as HTMLElement;
-                const fullText = label.innerText?.trim() || '';
-                const timeMatch = fullText.match(timeRangeRegex);
-                
-                if (!timeMatch) continue;
-
-                const availMatch = fullText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
-                if (!availMatch) continue;
-
-                // Check if the slot is available (not grayed out/disabled)
-                const style = window.getComputedStyle(label);
-                const isDisabled = label.hasAttribute('aria-disabled') && label.getAttribute('aria-disabled') === 'true';
-                const isGrayedOut = style.opacity === '0' || style.pointerEvents === 'none' || isDisabled;
-                const isAvailable = !isGrayedOut;
-
-                const fromTime = timeMatch[1].replace('.', ':');
-                const toTime = timeMatch[2].replace('.', ':');
-                const spots = parseInt(availMatch[1], 10);
-
-                labelData.push({ time: fromTime, toTime: toTime, spots: spots, isAvailable: isAvailable });
-            }
-
-            // Keep only first occurrence of each time, and only if it's available
-            for (const entry of labelData) {
-                if (!slots[entry.time] && entry.isAvailable) {
-                    slots[entry.time] = { from: entry.time, to: entry.toTime, availableSpots: entry.spots };
+        page.on('response', async (response) => {
+            try {
+                const request = response.request();
+                const contentType = response.headers()['content-type'] || '';
+                if (!contentType.includes('application/json') && !['xhr', 'fetch'].includes(request.resourceType())) {
+                    return;
                 }
+                const payload = await response.json().catch(() => null);
+                if (!payload) return;
+                const entry = {
+                    url: response.url(),
+                    status: response.status(),
+                    contentType,
+                    payload,
+                };
+                activeCapture.push(entry);
+            } catch {
+                // ignore JSON parse errors
             }
-
-            // Convert to array and sort
-            const ordered = Object.values(slots).sort((a, b) => a.from.localeCompare(b.from));
-
-            return {
-                slots: ordered,
-                debug: {
-                    totalLabels: labelList.length,
-                    processedCount: labelData.length,
-                    slotsExtracted: ordered.length,
-                    sampleTexts: ordered.slice(0, 5).map(s => `${s.from}: ${s.availableSpots}`)
-                }
-            };
         });
 
-        console.log('[Scraper] Scraped data:', JSON.stringify(scrapedData.debug, null, 2));
+        const dayCount = Math.max(1, Math.min(daysToFetch, 14));
 
-        const todayKey = new Intl.DateTimeFormat('sv-SE', {
-            timeZone: 'Europe/Oslo',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-        }).format(new Date());
+        for (let offset = 0; offset < dayCount; offset++) {
+            const dayKey = getDateKey(offset, timeZone);
+            const targetUrl = buildDateUrl(baseUrl, dayKey);
+            activeCapture = [];
 
-        await browser.close();
-        return { date: todayKey, slots: scrapedData.slots };
+            console.log(`[Scraper] Navigating to ${targetUrl}`);
+            await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+            await new Promise((r) => setTimeout(r, 2000));
+
+            console.log('[Scraper] Waiting for booking slots to load...');
+            try {
+                await page.waitForSelector('label.ant-radio-button-wrapper', { timeout: 10000 });
+                console.log('[Scraper] Booking slots loaded!');
+            } catch (e) {
+                console.log('[Scraper] WARNING: Timeout waiting for slots, proceeding anyway...');
+            }
+
+            await new Promise((r) => setTimeout(r, 1000));
+
+            let extractedSlots: ScrapedSlot[] = [];
+
+            if (activeCapture.length > 0) {
+                for (const capture of activeCapture) {
+                    const candidate = extractSlotsFromJson(capture.payload);
+                    if (candidate.length > extractedSlots.length) {
+                        extractedSlots = candidate;
+                    }
+                }
+            }
+
+            const domExtraction = await page.evaluate(() => {
+                const slots: Record<string, { from: string; to: string; availableSpots: number }> = {};
+                const timeRangeRegex = /(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/;
+
+                const labelList = document.querySelectorAll('label.ant-radio-button-wrapper');
+                const labelData: Array<{ time: string; toTime: string; spots: number; isAvailable: boolean; text: string }> = [];
+
+                for (let i = 0; i < labelList.length; i++) {
+                    const label = labelList[i] as HTMLElement;
+                    const fullText = label.innerText?.trim() || '';
+                    const timeMatch = fullText.match(timeRangeRegex);
+                    if (!timeMatch) continue;
+
+                    const availMatch = fullText.match(/(\d+)\s*(?:ledige?\s*plasser?|ledig\s*plass|ledige?|available)/i);
+                    if (!availMatch) continue;
+
+                    const style = window.getComputedStyle(label);
+                    const isDisabled = label.hasAttribute('aria-disabled') && label.getAttribute('aria-disabled') === 'true';
+                    const isGrayedOut = style.opacity === '0' || style.pointerEvents === 'none' || isDisabled;
+                    const isAvailable = !isGrayedOut;
+
+                    const fromTime = timeMatch[1].replace('.', ':');
+                    const toTime = timeMatch[2].replace('.', ':');
+                    const spots = parseInt(availMatch[1], 10);
+
+                    labelData.push({ time: fromTime, toTime: toTime, spots: spots, isAvailable: isAvailable, text: fullText });
+                }
+
+                for (const entry of labelData) {
+                    if (!slots[entry.time]) {
+                        slots[entry.time] = { from: entry.time, to: entry.toTime, availableSpots: entry.spots };
+                    }
+                }
+
+                const ordered = Object.values(slots).sort((a, b) => a.from.localeCompare(b.from));
+
+                return {
+                    slots: ordered,
+                    debug: {
+                        totalLabels: labelList.length,
+                        processedCount: labelData.length,
+                        slotsExtracted: ordered.length,
+                        sampleTexts: labelData.slice(0, 8).map(s => s.text),
+                    }
+                };
+            });
+
+            if (domExtraction.slots.length > extractedSlots.length) {
+                extractedSlots = domExtraction.slots;
+            }
+
+            if (extractedSlots.length === 0) {
+                const pageUrl = page.url();
+                const responseSummary = activeCapture.slice(0, 10).map((r) => ({
+                    url: r.url,
+                    status: r.status,
+                    contentType: r.contentType,
+                }));
+                console.warn('[Scraper] No slots extracted', {
+                    date: dayKey,
+                    finalUrl: pageUrl,
+                    dom: domExtraction.debug,
+                    responses: responseSummary,
+                });
+                diagnostics[dayKey] = {
+                    finalUrl: pageUrl,
+                    dom: domExtraction.debug,
+                    responses: responseSummary,
+                };
+            } else {
+                console.log(`[Scraper] Extracted ${extractedSlots.length} slots for ${dayKey}`);
+                days[dayKey] = extractedSlots;
+            }
+        }
+
+        await page.close();
+        if (shouldCloseBrowser && browser) await browser.close();
+        return { days, timestamp: new Date().toISOString(), diagnostics };
 
     } catch (error) {
         console.error('[Scraper] Error:', error);
-        if (browser) await browser.close();
-        return { date: null, slots: [] };
+        if (shouldCloseBrowser && browser) await browser.close();
+        return { days: {}, timestamp: new Date().toISOString(), diagnostics: {} };
     }
 }

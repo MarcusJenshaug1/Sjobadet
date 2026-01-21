@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './SaunaAvailability.module.css';
 import { BookingModal } from './BookingModal';
+import { getNextAvailableSlot } from '@/lib/availability-utils';
 
 interface ScrapedSlot {
     from: string;
@@ -305,25 +306,7 @@ export default function SaunaAvailability({
         }
     })();
 
-    const isTomorrow = currentData.displayDate === tomorrowOslo;
-
-    // Find next available slot (considering lead time if today)
-    const nextSlot = (() => {
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-        
-        return (data?.displaySlots || []).find((s: ScrapedSlot) => {
-            if (s.availableSpots <= 0) return false;
-            
-            if (currentData.displayDate === todayOslo) {
-                const parts = (s.from).split(/[:.]/).map(Number);
-                const slotStartTime = parts[0] * 60 + parts[1];
-                return slotStartTime > currentTime + 15;
-            }
-            
-            return true;
-        });
-    })();
+    const nextSlot = getNextAvailableSlot(data?.days, new Date(), 'Europe/Oslo');
 
     return (
         <div className={styles.container}>
@@ -376,12 +359,16 @@ export default function SaunaAvailability({
                 </div>
             </div>
 
-            {nextSlot && (
+            {nextSlot ? (
                 <div className={styles.nextSlot}>
                     <div className={styles.nextDot} />
                     <span className={styles.nextText}>
-                        Neste ledige: <span className={styles.nextTime}>{nextSlot.from}</span>
+                        Neste ledige: <span className={styles.nextTime}>{nextSlot.slot.from}</span>
                     </span>
+                </div>
+            ) : (
+                <div className={styles.nextSlot}>
+                    <span className={styles.nextText}>Ingen ledige tider</span>
                 </div>
             )}
 
@@ -393,7 +380,7 @@ export default function SaunaAvailability({
                             slot={slot}
                             totalCapacity={capacityDropin}
                             baseBookingUrl={bookingUrlDropin}
-                            isTomorrow={isTomorrow}
+                            displayDate={currentData.displayDate}
                             onOpenBooking={(url) => setBookingUrl(url)}
                         />
                     ))
@@ -416,7 +403,7 @@ export default function SaunaAvailability({
     );
 }
 
-function SlotCard({ slot, totalCapacity, baseBookingUrl, isTomorrow, onOpenBooking }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null, isTomorrow: boolean, onOpenBooking: (url: string) => void }) {
+function SlotCard({ slot, totalCapacity, baseBookingUrl, displayDate, onOpenBooking }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null, displayDate?: string, onOpenBooking: (url: string) => void }) {
     const isFull = slot.availableSpots === 0;
     const availablePlaces = slot.availableSpots;
 
@@ -432,12 +419,8 @@ function SlotCard({ slot, totalCapacity, baseBookingUrl, isTomorrow, onOpenBooki
     // Construct booking link: [Base URL]/[YYYY-MM-DD]/[HH:MM]
     let bookingLink = '';
     if (baseBookingUrl && baseBookingUrl.includes('periode.no') && !isFull) {
-        const targetDate = new Date();
-        if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
-
-        const dateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD
         const timeStr = slot.from; // HH:MM
-
+        const dateStr = displayDate || new Date().toISOString().split('T')[0];
         const cleanBase = baseBookingUrl.endsWith('/') ? baseBookingUrl.slice(0, -1) : baseBookingUrl;
         bookingLink = `${cleanBase}/${dateStr}/${timeStr}`;
     }
