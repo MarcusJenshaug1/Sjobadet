@@ -390,16 +390,33 @@ export default function SaunaAvailability({
 
             <div className={styles.grid}>
                 {availableSlots.length > 0 ? (
-                    availableSlots.map((slot: ScrapedSlot, i: number) => (
-                        <SlotCard
-                            key={i}
-                            slot={slot}
-                            totalCapacity={capacityDropin}
-                            baseBookingUrl={bookingUrlDropin}
-                            displayDate={currentData.displayDate}
-                            onOpenBooking={(url) => setBookingUrl(url)}
-                        />
-                    ))
+                    availableSlots.map((slot: ScrapedSlot, i: number) => {
+                        const isToday = currentData.displayDate === todayOslo;
+                        const now = new Date();
+                        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+                        let isPast = false;
+                        if (isToday) {
+                            const parts = slot.from.split(/[:.]/).map(Number);
+                            const slotTime = parts[0] * 60 + parts[1];
+                            // Mark as past if the slot start time is earlier than right now
+                            if (slotTime < currentMinutes) {
+                                isPast = true;
+                            }
+                        }
+
+                        return (
+                            <SlotCard
+                                key={i}
+                                slot={slot}
+                                totalCapacity={capacityDropin}
+                                baseBookingUrl={bookingUrlDropin}
+                                displayDate={currentData.displayDate}
+                                isPast={isPast}
+                                onOpenBooking={(url) => setBookingUrl(url)}
+                            />
+                        );
+                    })
                 ) : (
                     <div className={styles.empty}>
                         <p className={styles.emptyText}>Ingen ledige timer funnet akkurat nå</p>
@@ -419,14 +436,28 @@ export default function SaunaAvailability({
     );
 }
 
-function SlotCard({ slot, totalCapacity, baseBookingUrl, displayDate, onOpenBooking }: { slot: ScrapedSlot, totalCapacity: number, baseBookingUrl?: string | null, displayDate?: string, onOpenBooking: (url: string) => void }) {
+function SlotCard({
+    slot,
+    totalCapacity,
+    baseBookingUrl,
+    displayDate,
+    isPast = false,
+    onOpenBooking
+}: {
+    slot: ScrapedSlot,
+    totalCapacity: number,
+    baseBookingUrl?: string | null,
+    displayDate?: string,
+    isPast?: boolean,
+    onOpenBooking: (url: string) => void
+}) {
     const isFull = slot.availableSpots === 0;
     const availablePlaces = slot.availableSpots;
 
     let stateClass = styles.stateMany;
     const availablePercentage = totalCapacity > 0 ? (availablePlaces / totalCapacity) : 0;
 
-    if (isFull) {
+    if (isFull || isPast) {
         stateClass = styles.stateFull;
     } else if (availablePercentage <= 0.7) {
         stateClass = styles.stateFew;
@@ -434,7 +465,7 @@ function SlotCard({ slot, totalCapacity, baseBookingUrl, displayDate, onOpenBook
 
     // Construct booking link: [Base URL]/[YYYY-MM-DD]/[HH:MM]
     let bookingLink = '';
-    if (baseBookingUrl && baseBookingUrl.includes('periode.no') && !isFull) {
+    if (baseBookingUrl && baseBookingUrl.includes('periode.no') && !isFull && !isPast) {
 
         const timeStr = slot.from; // HH:MM
         const dateStr = displayDate || new Date().toISOString().split('T')[0];
@@ -451,7 +482,7 @@ function SlotCard({ slot, totalCapacity, baseBookingUrl, displayDate, onOpenBook
         </>
     );
 
-    const isClickable = Boolean(bookingLink) && !isFull;
+    const isClickable = Boolean(bookingLink) && !isFull && !isPast;
 
     if (isClickable && bookingLink) {
         return (
