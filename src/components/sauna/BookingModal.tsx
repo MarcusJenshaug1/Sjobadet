@@ -29,7 +29,16 @@ export function BookingModal({ url, open, onClose, title }: BookingModalProps) {
     if (!open) return null;
 
     return createPortal(
-        <div className={styles.backdrop} role="dialog" aria-modal="true" aria-label={title || 'Booking'} onClick={onClose}>
+        <div
+            className={styles.backdrop}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title || 'Booking'}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+            }}
+        >
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.header}>
                     <div className={styles.title}>{title || 'Fullfør booking'}</div>

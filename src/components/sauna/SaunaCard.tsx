@@ -222,9 +222,9 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                     </div>
 
                     {!isMaintenanceMode && (
-                        <Button 
+                        <Button
                             href={`/home/${sauna.slug}`}
-                            variant="outline" 
+                            variant="outline"
                             fullWidth
                             onClick={(e) => {
                                 e.preventDefault();
@@ -238,12 +238,14 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                     )}
                 </div>
             </div>
-            <BookingModal
-                open={Boolean(bookingUrl)}
-                url={bookingUrl || ''}
-                onClose={() => setBookingUrl(null)}
-                title={`${sauna.name} booking`}
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+                <BookingModal
+                    open={Boolean(bookingUrl)}
+                    url={bookingUrl || ''}
+                    onClose={() => setBookingUrl(null)}
+                    title={`${sauna.name} booking`}
+                />
+            </div>
         </div>
     );
 }
