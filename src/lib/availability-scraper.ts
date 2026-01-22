@@ -1,5 +1,5 @@
 import puppeteer, { Browser, ConsoleMessage, HTTPRequest } from 'puppeteer-core';
-import chromium from '@sparticuz/chromium-min';
+import chromium from '@sparticuz/chromium';
 
 export interface ScrapedSlot {
     from: string;
