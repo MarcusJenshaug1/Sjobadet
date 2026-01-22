@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { runScraper } from '@/lib/scraper-runner';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 300;
 
 export async function GET(req: NextRequest) {
     // Verify secret to prevent unauthorized scraping runs (cost/bandwidth protection)

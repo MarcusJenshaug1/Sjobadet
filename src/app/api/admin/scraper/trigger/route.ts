@@ -4,6 +4,10 @@ import { ScraperService } from '@/lib/scraper-service';
 import { runScraper } from '@/lib/scraper-runner';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
+
 export async function POST(request: NextRequest) {
     const session = await getSession();
     if (!session) {
@@ -17,15 +21,13 @@ export async function POST(request: NextRequest) {
         // Create the run entry
         const run = await ScraperService.createRun('manual', `Manual trigger: ${mode}`);
 
-        // Fire and forget (in Vercel this might need waitUntil)
-        runScraper({
+        // Run inside this request to ensure it completes on Vercel
+        await runScraper({
             mode,
             saunaIds,
             runId: run.id,
             trigger: 'manual'
-        }).catch(err => console.error('Background run failed', err));
-
-        return NextResponse.json({ success: true, runId: run.id });
+        });
 
         return NextResponse.json({ success: true, runId: run.id });
     } catch (error) {
