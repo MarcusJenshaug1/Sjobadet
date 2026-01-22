@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
+  outputFileTracingIncludes: {
+    '/api/**': ['node_modules/@sparticuz/chromium/**'],
+  },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },

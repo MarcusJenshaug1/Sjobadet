@@ -146,21 +146,41 @@ import fs from 'fs';
 export async function createScraperBrowser(): Promise<Browser> {
     let executablePath: string | undefined;
     let useChromiumBundle = true;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isServerless = !!process.env.VERCEL || !!process.env.AWS_EXECUTION_ENV;
+    const envExecutablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH;
 
-    // 1. Try sparticuz/chromium-min (Standard for Vercel/Production)
-    try {
-        executablePath = await chromium.executablePath();
-        if (executablePath) {
-            console.log('[Scraper] Using @sparticuz/chromium-min executable:', executablePath);
-        }
-    } catch (err) {
+    if (envExecutablePath) {
+        executablePath = envExecutablePath;
         useChromiumBundle = false;
-        console.log('[Scraper] @sparticuz/chromium-min failed, falling back to local discovery');
+        console.log('[Scraper] Using executable from env:', executablePath);
+    }
+
+    // 1. Try sparticuz/chromium (Standard for Vercel/Production)
+    if (!executablePath) {
+        try {
+            executablePath = await chromium.executablePath();
+            if (!executablePath && isServerless) {
+                executablePath = await chromium.executablePath('/tmp/chromium');
+            }
+            if (executablePath) {
+                console.log('[Scraper] Using @sparticuz/chromium executable:', executablePath);
+            }
+        } catch (err) {
+            useChromiumBundle = false;
+            console.log('[Scraper] @sparticuz/chromium failed, falling back to local discovery');
+        }
     }
 
     // 2. Local Discovery (Windows, Mac, Linux, WSL)
     if (!executablePath) {
         useChromiumBundle = false;
+
+        if (isProduction && isServerless) {
+            const envInfo = `Platform: ${process.platform}, Arch: ${process.arch}, Node: ${process.version}`;
+            console.error(`[Scraper] FATAL: Chromium bundle missing in serverless. ${envInfo}`);
+            throw new Error(`Chromium executable not found. Serverless bundle missing. ${envInfo}`);
+        }
 
         const isWindows = process.platform === 'win32';
         const isMac = process.platform === 'darwin';
