@@ -10,6 +10,8 @@ import { trackEvent } from '@/lib/analytics/tracking';
 import { useRouter } from 'next/navigation';
 import { BookingModal } from './BookingModal';
 
+import { formatDateNoShortTitleCase, getRelativeDayLabel } from '@/lib/availability-utils';
+
 interface SaunaProps {
     id: string;
     name: string;
@@ -79,30 +81,19 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
         if (!sauna.nextAvailableSlot) return null;
         const { time, availableSpots, date } = sauna.nextAvailableSlot;
 
-        const osloNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
-        const todayKey = new Intl.DateTimeFormat('sv-SE', {
-            timeZone: 'Europe/Oslo',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-        }).format(osloNow);
-        const tomorrow = new Date(osloNow);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowKey = new Intl.DateTimeFormat('sv-SE', {
-            timeZone: 'Europe/Oslo',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-        }).format(tomorrow);
+        const now = new Date();
+        const dayLabel = getRelativeDayLabel(date, now);
 
-        let dayLabel: string | null = null;
-        if (date === tomorrowKey) {
-            dayLabel = 'i morgen';
-        } else if (date && date !== todayKey) {
-            dayLabel = date;
-        }
+        // If not today, show "HH:mm (28. Jan)"
+        // If today, just show "HH:mm"
+        const isToday = dayLabel === 'i dag';
+        const formattedDate = !isToday ? formatDateNoShortTitleCase(date) : null;
 
-        return { time, availableSpots, dayLabel };
+        return {
+            time,
+            availableSpots,
+            dayLabel: formattedDate ? `(${formattedDate})` : null
+        };
     };
 
     const nextSlotLabel = formatNextSlotLabel();
@@ -164,7 +155,7 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                                 <div className={styles.nextSlotMain}>
                                     <Clock size={16} />
                                     <span className={styles.nextSlotText}>
-                                        Neste ledige: {nextSlotLabel.time}{nextSlotLabel.dayLabel ? ` (${nextSlotLabel.dayLabel})` : ''}
+                                        Neste ledige: {nextSlotLabel.time}{nextSlotLabel.dayLabel ? ` ${nextSlotLabel.dayLabel}` : ''}
                                     </span>
                                 </div>
                                 <span className={styles.nextSlotSpots}>{nextSlotLabel.availableSpots} plasser</span>

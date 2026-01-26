@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './SaunaAvailability.module.css';
 import { BookingModal } from './BookingModal';
-import { getNextAvailableSlot } from '@/lib/availability-utils';
+import { getNextAvailableSlot, getRelativeDayLabel, formatDateNoShortTitleCase } from '@/lib/availability-utils';
 
 interface ScrapedSlot {
     from: string;
@@ -303,33 +303,28 @@ export default function SaunaAvailability({
         return osloFormatter.format(d);
     })();
 
+    const nextSlot = getNextAvailableSlot(data?.days, new Date(), 'Europe/Oslo');
+
     const headingText = (() => {
         const displayDate = currentData.displayDate;
         if (!displayDate) return 'Drop-in ledighet';
-        if (displayDate === todayOslo) return 'Drop-in ledighet i dag';
-        if (displayDate === tomorrowOslo) return 'Drop-in ledighet i morgen';
-
-        try {
-            const [y, m, d] = displayDate.split('-').map(Number);
-            const pretty = new Intl.DateTimeFormat('nb-NO', {
-                weekday: 'long',
-                day: '2-digit',
-                month: '2-digit',
-            }).format(new Date(Date.UTC(y, (m ?? 1) - 1, d)));
-            return `Drop-in ledighet ${pretty}`;
-        } catch {
-            return `Drop-in ledighet ${displayDate}`;
-        }
+        const label = getRelativeDayLabel(displayDate, new Date(), 'Europe/Oslo');
+        return `Drop-in ledighet ${label}`;
     })();
 
-    const nextSlot = getNextAvailableSlot(data?.days, new Date(), 'Europe/Oslo');
+    const dateLabel = currentData.displayDate && getRelativeDayLabel(currentData.displayDate, new Date(), 'Europe/Oslo') !== 'i dag'
+        ? formatDateNoShortTitleCase(currentData.displayDate)
+        : null;
 
     return (
         <div className={styles.container}>
             <div className={styles.header}>
                 <div>
                     <div className={styles.titleWrapper}>
-                        <h3 className={styles.title}>{headingText}</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <h3 className={styles.title}>{headingText}</h3>
+                            {dateLabel && <span style={{ fontSize: '0.8rem', color: '#718096', marginTop: '-4px', marginBottom: '4px' }}>{dateLabel}</span>}
+                        </div>
                         <div className={styles.badge} title="Denne hentes automatisk hvert minutt">
                             <div className={refreshing ? styles.dotRefreshing : styles.dot} />
                             <span className={styles.badgeText}>
@@ -375,16 +370,19 @@ export default function SaunaAvailability({
                 </div>
             </div>
 
-            {nextSlot ? (
+            {!nextSlot ? (
+                <div className={styles.nextSlot}>
+                    <span className={styles.nextText}>Ingen ledige timer neste 7 dager</span>
+                </div>
+            ) : (
                 <div className={styles.nextSlot}>
                     <div className={styles.nextDot} />
                     <span className={styles.nextText}>
                         Neste ledige: <span className={styles.nextTime}>{nextSlot.slot.from}</span>
+                        {getRelativeDayLabel(nextSlot.date, new Date()) !== 'i dag' && (
+                            <span style={{ marginLeft: '4px', opacity: 0.8 }}>({formatDateNoShortTitleCase(nextSlot.date)})</span>
+                        )}
                     </span>
-                </div>
-            ) : (
-                <div className={styles.nextSlot}>
-                    <span className={styles.nextText}>Ingen ledige tider</span>
                 </div>
             )}
 
