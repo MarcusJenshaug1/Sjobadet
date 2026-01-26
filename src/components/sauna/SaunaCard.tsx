@@ -3,7 +3,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import Image from 'next/image';
-import { MapPin, Clock } from 'lucide-react';
+import {
+    MapPin,
+    Clock,
+    Users,
+    ExternalLink,
+    Ban,
+    AlertTriangle
+} from 'lucide-react';
 import styles from './SaunaCard.module.css';
 import { Button } from '../ui/Button';
 import { trackEvent } from '@/lib/analytics/tracking';
@@ -22,6 +29,7 @@ interface SaunaProps {
     bookingUrlDropin?: string | null;
     bookingUrlPrivat?: string | null;
     driftStatus?: string | null;
+    capacityDropin?: number; // Added to help with status calculation
     nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
 }
 
@@ -84,8 +92,6 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
         const now = new Date();
         const dayLabel = getRelativeDayLabel(date, now);
 
-        // If not today, show "HH:mm (28. Jan)"
-        // If today, just show "HH:mm"
         const isToday = dayLabel === 'i dag';
         const formattedDate = !isToday ? formatDateNoShortTitleCase(date) : null;
 
@@ -97,6 +103,33 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
     };
 
     const nextSlotLabel = formatNextSlotLabel();
+    const isClosed = sauna.driftStatus === 'closed';
+
+    // Status calculation for colors
+    const getStatusState = () => {
+        if (isClosed) return 'NONE';
+
+        const available = sauna.nextAvailableSlot?.availableSpots;
+        if (available === undefined || available === null) return 'PLENTY';
+
+        if (available <= 0) return 'NONE';
+
+        // Use capacity if available, otherwise fallback to absolute numbers
+        if (sauna.capacityDropin) {
+            if (available / sauna.capacityDropin <= 0.3) return 'LOW';
+        } else {
+            if (available <= 2) return 'LOW';
+        }
+
+        return 'PLENTY';
+    };
+
+    const statusState = getStatusState();
+
+    const chipClass =
+        statusState === 'NONE' ? styles.chipNone :
+            statusState === 'LOW' ? styles.chipFew :
+                styles.chipPlenty;
 
     return (
         <div
@@ -122,15 +155,23 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                         decoding="async"
                     />
                 ) : (
-                    <div style={{ width: '100%', height: '100%', backgroundColor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }} role="img" aria-label="Bilde ikke tilgjengelig">
+                    <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }} role="img" aria-label="Bilde ikke tilgjengelig">
                         <span>Bilde kommer</span>
                     </div>
                 )}
-                {sauna.driftStatus === 'closed' && (
-                    <span className={styles.badge} aria-label="Badstuen er stengt">
+                <div className={styles.imageGradient} />
+
+                {isClosed ? (
+                    <div className={`${styles.badge} ${styles.badgeStengt}`}>
+                        <Ban size={14} />
                         Stengt
-                    </span>
-                )}
+                    </div>
+                ) : statusState === 'LOW' ? (
+                    <div className={`${styles.badge} ${styles.badgeFew}`}>
+                        <AlertTriangle size={14} />
+                        Få plasser
+                    </div>
+                ) : null}
             </div>
 
             <div className={styles.content}>
@@ -138,39 +179,42 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                     <h3 className={styles.name}>
                         {sauna.name}
                     </h3>
-                    <div className={styles.meta}>
-                        <div className={styles.location}>
-                            <MapPin size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                            {sauna.location}
-                        </div>
+                    <div className={styles.locationContainer}>
+                        <MapPin size={16} />
+                        {sauna.location}
                     </div>
                 </div>
 
-                <p className={styles.description}>{sauna.shortDescription}</p>
-
                 {!isMaintenanceMode && (
-                    <div className={styles.nextSlotRow}>
+                    <div className={styles.chipsContainer} onClick={(e) => e.stopPropagation()}>
                         {nextSlotLabel ? (
-                            <div className={styles.nextSlotBadge}>
-                                <div className={styles.nextSlotMain}>
-                                    <Clock size={16} />
-                                    <span className={styles.nextSlotText}>
-                                        Neste ledige: {nextSlotLabel.time}{nextSlotLabel.dayLabel ? ` ${nextSlotLabel.dayLabel}` : ''}
-                                    </span>
-                                </div>
-                                <span className={styles.nextSlotSpots}>{nextSlotLabel.availableSpots} plasser</span>
+                            <div className={`${styles.chip} ${chipClass}`}>
+                                <Clock size={16} />
+                                <span>Neste ledige: {nextSlotLabel.time}{nextSlotLabel.dayLabel ? ` ${nextSlotLabel.dayLabel}` : ''}</span>
                             </div>
                         ) : (
-                            <div className={styles.nextSlotFallback}>
+                            <div className={`${styles.chip} ${styles.chipNone}`}>
                                 <Clock size={16} />
                                 <span>Ingen ledige timer nå</span>
+                            </div>
+                        )}
+
+                        {nextSlotLabel && (
+                            <div className={`${styles.chip} ${chipClass}`}>
+                                <Users size={16} />
+                                <span>{nextSlotLabel.availableSpots}/{sauna.capacityDropin || 10} ledige</span>
                             </div>
                         )}
                     </div>
                 )}
 
+                <div className={styles.description}>
+                    {sauna.shortDescription}
+                    <span className={styles.lesMer}>Les mer</span>
+                </div>
+
                 <div className={styles.actions}>
-                    <div className={styles.bookingButtons}>
+                    <div className={styles.bookingGrid}>
                         {sauna.bookingUrlDropin ? (
                             <Button
                                 href={sauna.bookingUrlDropin || '#'}
@@ -180,13 +224,12 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                                     setBookingUrl(sauna.bookingUrlDropin || null);
                                     trackEvent('booking_click', { type: 'drop-in', saunaId: sauna.id, saunaName: sauna.name });
                                 }}
-                                variant="primary"
-                                style={{ fontSize: '0.9rem', padding: '0.5rem' }}
+                                className={styles.btnDropin}
                             >
                                 Book Drop-in
                             </Button>
                         ) : (
-                            <Button disabled variant="secondary" style={{ fontSize: '0.9rem', padding: '0.5rem', opacity: 0.5 }}>
+                            <Button disabled className={`${styles.btnDropin} ${styles.btnDisabled}`}>
                                 Kun privat
                             </Button>
                         )}
@@ -200,23 +243,20 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                                     setBookingUrl(sauna.bookingUrlPrivat || null);
                                     trackEvent('booking_click', { type: 'private', saunaId: sauna.id, saunaName: sauna.name });
                                 }}
-                                variant="secondary"
-                                style={{ fontSize: '0.9rem', padding: '0.5rem' }}
+                                className={styles.btnPrivat}
                             >
                                 Book Privat
                             </Button>
                         ) : (
-                            <Button disabled variant="secondary" style={{ fontSize: '0.9rem', padding: '0.5rem', opacity: 0.6 }}>
+                            <Button disabled className={`${styles.btnPrivat} ${styles.btnDisabled}`}>
                                 Ikke tilgj.
                             </Button>
                         )}
                     </div>
 
                     {!isMaintenanceMode && (
-                        <Button
-                            href={`/home/${sauna.slug}`}
-                            variant="outline"
-                            fullWidth
+                        <button
+                            className={styles.btnDetails}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -225,7 +265,8 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                             }}
                         >
                             Se badstuen
-                        </Button>
+                            <ExternalLink size={16} />
+                        </button>
                     )}
                 </div>
             </div>
