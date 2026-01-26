@@ -2,7 +2,6 @@
     z-index: 1000;
     width: 100%;
     background-color: rgba(255, 255, 255, 0.85);
-    /* Slightly more transparent at top */
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border-bottom: 1px solid transparent;
@@ -43,74 +42,201 @@
     border: none;
     cursor: pointer;
     color: var(--foreground);
+    padding: 8px;
+    border-radius: 8px;
+    -webkit-tap-highlight-color: transparent;
 }
 
+/* Premium Mobile Drawer (Full Sheet) */
 .mobileMenu {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
     background-color: #ffffff;
-    padding: 1.25rem 1.5rem 2rem;
     display: none;
     flex-direction: column;
-    gap: 1.5rem;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
     z-index: 1200;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .mobileMenu.open {
     display: flex;
 }
 
-.mobileTopRow {
+.mobileMenuHeader {
+    position: sticky;
+    top: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    height: 64px;
+    padding: 0 1.25rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border-bottom: 1px solid #f1f5f9;
+    z-index: 20;
+    padding-top: env(safe-area-inset-top, 0);
+    box-sizing: content-box;
 }
 
 .mobileLogo {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
 }
 
 .closeBtn {
     border: 1px solid #e2e8f0;
-    background: #ffffff;
+    background: #f8fafc;
     border-radius: 999px;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    color: #475569;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.closeBtn:active {
+    background: #f1f5f9;
+    transform: scale(0.9);
+}
+
+/* Scrollable Content Zone */
+.mobileScrollArea {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.25rem 2rem;
+    -webkit-overflow-scrolling: touch;
+    background-color: #fafafa;
+    /* Subtle background depth */
 }
 
 .mobileLinks {
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
-    margin-top: 0.25rem;
+    gap: 0.25rem;
+}
+
+.mobileLinkWrapper {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    transition: background 0.2s;
+}
+
+.mobileLinkRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    min-height: 60px;
+}
+
+.mobileLinkRow:active {
+    background-color: #f1f5f9;
+    /* Subtle press effect */
 }
 
 .mobileLink {
-    font-size: 1.2rem;
-    color: #0f172a;
-    text-decoration: none;
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
+    color: #1e293b;
+    flex: 1;
 }
 
+.linkIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: #f8fafc;
+    color: var(--primary);
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.mobileLinkRow:active .linkIcon {
+    background-color: var(--primary);
+    color: white;
+}
+
+.mobileToggle {
+    background: none;
+    border: none;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    transition: transform 0.25s ease;
+}
+
+/* Accordion Hierarchy */
+.mobileAccordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0.5rem 1rem 3.5rem;
+    background-color: #fcfcfc;
+}
+
+.mobileAccordionLink {
+    font-size: 1rem;
+    color: #475569;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.6rem 0;
+    transition: color 0.2s;
+}
+
+.mobileAccordionLink:active {
+    color: var(--primary);
+}
+
+/* Custom Admin Styling */
 .mobileAdmin {
-    color: #2563eb;
+    margin-top: 1rem;
+    background-color: #eff6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
 }
 
-.mobileCta {
-    margin-top: auto;
+.adminBadge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: #2563eb;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+}
+
+/* Pinned Footer Zone */
+.mobileFooter {
+    position: sticky;
+    bottom: 0;
+    background-color: #ffffff;
+    padding: 1.25rem;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0));
+    border-top: 1px solid #f1f5f9;
+    z-index: 20;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
 }
 
 @media (min-width: 768px) {
@@ -123,6 +249,11 @@
     .navLink {
         font-weight: 500;
         transition: color 0.2s;
+        text-decoration: none;
+        color: var(--foreground);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
     }
 
     .navLink:hover {
@@ -135,5 +266,59 @@
 
     .mobileMenu {
         display: none;
+    }
+
+    /* Desktop Dropdown UI */
+    .dropdownContainer {
+        position: relative;
+        padding: 0.25rem 0;
+    }
+
+    .dropdownMenu {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        min-width: 240px;
+        padding: 0.75rem;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 1001;
+    }
+
+    .dropdownContainer:hover .dropdownMenu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .dropdownItem {
+        display: block;
+        padding: 0.75rem 1rem;
+        text-decoration: none;
+        color: #475569;
+        border-radius: 10px;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .dropdownItem:hover {
+        background-color: #f8fafc;
+        color: var(--primary);
+        transform: translateX(4px);
+    }
+
+    .chevron {
+        transition: transform 0.2s;
+    }
+
+    .dropdownContainer:hover .chevron {
+        transform: rotate(180deg);
     }
 }
