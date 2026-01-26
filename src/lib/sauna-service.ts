@@ -156,7 +156,7 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
     const cached = activeSaunaCache.get(cacheKey);
     const now = Date.now();
     if (cached && cached.expiresAt > now) {
-        return cached.data.map((sauna: any) => ({
+        return cached.data.map((sauna) => ({
             ...sauna,
             nextAvailableSlot: computeNextAvailableSlot(sauna.availabilityData),
         }));
@@ -202,14 +202,14 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
             } as any
         });
 
-        activeSaunaCache.set(cacheKey, { data: result as any, expiresAt: now + SAUNA_CACHE_TTL_MS });
+        activeSaunaCache.set(cacheKey, { data: result as unknown as ActiveSauna[], expiresAt: now + SAUNA_CACHE_TTL_MS });
 
-        return result.map((sauna: any) => ({
+        return (result as unknown as ActiveSauna[]).map((sauna) => ({
             ...sauna,
             nextAvailableSlot: computeNextAvailableSlot(sauna.availabilityData),
         }));
-    } catch (error) {
-        console.error('[SaunaService] Falling back to static saunas.json due to DB error:', error);
+    } catch (err) {
+        console.error('[SaunaService] Falling back to static saunas.json due to DB error:', err);
         return mapStaticSaunaBase().map(sauna => ({
             ...sauna,
             nextAvailableSlot: computeNextAvailableSlot(sauna.availabilityData)
@@ -267,16 +267,17 @@ export const getSaunaBySlug = async (slug: string) => {
         });
 
         if (result) {
+            const saunaData = result as unknown as ActiveSauna;
             const withNext = {
-                ...(result as any),
-                nextAvailableSlot: computeNextAvailableSlot((result as any).availabilityData ?? null),
+                ...saunaData,
+                nextAvailableSlot: computeNextAvailableSlot(saunaData.availabilityData ?? null),
             };
-            saunaBySlugCache.set(slug, { data: withNext, expiresAt: now + SAUNA_CACHE_TTL_MS });
+            saunaBySlugCache.set(slug, { data: withNext as unknown as SaunaDetail, expiresAt: now + SAUNA_CACHE_TTL_MS });
             return withNext;
         }
         return result;
-    } catch (error) {
-        console.error('[SaunaService] Falling back to static sauna detail due to DB error:', error);
+    } catch (err) {
+        console.error('[SaunaService] Falling back to static sauna detail due to DB error:', err);
         const fallback = mapStaticSaunaDetail(slug);
         if (fallback) {
             saunaBySlugCache.set(slug, { data: fallback, expiresAt: now + SAUNA_CACHE_TTL_MS });

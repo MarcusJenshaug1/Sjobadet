@@ -10,7 +10,7 @@ export function SaunaStory() {
             <div className={styles.storySubsection}>
                 <h3><Sparkles size={24} color="#0f766e" /> LöYLY</h3>
                 <p className={styles.storyText}>
-                    Dampen som stiger opp fra ovnen kalles for <strong>Löyly</strong>. Det betyr "Saunaens sjel" og stammer fra Finsk folkelore. Det sies at energien i badstuer er kvinnelig, derfor har ofte badstuer kvinnenavn, vår er intet unntak.
+                    Dampen som stiger opp fra ovnen kalles for <strong>Löyly</strong>. Det betyr &quot;Saunaens sjel&quot; og stammer fra Finsk folkelore. Det sies at energien i badstuer er kvinnelig, derfor har ofte badstuer kvinnenavn, vår er intet unntak.
                 </p>
             </div>
 

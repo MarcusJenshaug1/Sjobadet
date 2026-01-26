@@ -1,10 +1,17 @@
 import prisma from '../prisma';
 
+interface PageviewCount {
+    path: string | null;
+    _count: {
+        _all: number;
+    };
+}
+
 /**
  * Fetches pageview counts for all paths, sorted by popularity.
  * This is used to build "smart" navigation menus.
  */
-export async function getPopularityStats() {
+export async function getPopularityStats(): Promise<Record<string, number>> {
     try {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -19,19 +26,19 @@ export async function getPopularityStats() {
             _count: {
                 _all: true
             }
-        });
+        }) as PageviewCount[];
 
         // Convert to a simple Key-Value object for easier lookups
         const stats: Record<string, number> = {};
-        pageviews.forEach((p: any) => {
+        pageviews.forEach((p) => {
             if (p.path) {
                 stats[p.path] = p._count._all;
             }
         });
 
         return stats;
-    } catch (error) {
-        console.error('[PopularityStats] Failed to fetch:', error);
+    } catch {
+        // Log generic error but don't leak it back to UI
         return {};
     }
 }

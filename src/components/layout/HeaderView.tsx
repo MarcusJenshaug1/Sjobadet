@@ -31,6 +31,11 @@ interface HeaderViewProps {
     infoLinks?: NavLink[];
 }
 
+interface MainNavLink extends NavLink {
+    icon?: React.ReactNode;
+    dropdown?: NavLink[];
+}
+
 export function HeaderView({
     isAdmin,
     isMaintenanceMode = false,
@@ -56,7 +61,7 @@ export function HeaderView({
     useEffect(() => {
         let cancelled = false;
         fetch('/api/auth/session', { cache: 'no-store' })
-            .then((res) => res.ok ? res.json() : { isAdmin })
+            .then((res) => res.ok ? res.json() as Promise<{ isAdmin: boolean }> : { isAdmin })
             .then((data) => {
                 if (!cancelled && typeof data?.isAdmin === 'boolean') {
                     setClientIsAdmin(data.isAdmin);
@@ -68,7 +73,7 @@ export function HeaderView({
 
     const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
-    const mainLinks = [
+    const mainLinks: MainNavLink[] = [
         { href: '/#saunas', label: 'Badstuer', icon: <Flame size={20} />, dropdown: saunaLinks },
         { href: '/medlemskap', label: 'Medlemskap', icon: <Users size={20} /> },
         { href: '/gavekort', label: 'Gavekort', icon: <Ticket size={20} /> },
@@ -177,7 +182,7 @@ export function HeaderView({
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                                 className={styles.mobileLink}
                                             >
-                                                {(link as any).icon && <span className={styles.linkIcon}>{(link as any).icon}</span>}
+                                                {link.icon && <span className={styles.linkIcon}>{link.icon}</span>}
                                                 {link.label}
                                             </Link>
                                             {hasDropdown && (
