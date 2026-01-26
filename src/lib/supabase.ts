@@ -21,7 +21,8 @@ export const getSupabaseAdmin = (): SupabaseClient => {
 export const supabaseAdmin = (function () {
     const proxy = new Proxy({}, {
         get(_, prop) {
-            return (getSupabaseAdmin() as any)[prop]
+            const admin = getSupabaseAdmin();
+            return (admin as unknown as Record<string | symbol, unknown>)[prop];
         }
     })
     return proxy as SupabaseClient

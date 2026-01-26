@@ -6,6 +6,7 @@ import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 import nextDynamic from 'next/dynamic';
 import { SaunaCard } from '@/components/sauna/SaunaCard';
+import { Suspense } from 'react';
 
 // Lazy load non-critical components
 const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
@@ -29,13 +30,15 @@ export const metadata: Metadata = {
   },
 };
 
-import { Suspense } from 'react';
-import { MapPin } from 'lucide-react';
+interface MaintenanceSnapshot {
+  saunas: any[];
+  generatedAt?: string;
+}
 
 export default async function Home() {
   // Check maintenance mode immediately
   let isMaintenanceMode = false;
-  let maintenanceSnapshot: any = null;
+  let maintenanceSnapshot: MaintenanceSnapshot | null = null;
   let snapshotGeneratedAt = '';
 
   try {
@@ -48,14 +51,14 @@ export default async function Home() {
 
     if (isMaintenanceMode && snapshotSetting?.value) {
       try {
-        maintenanceSnapshot = JSON.parse(snapshotSetting.value);
-        snapshotGeneratedAt = maintenanceSnapshot.generatedAt || '';
-      } catch (e) {
-        console.error('Failed to parse maintenance snapshot:', e);
+        maintenanceSnapshot = JSON.parse(snapshotSetting.value) as MaintenanceSnapshot;
+        snapshotGeneratedAt = maintenanceSnapshot?.generatedAt || '';
+      } catch {
+        // Silent fail for snapshot parsing
       }
     }
-  } catch (e) {
-    console.error('Failed to check maintenance mode:', e);
+  } catch {
+    // Silent fail for maintenance check to avoid entire site crash
   }
 
   if (isMaintenanceMode) {

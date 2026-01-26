@@ -15,7 +15,7 @@ interface LighthouseResult {
   tbt?: number;
   cls?: number;
   si?: number;
-  fullReport: any;
+  fullReport: unknown;
 }
 
 const MOBILE_CONFIG = {
@@ -65,7 +65,7 @@ const DESKTOP_CONFIG = {
 
 export async function runLighthouse(url: string, device: 'mobile' | 'desktop'): Promise<LighthouseResult | null> {
   let chrome;
-  
+
   try {
     // Launch Chrome
     chrome = await chromeLauncher.launch({
@@ -73,13 +73,13 @@ export async function runLighthouse(url: string, device: 'mobile' | 'desktop'): 
     });
 
     const config = device === 'mobile' ? MOBILE_CONFIG : DESKTOP_CONFIG;
-    
+
     // Run Lighthouse
     const runnerResult = await lighthouse(url, {
       port: chrome.port,
       output: 'json',
       logLevel: 'error',
-    }, config as any);
+    }, config as unknown as Record<string, unknown>);
 
     if (!runnerResult) {
       console.error('Lighthouse returned no results');
@@ -135,7 +135,7 @@ export async function runLighthouse(url: string, device: 'mobile' | 'desktop'): 
 export async function getAllUrls(): Promise<string[]> {
   // Get base URL from site settings or environment
   let baseUrl = 'https://sjobadet.marcusjenshaug.no';
-  
+
   try {
     const setting = await prisma.siteSetting.findUnique({
       where: { key: 'lighthouse_base_url' },
@@ -143,10 +143,10 @@ export async function getAllUrls(): Promise<string[]> {
     if (setting?.value) {
       baseUrl = setting.value;
     }
-  } catch (error) {
+  } catch {
     console.warn('Failed to fetch lighthouse base URL from settings, using default');
   }
-  
+
   const urls: string[] = [
     '/', // Forside
     '/info',
@@ -167,7 +167,7 @@ export async function getAllUrls(): Promise<string[]> {
       where: { status: 'active' },
       select: { slug: true },
     });
-    
+
     saunas.forEach((sauna) => {
       urls.push(`/home/${sauna.slug}`);
     });
@@ -192,7 +192,7 @@ export async function runFullScan(): Promise<string> {
   (async () => {
     try {
       const urls = await getAllUrls();
-      
+
       await prisma.lighthouseScan.update({
         where: { id: scanId.id },
         data: { totalUrls: urls.length * 2 }, // x2 for mobile + desktop
@@ -203,7 +203,7 @@ export async function runFullScan(): Promise<string> {
 
       for (const url of urls) {
         console.log(`\n🔍 Scanning: ${url}`);
-        
+
         // Mobile scan
         try {
           const mobileResult = await runLighthouse(url, 'mobile');
@@ -312,8 +312,8 @@ export async function getLatestReports() {
   });
 
   // Group by URL and device, get latest for each
-  const grouped = new Map<string, any>();
-  
+  const grouped = new Map<string, unknown>();
+
   for (const report of reports) {
     const key = `${report.url}-${report.device}`;
     if (!grouped.has(key)) {
@@ -321,7 +321,7 @@ export async function getLatestReports() {
     }
   }
 
-  return Array.from(grouped.values());
+  return Array.from(grouped.values()) as typeof reports;
 }
 
 export async function getReportHistory(url: string, device: string, days: number = 30) {

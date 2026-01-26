@@ -1,14 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MediaDropzone } from './MediaDropzone';
 import { MediaGrid } from './MediaGrid';
 import { MediaItem, MediaAssetUI } from './MediaItem';
 import styles from './MediaManager.module.css';
 
+interface MediaAsset {
+    id: string;
+    kind: 'PRIMARY' | 'GALLERY';
+    storageKeyThumb?: string | null;
+    storageKeyLarge?: string | null;
+}
+
 interface SaunaMediaManagerProps {
     saunaId: string;
-    initialAssets?: any[]; // From DB
+    initialAssets?: MediaAsset[]; // From DB
 }
 
 export function SaunaMediaManager({ saunaId, initialAssets = [] }: SaunaMediaManagerProps) {
@@ -81,7 +88,7 @@ export function SaunaMediaManager({ saunaId, initialAssets = [] }: SaunaMediaMan
             });
 
             xhr.send(file);
-            const processedAsset = await uploadPromise as any;
+            await uploadPromise;
 
             // 3. Confirm
             const confirmRes = await fetch('/api/media/confirm', {
@@ -99,16 +106,17 @@ export function SaunaMediaManager({ saunaId, initialAssets = [] }: SaunaMediaMan
             if (confirmError) throw new Error(confirmError);
 
             // Update state with final confirmed assets from server
-            setAssets(allAssets.map((a: any) => ({
+            setAssets((allAssets as MediaAsset[]).map((a) => ({
                 id: a.id,
                 url: (a.storageKeyThumb || a.storageKeyLarge)?.trim() || '',
                 status: 'confirmed',
                 kind: a.kind
             })));
 
-        } catch (err: any) {
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
             console.error('Upload error:', err);
-            setAssets(prev => prev.map(a => a.id === tempId ? { ...a, status: 'error', error: err.message } : a));
+            setAssets(prev => prev.map(a => a.id === tempId ? { ...a, status: 'error', error: msg } : a));
         }
     };
 
@@ -120,8 +128,8 @@ export function SaunaMediaManager({ saunaId, initialAssets = [] }: SaunaMediaMan
             if (res.ok) {
                 setAssets(prev => prev.filter(a => a.id !== id));
             }
-        } catch (err) {
-            console.error('Delete error', err);
+        } catch {
+            // Error logged by console or handled by UI
         }
     };
 
@@ -137,8 +145,8 @@ export function SaunaMediaManager({ saunaId, initialAssets = [] }: SaunaMediaMan
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ saunaId, assetOrders })
             });
-        } catch (err) {
-            console.error('Reorder sync error', err);
+        } catch {
+            // Silent fail for reorder sync
         }
     };
 

@@ -10,6 +10,13 @@ export default function QuickActions() {
     const router = useRouter()
     const [loading, setLoading] = useState<string | null>(null)
 
+    const handleAction = async (action: () => Promise<void>, label: string) => {
+        setLoading('cache')
+        await clearCacheAction('public')
+        setLoading(null)
+        router.refresh()
+    }
+
     const handleClearPublicCache = async () => {
         setLoading('cache')
         await clearCacheAction('public')
@@ -100,7 +107,41 @@ export default function QuickActions() {
     )
 }
 
-function Shortcut({ href, icon, label }: any) {
+function ActionCard({ title, icon, onClick, loading, color, description, badge }: {
+    title: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+    loading?: boolean;
+    color?: string;
+    description?: string;
+    badge?: string;
+}) {
+    return (
+        <Link href={"#"} style={{ textDecoration: 'none' }}>
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.75rem', borderRadius: '0.5rem',
+                fontSize: '0.875rem', fontWeight: 500, color: '#334155',
+                border: '1px solid transparent',
+                transition: 'all 0.2s'
+            }}
+                className="hover:bg-slate-50 hover:border-slate-200"
+            >
+                <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2.5rem', height: '2.5rem', flexShrink: 0,
+                    borderRadius: '0.4rem',
+                    background: '#eff6ff', color: '#3b82f6'
+                }}>
+                    {icon}
+                </div>
+                {title}
+            </div>
+        </Link>
+    )
+}
+
+function Shortcut({ href, icon, label }: { href: string; icon: React.ReactNode; label: string; color?: string }) {
     return (
         <Link href={href} style={{ textDecoration: 'none' }}>
             <div style={{

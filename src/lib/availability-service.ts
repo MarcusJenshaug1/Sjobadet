@@ -29,8 +29,6 @@ export async function updateSaunaAvailability(saunaId: string, options: { browse
 
     try {
         console.log(`[AvailabilityService] Updating ${sauna.name}...`);
-        const attemptAt = new Date();
-        console.log(`[AvailabilityService] Updating ${sauna.name}...`);
         // lastScrapeAttemptAt removed from schema
 
 
@@ -61,9 +59,6 @@ export async function updateSaunaAvailability(saunaId: string, options: { browse
 
         if (!freshHasSlots) {
             console.warn(`[AvailabilityService] Empty scrape for ${sauna.name} - keeping previous availability data`);
-            const emptyDiagnostics = fresh.diagnostics && Object.keys(fresh.diagnostics).length > 0
-                ? JSON.stringify(fresh.diagnostics)
-                : 'Ingen diagnostikk tilgjengelig';
 
             /*
             await logAdminAction(
@@ -92,7 +87,7 @@ export async function updateSaunaAvailability(saunaId: string, options: { browse
             timestamp: new Date().toISOString(),
         });
 
-        const updated = await prisma.sauna.update({
+        await prisma.sauna.update({
             where: { id: saunaId },
             data: {
                 ...(dataHasChanged ? { previousAvailabilityData: sauna.availabilityData } : {}),
@@ -115,13 +110,6 @@ export async function updateSaunaAvailability(saunaId: string, options: { browse
         }
 
         console.log(`[AvailabilityService] Success for ${sauna.name}`);
-
-        // Add log entry for the individual scrape
-        const slotSummary = Object.values(freshDays)
-            .flat()
-            .slice(0, 3)
-            .map(s => `${s.from}: ${s.availableSpots}`)
-            .join(', ');
 
         if (freshHasSlots) {
             // We generally don't need to bloat the main Activity Log with every successful scrape anymore

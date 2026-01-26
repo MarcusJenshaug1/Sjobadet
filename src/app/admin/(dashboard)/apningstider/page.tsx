@@ -1,11 +1,24 @@
 import prisma from '@/lib/prisma'
-import { Button } from '@/components/ui/Button'
-import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
 
 import OpeningHoursList from './OpeningHoursList'
+
+interface OpeningHour {
+    id: string;
+    saunaId: string;
+    weekday: number;
+    opens: string | null;
+    closes: string | null;
+    active: boolean;
+}
+
+interface SaunaWithHours {
+    id: string;
+    name: string;
+    flexibleHours?: boolean | null;
+    openingHours: OpeningHour[];
+}
 
 export default async function OpeningHoursPage() {
     const saunas = await prisma.sauna.findMany({
@@ -37,11 +50,21 @@ export default async function OpeningHoursPage() {
     })
 
     // Filter out saunas with flexible hours (user request)
-    const saunasWithHours = allSaunas
-        .filter((s: any) => !s.flexibleHours)
-        .map((s: any) => ({
+    const serializedSaunas = allSaunas.map((s) => ({
+        ...s,
+        updatedAt: s.updatedAt.toISOString(),
+        createdAt: s.createdAt.toISOString(),
+        openingHours: s.openingHours.map((h) => ({
+            ...h,
+            createdAt: h.createdAt?.toISOString() ?? null
+        }))
+    }))
+
+    const saunasWithHours = serializedSaunas
+        .filter((s) => !s.flexibleHours)
+        .map((s) => ({
             ...s,
-            openingHours: s.openingHours.map((h: any) => ({
+            openingHours: s.openingHours.map((h) => ({
                 ...h,
                 weekday: h.weekday ?? 0
             }))
@@ -51,7 +74,9 @@ export default async function OpeningHoursPage() {
         <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem', paddingTop: '2rem' }}>
             <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Åpningstider (Ukentlig)</h1>
             <p style={{ color: '#64748b', marginBottom: '2rem' }}>
-                Administrer faste åpningstider for hver lokasjon. Avvikende åpningstider administreres under "Avvik".
+                Her kan du overstyre de faste åpningstidene som er satt for hver badstue.
+                Klikk på &quot;Rediger&quot; for å endre tidene for en spesifikk badstue.
+                Avvikende åpningstider administreres under &quot;Avvik&quot;.
             </p>
 
             <OpeningHoursList saunas={saunasWithHours} />

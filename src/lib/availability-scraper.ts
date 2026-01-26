@@ -82,7 +82,6 @@ const normalizeTime = (value: string | null | undefined) => {
 
 const extractSlotsFromJson = (payload: unknown): ScrapedSlot[] => {
     const slots: ScrapedSlot[] = [];
-    const timeRegex = /\d{1,2}[:.]\d{2}/;
 
     const getNumber = (value: unknown) => {
         if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -93,24 +92,25 @@ const extractSlotsFromJson = (payload: unknown): ScrapedSlot[] => {
         return null;
     };
 
-    const toSlot = (item: any): ScrapedSlot | null => {
+    const toSlot = (item: unknown): ScrapedSlot | null => {
         if (!item || typeof item !== 'object') return null;
-        const fromRaw = item.from ?? item.start ?? item.startTime ?? item.startsAt ?? item.fromTime;
-        const toRaw = item.to ?? item.end ?? item.endTime ?? item.endsAt ?? item.toTime;
+        const i = item as Record<string, unknown>;
+        const fromRaw = i.from ?? i.start ?? i.startTime ?? i.startsAt ?? i.fromTime;
+        const toRaw = i.to ?? i.end ?? i.endTime ?? i.endsAt ?? i.toTime;
         const from = normalizeTime(typeof fromRaw === 'string' ? fromRaw : null);
         const to = normalizeTime(typeof toRaw === 'string' ? toRaw : null);
 
         const available =
-            getNumber(item.availableSpots ?? item.available ?? item.free ?? item.spots ?? item.remaining ?? item.availableSlots ?? item.spotsRemaining) ??
-            (getNumber(item.capacity) !== null && getNumber(item.booked) !== null
-                ? Math.max(0, (getNumber(item.capacity) as number) - (getNumber(item.booked) as number))
+            getNumber(i.availableSpots ?? i.available ?? i.free ?? i.spots ?? i.remaining ?? i.availableSlots ?? i.spotsRemaining) ??
+            (getNumber(i.capacity) !== null && getNumber(i.booked) !== null
+                ? Math.max(0, (getNumber(i.capacity) as number) - (getNumber(i.booked) as number))
                 : null);
 
         if (!from || !to || available === null) return null;
         return { from, to, availableSpots: available };
     };
 
-    const walk = (node: any) => {
+    const walk = (node: unknown) => {
         if (!node) return;
         if (Array.isArray(node)) {
             const candidate: ScrapedSlot[] = [];
@@ -129,9 +129,6 @@ const extractSlotsFromJson = (payload: unknown): ScrapedSlot[] => {
         if (typeof node === 'object') {
             const values = Object.values(node);
             for (const value of values) {
-                if (typeof value === 'string' && timeRegex.test(value)) {
-                    // keep traversing
-                }
                 walk(value);
             }
         }
@@ -166,7 +163,7 @@ export async function createScraperBrowser(): Promise<Browser> {
             if (executablePath) {
                 console.log('[Scraper] Using @sparticuz/chromium executable:', executablePath);
             }
-        } catch (err) {
+        } catch {
             useChromiumBundle = false;
             console.log('[Scraper] @sparticuz/chromium failed, falling back to local discovery');
         }
@@ -321,7 +318,7 @@ export async function fetchAvailability(url: string, options: FetchAvailabilityO
             try {
                 await page.waitForSelector('label.ant-radio-button-wrapper', { timeout: 10000 });
                 console.log('[Scraper] Booking slots loaded!');
-            } catch (e) {
+            } catch {
                 console.log('[Scraper] WARNING: Timeout waiting for slots, proceeding anyway...');
             }
 
@@ -417,8 +414,7 @@ export async function fetchAvailability(url: string, options: FetchAvailabilityO
         if (shouldCloseBrowser && browser) await browser.close();
         return { days, timestamp: new Date().toISOString(), diagnostics };
 
-    } catch (error) {
-        console.error('[Scraper] Error:', error);
+    } catch {
         if (shouldCloseBrowser && browser) await browser.close();
         return { days: {}, timestamp: new Date().toISOString(), diagnostics: {} };
     }

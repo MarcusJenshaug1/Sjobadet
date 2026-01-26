@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import styles from './MediaManager.module.css';
-import { Upload, FileWarning } from 'lucide-react';
+import { Upload } from 'lucide-react';
 
 interface MediaDropzoneProps {
     onFilesSelected: (files: File[]) => void;

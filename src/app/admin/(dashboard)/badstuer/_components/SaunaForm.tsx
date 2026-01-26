@@ -4,23 +4,62 @@ import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { SubmitButton } from './SubmitButton'
 import { saveSauna } from '../actions'
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import 'easymde/dist/easymde.min.css'
+import { ChevronDown, X, Clock } from 'lucide-react'
+import styles from '../SaunaFormLayout.module.css'
+import { SaunaMediaManager } from '@/components/admin/SaunaMediaManager'
+import { ActiveSauna } from '@/lib/sauna-service'
+
+interface AdminSauna extends Omit<ActiveSauna, 'openingHours'> {
+    status?: string | null;
+    driftStatus?: string | null;
+    sorting?: number | null;
+    mediaAssets?: Array<{
+        id: string;
+        kind: 'PRIMARY' | 'GALLERY';
+        storageKeyOriginal: string;
+        storageKeyLarge: string;
+        storageKeyThumb: string;
+        mimeType: string;
+        sizeBytes: number;
+        width: number;
+        height: number;
+        orderIndex: number;
+        altText?: string | null;
+        status: string;
+        creatorId?: string | null;
+        createdAt: Date | string;
+    }>;
+    updatedAt?: Date | string | null;
+    mapEmbedUrl?: string | null;
+    stengeArsak?: string | null;
+    kundeMelding?: string | null;
+    openingHours: Array<{
+        id: string;
+        saunaId: string;
+        weekday: number;
+        opens: string | null;
+        closes: string | null;
+        active: boolean;
+        createdAt?: Date | string | null;
+    }>;
+    description?: string | null;
+    facilities?: string | null;
+}
 
 const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false })
 
-import { SaunaMediaManager } from '@/components/admin/SaunaMediaManager'
-
-export default function SaunaForm({ sauna }: { sauna?: any }) {
-    const [id, setId] = useState(sauna?.id || '')
+export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
+    const [id] = useState(() => sauna?.id || crypto.randomUUID())
     const [isMounted, setIsMounted] = useState(false)
     const isNew = !sauna
 
     // Form State
     const [isDirty, setIsDirty] = useState(false)
-    const [status, setStatus] = useState(sauna?.status || 'active')
-    const [driftStatus, setDriftStatus] = useState(sauna?.driftStatus || 'open')
+    const [status, setStatus] = useState<string>(sauna?.status || 'active')
+    const [driftStatus, setDriftStatus] = useState<string>(sauna?.driftStatus || 'open')
 
     // Facilities State
     const initialFacilities = sauna?.facilities ? JSON.parse(sauna.facilities) : []
@@ -56,10 +95,7 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
 
     useEffect(() => {
         setIsMounted(true)
-        if (!id && !sauna) {
-            setId(crypto.randomUUID())
-        }
-    }, [id, sauna])
+    }, [])
 
     // Facilities Handlers
     const addFacility = (e: React.KeyboardEvent) => {
@@ -206,7 +242,7 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                                 <LabelInput
                                     label="SEO Tittel (Meta Title)"
                                     name="seoTitle"
-                                    defaultValue={sauna?.seoTitle}
+                                    defaultValue={sauna?.seoTitle || undefined}
                                     placeholder={sauna?.name}
                                     maxLength={60}
                                 />
@@ -216,8 +252,8 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                                 <LabelInput
                                     label="SEO Beskrivelse (Meta Description)"
                                     name="seoDescription"
-                                    defaultValue={sauna?.seoDescription}
-                                    placeholder={sauna?.shortDescription}
+                                    defaultValue={sauna?.seoDescription || undefined}
+                                    placeholder={sauna?.shortDescription || undefined}
                                     maxLength={160}
                                 />
                                 <div className={styles.helperText}>Optimal lengde: 120-160 tegn. La stå tom for å bruke den korte beskrivelsen.</div>
@@ -233,15 +269,15 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                         </div>
                         <div className={`${styles.sectionBody} ${!sections.booking && styles.sectionBodyHidden}`}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                                <LabelInput label="Kapasitet Drop-in" name="capacityDropin" type="number" defaultValue={sauna?.capacityDropin} />
-                                <LabelInput label="Kapasitet Privat" name="capacityPrivat" type="number" defaultValue={sauna?.capacityPrivat} />
+                                <LabelInput label="Kapasitet Drop-in" name="capacityDropin" type="number" defaultValue={sauna?.capacityDropin || undefined} />
+                                <LabelInput label="Kapasitet Privat" name="capacityPrivat" type="number" defaultValue={sauna?.capacityPrivat || undefined} />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.25rem' }}>
                                 <div className={styles.fieldGroup}>
-                                    <LabelInput label="Booking URL (Drop-in)" name="bookingUrlDropin" defaultValue={sauna?.bookingUrlDropin} placeholder="https://..." />
+                                    <LabelInput label="Booking URL (Drop-in)" name="bookingUrlDropin" defaultValue={sauna?.bookingUrlDropin || undefined} placeholder="https://..." />
                                 </div>
                                 <div className={styles.fieldGroup}>
-                                    <LabelInput label="Booking URL (Privat)" name="bookingUrlPrivat" defaultValue={sauna?.bookingUrlPrivat} placeholder="https://..." />
+                                    <LabelInput label="Booking URL (Privat)" name="bookingUrlPrivat" defaultValue={sauna?.bookingUrlPrivat || undefined} placeholder="https://..." />
                                 </div>
                             </div>
                         </div>
@@ -254,7 +290,7 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                             <ChevronDown style={{ transform: sections.address ? 'rotate(180deg)' : 'rotate(0)' }} />
                         </div>
                         <div className={`${styles.sectionBody} ${!sections.address && styles.sectionBodyHidden}`}>
-                            <LabelInput label="Gateadresse" name="address" defaultValue={sauna?.address} placeholder="Storgaten 1, 3126 Tønsberg" />
+                            <LabelInput label="Gateadresse" name="address" defaultValue={sauna?.address || undefined} placeholder="Storgaten 1, 3126 Tønsberg" />
                         </div>
                     </div>
 
@@ -273,7 +309,7 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                                         Faste (administreres separat)
                                     </label>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <input type="radio" name="hoursType" value="flexible" defaultChecked={sauna?.flexibleHours} />
+                                        <input type="radio" name="hoursType" value="flexible" defaultChecked={!!sauna?.flexibleHours} />
                                         Fleksible (tekstbasert)
                                     </label>
                                 </div>
@@ -286,7 +322,7 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                             <div style={{ marginTop: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
                                 <div style={{ marginBottom: '1rem' }}>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-                                        <input type="checkbox" name="flexibleHours" defaultChecked={sauna?.flexibleHours} />
+                                        <input type="checkbox" name="flexibleHours" defaultChecked={!!sauna?.flexibleHours} />
                                         Aktiver fleksible åpningstider
                                     </label>
                                     <div className={styles.helperText}>
@@ -296,7 +332,7 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                                 <LabelInput
                                     label="Melding om åpningstider"
                                     name="hoursMessage"
-                                    defaultValue={sauna?.hoursMessage}
+                                    defaultValue={sauna?.hoursMessage || undefined}
                                     placeholder="F.eks: Tilgjengelig ved leie - kontakt oss for booking"
                                 />
                             </div>
@@ -345,10 +381,10 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
                             {driftStatus === 'closed' && (
                                 <div className={styles.warningBox}>
                                     <div className={styles.fieldGroup}>
-                                        <LabelInput label="Stengeårsak" name="stengeArsak" defaultValue={sauna?.stengeArsak} placeholder="Vedlikehold" />
+                                        <LabelInput label="Stengeårsak" name="stengeArsak" defaultValue={sauna?.stengeArsak || undefined} placeholder="Vedlikehold" />
                                     </div>
                                     <div className={styles.fieldGroup} style={{ marginBottom: 0 }}>
-                                        <LabelInput label="Kundemelding" name="kundeMelding" defaultValue={sauna?.kundeMelding} placeholder="Vi holder stengt for..." />
+                                        <LabelInput label="Kundemelding" name="kundeMelding" defaultValue={sauna?.kundeMelding || undefined} placeholder="Vi holder stengt for..." />
                                     </div>
                                 </div>
                             )}
@@ -363,7 +399,7 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
 
                     <div className={styles.section} style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            <LabelInput label="Innebygd kart URL (valgfri)" name="mapEmbedUrl" defaultValue={sauna?.mapEmbedUrl} placeholder="https://maps.google..." />
+                            <LabelInput label="Innebygd kart URL (valgfri)" name="mapEmbedUrl" defaultValue={sauna?.mapEmbedUrl || undefined} placeholder="https://maps.google..." />
                             <div className={styles.helperText}>La stå tom for å autogenerere fra adresse.</div>
                         </div>
                     </div>
@@ -390,10 +426,11 @@ export default function SaunaForm({ sauna }: { sauna?: any }) {
     )
 }
 
-import { ChevronDown, X, Clock } from 'lucide-react'
-import styles from '../SaunaFormLayout.module.css'
+interface LabelInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    label: string;
+}
 
-function LabelInput({ label, className, ...props }: any) {
+function LabelInput({ label, ...props }: LabelInputProps) {
     return (
         <div>
             <label className={`${styles.label} ${props.required ? styles.labelRequired : ''}`}>{label}</label>

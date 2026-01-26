@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     }
 
     // Only allow Marcus to clear analytics
-    const username = session.user?.username || session.user?.email || ''
+    const username = session.user?.username || session.user?.name || ''
     if (username !== 'Marcus') {
         return NextResponse.json(
             { error: 'Kun Marcus kan slette analytikk' },

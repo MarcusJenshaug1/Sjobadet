@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+interface NetworkInformation {
+    saveData?: boolean;
+    effectiveType?: string;
+}
+
 /**
  * SmartPrefetcher intelligently prefetches key routes during idle time.
  * It also uses the Speculation Rules API to "pre-render" pages in the background
@@ -14,9 +19,10 @@ export function SmartPrefetcher() {
 
     useEffect(() => {
         // Guardrails: Don't prefetch if on slow connection or data saver is on
-        const connection = (navigator as any).connection;
+        const nav = navigator as unknown as { connection?: NetworkInformation };
+        const connection = nav.connection;
         if (connection) {
-            if (connection.saveData || /2g/.test(connection.effectiveType)) {
+            if (connection.saveData || (connection.effectiveType && /2g/.test(connection.effectiveType))) {
                 return;
             }
         }
@@ -29,7 +35,9 @@ export function SmartPrefetcher() {
 
             // Use requestIdleCallback if available, fallback to a much longer timeout (5s)
             // to ensure LCP has completely finished on mobile.
-            const schedule = (window as any).requestIdleCallback || ((cb: any) => setTimeout(cb, 5000));
+            type IdleCallback = (cb: () => void) => void;
+            const schedule = (window as unknown as { requestIdleCallback?: IdleCallback }).requestIdleCallback ||
+                ((cb: () => void) => setTimeout(cb, 5000));
 
             schedule(async () => {
                 // 1. Prefetch static high-traffic routes (Standard Next.js Prefetch)
@@ -42,11 +50,11 @@ export function SmartPrefetcher() {
                 try {
                     const res = await fetch('/api/saunas/slugs');
                     if (res.ok) {
-                        const { slugs } = await res.json();
-                        const urls = slugs.map((s: string) => `/home/${s}`);
+                        const { slugs } = await res.json() as { slugs: string[] };
+                        const urls = slugs.map((s) => `/home/${s}`);
 
                         // Standard Next.js prefetch as a fallback (more conservative timing)
-                        urls.forEach((url: string, index: number) => {
+                        urls.forEach((url, index) => {
                             setTimeout(() => router.prefetch(url), (staticRoutes.length + index) * 800);
                         });
 
@@ -54,7 +62,7 @@ export function SmartPrefetcher() {
                         // We use state to trigger this late in the lifecycle
                         setPrerenderUrls(urls);
                     }
-                } catch (e) {
+                } catch {
                     // Ignore prefetch errors
                 }
             });

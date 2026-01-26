@@ -18,11 +18,22 @@ export const metadata: Metadata = {
     }
 };
 
+interface SubscriptionData {
+    id: string;
+    name: string;
+    price: number;
+    period: string;
+    features: string;
+    binding: boolean;
+    bindingDescription: string | null;
+    paymentUrl: string | null;
+}
+
 export default async function MembershipPage() {
     const subscriptions = await prisma.subscription.findMany({
         where: { active: true },
         orderBy: { sorting: 'asc' }
-    });
+    }) as SubscriptionData[];
 
     return (
         <>
@@ -47,14 +58,13 @@ export default async function MembershipPage() {
                         maxWidth: '900px',
                         margin: '0 auto'
                     }}>
-                        {subscriptions.map((sub: any) => {
+                        {subscriptions.map((sub) => {
                             let features: string[] = [];
                             try {
                                 features = sub.features ? JSON.parse(sub.features) : [];
                                 if (!Array.isArray(features)) features = [];
-                            } catch (e) {
-                                console.error('Failed to parse features for sub', sub.id, e);
-                                features = [];
+                            } catch {
+                                // Fallback
                             }
                             return (
                                 <div key={sub.id} style={{

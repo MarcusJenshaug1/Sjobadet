@@ -29,7 +29,7 @@ export class ScraperService {
         level: ScraperLogLevel,
         scope: ScraperLogScope,
         message: string,
-        data?: any,
+        data?: unknown,
         saunaId?: string
     ) {
         // Redact sensitive data if needed (basic implementation)

@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
         }
 
         const { searchParams } = new URL(req.url);
-        
+
         // Filters
         const version = searchParams.get('version');
         const choice = searchParams.get('choice');
@@ -28,17 +28,18 @@ export async function GET(req: NextRequest) {
         const offset = parseInt(searchParams.get('offset') || '0');
 
         // Build where clause
-        const where: any = {};
-        
+        const where: Record<string, unknown> = {};
+
         if (version) where.consentVersion = version;
         if (choice) where.choice = choice;
         if (analysis !== null) {
             where.analysis = analysis === 'true';
         }
         if (from || to) {
-            where.timestamp = {};
-            if (from) where.timestamp.gte = new Date(from);
-            if (to) where.timestamp.lte = new Date(to);
+            const timestamp: { gte?: Date; lte?: Date } = {};
+            if (from) timestamp.gte = new Date(from);
+            if (to) timestamp.lte = new Date(to);
+            where.timestamp = timestamp;
         }
 
         // Fetch logs

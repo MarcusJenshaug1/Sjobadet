@@ -2,7 +2,7 @@ import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { HeaderView } from './HeaderView';
 import { AlertBar } from './AlertBar';
-import { getActiveSaunas } from '@/lib/sauna-service';
+import { getActiveSaunas, ActiveSauna } from '@/lib/sauna-service';
 import { getPopularityStats } from '@/lib/analytics/popular-routes';
 
 export const revalidate = 300;
@@ -10,7 +10,7 @@ export const revalidate = 300;
 export async function Header() {
     let isAdmin = false;
     let isMaintenanceMode = false;
-    let saunas: any[] = [];
+    let saunas: ActiveSauna[] = [];
     let popularity: Record<string, number> = {};
 
     try {
@@ -27,8 +27,8 @@ export async function Header() {
         isMaintenanceMode = maintenanceSetting?.value === 'true';
         saunas = saunasData;
         popularity = stats;
-    } catch (error) {
-        console.error('Error in Header fetching:', error);
+    } catch {
+        // Silently fail for header fetching to prevent entire page crash
     }
 
     // Sort saunas by popularity

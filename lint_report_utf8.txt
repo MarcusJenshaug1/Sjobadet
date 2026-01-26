@@ -1,0 +1,691 @@
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\_components\ActionableKPIs.tsx
+  3:68  warning  'Shield' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\_components\DashboardAlerts.tsx
+  3:10  warning  'AlertTriangle' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\_components\DriftStatus.tsx
+    5:48  warning  'CheckCircle' is defined but never used    @typescript-eslint/no-unused-vars
+    5:61  warning  'AlertTriangle' is defined but never used  @typescript-eslint/no-unused-vars
+    5:76  warning  'XCircle' is defined but never used        @typescript-eslint/no-unused-vars
+   55:26  warning  'e' is defined but never used              @typescript-eslint/no-unused-vars
+  236:67  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\_components\QuickActions.tsx
+    3:16  warning  'Settings' is defined but never used        @typescript-eslint/no-unused-vars
+  103:42  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  129:10  warning  'CreditCardIcon' is defined but never used  @typescript-eslint/no-unused-vars
+  129:32  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\_components\RecentActivity.tsx
+  1:10  warning  'Clock' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\ActionMenu.tsx
+  20:5  error  React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\ClearAnalyticsButton.tsx
+  44:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx
+   39:19  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   40:19  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  100:26  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:100:26
+   98 |                 <thead>
+   99 |                     <tr style={{ backgroundColor: '#f8fafc' }}>
+> 100 |                         <SortHeader column="name" label="Badstue" />
+      |                          ^^^^^^^^^^ This component is created during render
+  101 |                         <SortHeader column="views" label="Visninger" />
+  102 |                         <SortHeader column="dropinClicks" label="Drop-in bookinger" />
+  103 |                         <SortHeader column="privateClicks" label="Private bookinger" />
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:61:24
+  59 |     };
+  60 |
+> 61 |     const SortHeader = ({ column, label, title }: { column: SortColumn; label: string; title?: string }) => (
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 62 |         <th
+     | ^^^^^^^^^^^
+> 63 |             style={{
+     …
+     | ^^^^^^^^^^^
+> 75 |         </th>
+     | ^^^^^^^^^^^
+> 76 |     );
+     | ^^^^^^ The component is created during render here
+  77 |
+  78 |     const tdStyle = {
+  79 |         padding: '1rem',                                                                                                                                   react-hooks/static-components
+  101:26  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:101:26
+   99 |                     <tr style={{ backgroundColor: '#f8fafc' }}>
+  100 |                         <SortHeader column="name" label="Badstue" />
+> 101 |                         <SortHeader column="views" label="Visninger" />
+      |                          ^^^^^^^^^^ This component is created during render
+  102 |                         <SortHeader column="dropinClicks" label="Drop-in bookinger" />
+  103 |                         <SortHeader column="privateClicks" label="Private bookinger" />
+  104 |                         <SortHeader column="conversion" label="Konvertering %" title="Andel av visninger som endte i booking (drop-in eller private)" />
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:61:24
+  59 |     };
+  60 |
+> 61 |     const SortHeader = ({ column, label, title }: { column: SortColumn; label: string; title?: string }) => (
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 62 |         <th
+     | ^^^^^^^^^^^
+> 63 |             style={{
+     …
+     | ^^^^^^^^^^^
+> 75 |         </th>
+     | ^^^^^^^^^^^
+> 76 |     );
+     | ^^^^^^ The component is created during render here
+  77 |
+  78 |     const tdStyle = {
+  79 |         padding: '1rem',  react-hooks/static-components
+  102:26  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:102:26
+  100 |                         <SortHeader column="name" label="Badstue" />
+  101 |                         <SortHeader column="views" label="Visninger" />
+> 102 |                         <SortHeader column="dropinClicks" label="Drop-in bookinger" />
+      |                          ^^^^^^^^^^ This component is created during render
+  103 |                         <SortHeader column="privateClicks" label="Private bookinger" />
+  104 |                         <SortHeader column="conversion" label="Konvertering %" title="Andel av visninger som endte i booking (drop-in eller private)" />
+  105 |                     </tr>
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:61:24
+  59 |     };
+  60 |
+> 61 |     const SortHeader = ({ column, label, title }: { column: SortColumn; label: string; title?: string }) => (
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 62 |         <th
+     | ^^^^^^^^^^^
+> 63 |             style={{
+     …
+     | ^^^^^^^^^^^
+> 75 |         </th>
+     | ^^^^^^^^^^^
+> 76 |     );
+     | ^^^^^^ The component is created during render here
+  77 |
+  78 |     const tdStyle = {
+  79 |         padding: '1rem',                                        react-hooks/static-components
+  103:26  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:103:26
+  101 |                         <SortHeader column="views" label="Visninger" />
+  102 |                         <SortHeader column="dropinClicks" label="Drop-in bookinger" />
+> 103 |                         <SortHeader column="privateClicks" label="Private bookinger" />
+      |                          ^^^^^^^^^^ This component is created during render
+  104 |                         <SortHeader column="conversion" label="Konvertering %" title="Andel av visninger som endte i booking (drop-in eller private)" />
+  105 |                     </tr>
+  106 |                 </thead>
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:61:24
+  59 |     };
+  60 |
+> 61 |     const SortHeader = ({ column, label, title }: { column: SortColumn; label: string; title?: string }) => (
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 62 |         <th
+     | ^^^^^^^^^^^
+> 63 |             style={{
+     …
+     | ^^^^^^^^^^^
+> 75 |         </th>
+     | ^^^^^^^^^^^
+> 76 |     );
+     | ^^^^^^ The component is created during render here
+  77 |
+  78 |     const tdStyle = {
+  79 |         padding: '1rem',                                                                                    react-hooks/static-components
+  104:26  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:104:26
+  102 |                         <SortHeader column="dropinClicks" label="Drop-in bookinger" />
+  103 |                         <SortHeader column="privateClicks" label="Private bookinger" />
+> 104 |                         <SortHeader column="conversion" label="Konvertering %" title="Andel av visninger som endte i booking (drop-in eller private)" />
+      |                          ^^^^^^^^^^ This component is created during render
+  105 |                     </tr>
+  106 |                 </thead>
+  107 |                 <tbody>
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\_components\SaunaSortableTable.tsx:61:24
+  59 |     };
+  60 |
+> 61 |     const SortHeader = ({ column, label, title }: { column: SortColumn; label: string; title?: string }) => (
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 62 |         <th
+     | ^^^^^^^^^^^
+> 63 |             style={{
+     …
+     | ^^^^^^^^^^^
+> 75 |         </th>
+     | ^^^^^^^^^^^
+> 76 |     );
+     | ^^^^^^ The component is created during render here
+  77 |
+  78 |     const tdStyle = {
+  79 |         padding: '1rem',                                                                                                                                    react-hooks/static-components
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\analytics\page.tsx
+    2:63  warning  'Calendar' is defined but never used                      @typescript-eslint/no-unused-vars
+    2:81  warning  'Info' is defined but never used                          @typescript-eslint/no-unused-vars
+    2:87  warning  'Trash2' is defined but never used                        @typescript-eslint/no-unused-vars
+    2:95  warning  'ChevronDown' is defined but never used                   @typescript-eslint/no-unused-vars
+   27:22  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+   36:33  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+   77:24  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+   78:21  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+   79:24  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+   80:9   error    'lastUpdated' is never reassigned. Use 'const' instead    prefer-const
+   80:9   warning  'lastUpdated' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  165:18  warning  'e' is defined but never used                             @typescript-eslint/no-unused-vars
+  176:11  warning  'totalConsentActions' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  179:17  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  184:14  warning  'e' is defined but never used                             @typescript-eslint/no-unused-vars
+  230:17  error    'saunaId' is never reassigned. Use 'const' instead        prefer-const
+  261:18  warning  'e' is defined but never used                             @typescript-eslint/no-unused-vars
+  372:46  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  419:10  warning  'KPICard' is defined but never used                       @typescript-eslint/no-unused-vars
+  419:52  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  455:7   warning  'thStyle' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  464:7   warning  'tdStyle' is assigned a value but never used              @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\apningstider\OpeningHoursEditor.tsx
+  4:55  warning  'Clock' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\apningstider\actions.ts
+  7:66  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\apningstider\page.tsx
+   2:10   warning  'Button' is defined but never used                               @typescript-eslint/no-unused-vars
+   3:10   warning  'revalidatePath' is defined but never used                       @typescript-eslint/no-unused-vars
+   4:10   warning  'requireAdmin' is defined but never used                         @typescript-eslint/no-unused-vars
+  41:21   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  42:18   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  44:50   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  54:110  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  54:116  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\badstuer\_components\SaunaForm.tsx
+    7:33  warning  'useMemo' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   15:56  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   58:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\badstuer\_components\SaunaForm.tsx:58:9
+  56 |
+  57 |     useEffect(() => {
+> 58 |         setIsMounted(true)
+     |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  59 |         if (!id && !sauna) {
+  60 |             setId(crypto.randomUUID())
+  61 |         }  react-hooks/set-state-in-effect
+   84:11  warning  'generateSlug' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  396:30  warning  'className' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  396:53  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\badstuer\_components\SaunaList.tsx
+  17:20  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\badstuer\_components\SubmitButton.tsx
+  7:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\badstuer\page.tsx
+   4:10  warning  'revalidatePath' is defined but never used     @typescript-eslint/no-unused-vars
+   7:10  warning  'toggleSaunaStatus' is defined but never used  @typescript-eslint/no-unused-vars
+   7:29  warning  'deleteSauna' is defined but never used        @typescript-eslint/no-unused-vars
+  18:45  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  22:46  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\brukere\_components\UserEditor.tsx
+    8:24  warning  'deleteAvatarFromStorage' is defined but never used                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   49:23  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  106:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  127:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\brukere\_components\UserList.tsx
+    4:53  warning  'Shield' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   18:19  warning  'setUsers' is assigned a value but never used                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   56:31  warning  'user' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  113:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\brukere\actions.ts
+  25:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\dashboard-actions.ts
+   44:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   46:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   60:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   60:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   72:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   75:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   81:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\layout.tsx
+   94:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @next/next/no-img-element
+  185:16  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\layout.tsx:185:16
+  183 |           <>
+  184 |             <div className={styles.userInfo}>
+> 185 |               <UserAvatar className={styles.userAvatar} />
+      |                ^^^^^^^^^^ This component is created during render
+  186 |               <div className={styles.userDetails}>
+  187 |                 <div className={styles.userName}>{userInfo.name}</div>
+  188 |                 <div className={styles.userRole}>{userInfo.role}</div>
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\layout.tsx:91:22
+   89 |   const avatarLetter = userInfo.name.charAt(0).toUpperCase()
+   90 |
+>  91 |   const UserAvatar = ({ className }: { className: string }) => (
+      |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  92 |     <div className={className} style={userInfo.avatarUrl ? { background: 'none' } : {}}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  93 |       {userInfo.avatarUrl ? (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |   )
+      | ^^^^ The component is created during render here
+  104 |
+  105 |   return (
+  106 |     <>  react-hooks/static-components
+  200:14  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\layout.tsx:200:14
+  198 |         {collapsed && (
+  199 |           <div title={userInfo.name}>
+> 200 |             <UserAvatar className={styles.userAvatarCollapsed} />
+      |              ^^^^^^^^^^ This component is created during render
+  201 |           </div>
+  202 |         )}
+  203 |       </div>
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\layout.tsx:91:22
+   89 |   const avatarLetter = userInfo.name.charAt(0).toUpperCase()
+   90 |
+>  91 |   const UserAvatar = ({ className }: { className: string }) => (
+      |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  92 |     <div className={className} style={userInfo.avatarUrl ? { background: 'none' } : {}}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  93 |       {userInfo.avatarUrl ? (
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |   )
+      | ^^^^ The component is created during render here
+  104 |
+  105 |   return (
+  106 |     <>                                                                                                                                                  react-hooks/static-components
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\lighthouse\_components\LighthouseDetailedReport.tsx
+   31:13  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+   52:15  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+   70:6   warning  React Hook useEffect has a missing dependency: 'fetchReport'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  141:9   warning  'formatMetricValue' is assigned a value but never used                                                          @typescript-eslint/no-unused-vars
+  319:43  warning  '_' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+  504:70  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\lighthouse\_components\LighthouseReportsView2.tsx
+   78:6   warning  React Hook useEffect has a missing dependency: 'checkScanStatus'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  535:77  error    Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\lighthouse\_components\LighthouseStats.tsx
+  53:11  error  'latestMobileScores' is never reassigned. Use 'const' instead     prefer-const
+  54:11  error  'latestDesktopScores' is never reassigned. Use 'const' instead    prefer-const
+  55:11  error  'previousMobileScores' is never reassigned. Use 'const' instead   prefer-const
+  56:11  error  'previousDesktopScores' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\lighthouse\_components\LighthouseStatsComparison.tsx
+    6:3   warning  'Calendar' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+    7:18  warning  'SplitSquareHorizontal' is defined but never used                                                                     @typescript-eslint/no-unused-vars
+   67:23  warning  'setSearchQuery' is assigned a value but never used                                                                   @typescript-eslint/no-unused-vars
+  107:31  warning  'key' is defined but never used                                                                                       @typescript-eslint/no-unused-vars
+  153:6   warning  React Hook useMemo has an unnecessary dependency: 'comparisonMode'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+  322:58  error    Unexpected any. Specify a different type                                                                              @typescript-eslint/no-explicit-any
+  456:40  warning  'idx' is defined but never used                                                                                       @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\media\_components\MediaGrid.tsx
+    5:13  warning  'Filter' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+    5:49  warning  'Info' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+    7:18  warning  'ArrowUpDown' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   63:13  error    'filtered' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                      prefer-const
+   92:23  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  277:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  367:49  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  367:49  warning  img elements must have an alt prop, either with meaningful text, or an empty string for decorative images                                                                                                                                                                                jsx-a11y/alt-text
+  431:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  493:53  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  493:53  warning  img elements must have an alt prop, either with meaningful text, or an empty string for decorative images                                                                                                                                                                                jsx-a11y/alt-text
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\media\actions.ts
+   16:16  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   27:16  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   37:62  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:20  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:55  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:52  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  145:57  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:31  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:30  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  185:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\medlemskap\_components\SubscriptionEditor.tsx
+   3:20  warning  'useCallback' is defined but never used     @typescript-eslint/no-unused-vars
+   3:33  warning  'useRef' is defined but never used          @typescript-eslint/no-unused-vars
+   5:10  warning  'X' is defined but never used               @typescript-eslint/no-unused-vars
+  29:11  warning  'isNew' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\medlemskap\_components\SubscriptionList.tsx
+   4:60  warning  'Eye' is defined but never used                        @typescript-eslint/no-unused-vars
+  25:27  warning  'setSubscriptions' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\medlemskap\actions.ts
+  5:10  warning  'redirect' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\medlemskap\page.tsx
+  11:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\privacy\page.tsx
+    5:67   warning  'Download' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+    5:77   warning  'Filter' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   97:9    error    Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\privacy\page.tsx:97:9
+   95 |
+   96 |     useEffect(() => {
+>  97 |         loadData();
+      |         ^^^^^^^^ `loadData` accessed before it is declared
+   98 |     }, [consentFilter, analysisFilter, dateRange, maskIp, currentPage, deviceFilter, browserFilter]);
+   99 |
+  100 |     const loadData = async () => {
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\privacy\page.tsx:100:5
+   98 |     }, [consentFilter, analysisFilter, dateRange, maskIp, currentPage, deviceFilter, browserFilter]);
+   99 |
+> 100 |     const loadData = async () => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |         setLoading(true);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |         try {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 151 |         setLoading(false);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 152 |     };
+      | ^^^^^^^ `loadData` is declared here
+  153 |
+  154 |     const toggleSessionDetails = async (sessionId: string) => {
+  155 |         if (expandedSessionId === sessionId) {  react-hooks/immutability
+   98:8    warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+  332:118  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  332:126  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  347:113  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  356:115  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  364:105  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  442:107  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  450:113  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  458:115  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  613:66   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  613:74   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  655:103  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  655:118  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\scraper\ScraperLiveLogs.tsx
+  12:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\scraper\ScraperOverview.tsx
+   4:41  warning  'XCircle' is defined but never used           @typescript-eslint/no-unused-vars
+   8:40  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   9:12  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  55:21  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\scraper\ScraperRunsList.tsx
+  11:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\settings\_components\CacheManager.tsx
+  40:18  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\settings\_components\HistoryLog.tsx
+   5:28  warning  'Activity' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  37:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\settings\_components\HistoryLog.tsx:37:9
+  35 |
+  36 |     useEffect(() => {
+> 37 |         fetchLogs(1)
+     |         ^^^^^^^^^ Avoid calling setState() directly within an effect
+  38 |     }, [])
+  39 |
+  40 |     const logs = data.logs  react-hooks/set-state-in-effect
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\settings\_components\MaintenanceMode.tsx
+  6:8  warning  'styles' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\settings\_components\PreloadManager.tsx
+   6:54  warning  'Loader2' is defined but never used       @typescript-eslint/no-unused-vars
+  62:25  warning  'prev' is defined but never used          @typescript-eslint/no-unused-vars
+  65:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:25  warning  'prev' is defined but never used          @typescript-eslint/no-unused-vars
+  69:25  warning  'prev' is defined but never used          @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\settings\_components\SettingsForm.tsx
+  24:13  error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  47:18  warning  'error' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\settings\actions.ts
+  126:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  135:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\(dashboard)\settings\page.tsx
+  11:77  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\admin\login\actions.ts
+   8:46  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\admin\analytics\clear\route.ts
+  5:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\admin\check-maintenance\route.ts
+  11:27  warning  'req' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\admin\scraper\runs\route.ts
+  23:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\admin\scraper\stream\route.ts
+   25:36  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   38:13  error    'lastEventId' is never reassigned. Use 'const' instead  prefer-const
+   50:23  warning  'whereClause' is assigned a value but never used        @typescript-eslint/no-unused-vars
+   50:36  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  140:22  warning  'e' is defined but never used                           @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\admin\scraper\trigger\route.ts
+  2:8  warning  'prisma' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\admin\users\route.ts
+  24:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\analytics\export\route.ts
+  24:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\analytics\ingest\route.ts
+   21:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   86:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\analytics\stats\route.ts
+  25:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  82:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  83:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\lighthouse\reports\route.ts
+  11:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\lighthouse\scan\route.ts
+  17:14  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\lighthouse\settings\route.ts
+  5:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\maintenance\snapshot\route.ts
+  11:28  warning  'req' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\media\[id]\route.ts
+  52:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\media\confirm\route.ts
+  69:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\media\init\route.ts
+   9:32  warning  'filename' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  43:21  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\media\reorder\route.ts
+  16:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\media\upload\[id]\route.ts
+  50:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\privacy\consent\route.ts
+  43:13  error  'sessionId' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\privacy\sessions\route.ts
+   31:22  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  111:54  warning  'ipAddressFull' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\privacy\stats\route.ts
+  10:27  warning  'req' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\api\saunas\slugs\route.ts
+  14:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\error.tsx
+  11:33  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\home\[slug]\page.tsx
+   57:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  213:96  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:55  warning  'node' is defined but never used          @typescript-eslint/no-unused-vars
+  226:56  warning  'node' is defined but never used          @typescript-eslint/no-unused-vars
+  227:56  warning  'node' is defined but never used          @typescript-eslint/no-unused-vars
+  228:56  warning  'node' is defined but never used          @typescript-eslint/no-unused-vars
+  229:56  warning  'node' is defined but never used          @typescript-eslint/no-unused-vars
+  230:56  warning  'node' is defined but never used          @typescript-eslint/no-unused-vars
+  231:56  warning  'node' is defined but never used          @typescript-eslint/no-unused-vars
+  266:96  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\info\apningstider\page.tsx
+  31:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\info\faq\FAQContent.tsx
+  5:23  warning  'Sparkles' is defined but never used  @typescript-eslint/no-unused-vars
+  5:62  warning  'Info' is defined but never used      @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\info\om-oss\page.tsx
+  89:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\layout.tsx
+  60:10  warning  'AlertBar' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\maintenance\page.tsx
+  49:64  error  Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\medlemskap\page.tsx
+  50:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\page.tsx
+  33:10  warning  'MapPin' is defined but never used        @typescript-eslint/no-unused-vars
+  38:28  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\app\sitemap.ts
+  15:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  44:48  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\components\admin\MediaDropzone.tsx
+  5:18  warning  'FileWarning' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\components\admin\MediaGrid.tsx
+  17:5  warning  'verticalListSortingStrategy' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\components\analytics\ConsentBanner.tsx
+   25:13   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mjens\OneDrive\Musikk\Dokumenter\Prosjekter\Google Antigravity test\src\components\analytics\ConsentBanner.tsx:25:13
+  23 |         const consent = getConsent();
+  24 |         if (!consent) {
+> 25 |             setIsVisible(true);
+     |             ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |         } else {
+  27 |             setPrefs({
+  28 |                 analysis: consent.analysis,  react-hooks/set-state-in-effect
+  104:157  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  104:165  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+
+✖ 254 problems (143 errors, 111 warnings)
+  9 errors and 0 warnings potentially fixable with the `--fix` option.
+

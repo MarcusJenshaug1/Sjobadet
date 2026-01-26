@@ -292,11 +292,6 @@ export default function SaunaAvailability({
     };
 
     const availableSlots = getDisplaySlots();
-    const tomorrowOslo = (() => {
-        const d = new Date();
-        d.setDate(d.getDate() + 1);
-        return osloFormatter.format(d);
-    })();
 
     const nextSlot = getNextAvailableSlot(data?.days, new Date(), 'Europe/Oslo');
 

@@ -1,5 +1,11 @@
 import { nanoid } from 'nanoid';
 
+declare global {
+    interface Window {
+        SJOBADET_IS_ADMIN?: boolean;
+    }
+}
+
 const SESSION_KEY = 'sjobadet_session';
 const CONSENT_KEY = 'sjobadet_consent';
 const CONSENT_VERSION = 'v1'; // Audit finding #3: Versioning
@@ -51,7 +57,7 @@ export const setConsent = async (choices: Partial<ConsentChoices>) => {
     document.cookie = `${CONSENT_KEY}=${value}; path=/; max-age=${365 * 24 * 60 * 60}; samesite=lax; secure`;
 
     // Log consent to server (bypasses admin check for consent logging)
-    if (typeof window !== 'undefined' && !(window as any).SJOBADET_IS_ADMIN) {
+    if (typeof window !== 'undefined' && !window.SJOBADET_IS_ADMIN) {
         try {
             // Determine choice type
             let choice = 'custom';
@@ -83,7 +89,7 @@ export const setConsent = async (choices: Partial<ConsentChoices>) => {
                 }),
                 keepalive: true,
             });
-        } catch (e) {
+        } catch {
             // Silent fail
         }
     }
@@ -122,7 +128,7 @@ const getSessionData = (): SessionData => {
     if (cookie) {
         try {
             return JSON.parse(decodeURIComponent(cookie.split('=')[1]));
-        } catch (e) { }
+        } catch { }
     }
 
     // New session: capture initial attribution (ONLY if consent given)
@@ -148,10 +154,10 @@ const getSessionData = (): SessionData => {
 export async function track(type: 'pageview' | 'event', data: {
     eventName?: string;
     path?: string;
-    payload?: any;
+    payload?: unknown;
 }) {
     // Skip tracking for admin sessions to keep analytics clean from internal activity
-    if (typeof window !== 'undefined' && (window as any).SJOBADET_IS_ADMIN) {
+    if (typeof window !== 'undefined' && window.SJOBADET_IS_ADMIN) {
         return;
     }
 
@@ -183,7 +189,7 @@ export async function track(type: 'pageview' | 'event', data: {
             // Use keepalive for better reliability during navigation
             keepalive: true,
         });
-    } catch (e) {
+    } catch {
         // Silent fail - analytics should never block the main app
     }
 }
@@ -192,7 +198,7 @@ export async function track(type: 'pageview' | 'event', data: {
  * Convenience helpers for tracking.
  */
 export const trackPageview = (path?: string) => track('pageview', { path });
-export const trackEvent = (eventName: string, payload?: any) => track('event', { eventName, payload });
+export const trackEvent = (eventName: string, payload?: unknown) => track('event', { eventName, payload });
 
 /**
  * Specifically for tracking consent choices.
@@ -201,7 +207,7 @@ export const trackEvent = (eventName: string, payload?: any) => track('event', {
  */
 export async function trackConsentChoice(choice: 'accepted' | 'declined' | 'custom') {
     // Skip tracking for admin sessions
-    if (typeof window !== 'undefined' && (window as any).SJOBADET_IS_ADMIN) {
+    if (typeof window !== 'undefined' && window.SJOBADET_IS_ADMIN) {
         return;
     }
 
@@ -220,5 +226,5 @@ export async function trackConsentChoice(choice: 'accepted' | 'declined' | 'cust
             }),
             keepalive: true,
         });
-    } catch (e) { }
+    } catch { }
 }

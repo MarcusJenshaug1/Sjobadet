@@ -17,6 +17,7 @@ export async function getPopularityStats(): Promise<Record<string, number>> {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
         // Map paths to view counts
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pageviews = await (prisma as any).analyticsEvent.groupBy({
             by: ['path'],
             where: {

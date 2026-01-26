@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Fetch base URL from settings, fallback to production URL
     let baseUrl = 'https://sjobadet.net';
-    
+
     try {
         const setting = await prisma.siteSetting.findUnique({
             where: { key: 'lighthouse_base_url' },
@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         if (setting?.value) {
             baseUrl = setting.value;
         }
-    } catch (error) {
+    } catch {
         console.warn('Failed to fetch base URL from settings for sitemap, using default');
     }
 
@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             select: { slug: true, updatedAt: true }
         });
 
-        const saunaRoutes = saunas.map((sauna: any) => ({
+        const saunaRoutes = saunas.map((sauna) => ({
             url: `${baseUrl}/home/${sauna.slug}`,
             lastModified: sauna.updatedAt,
             changeFrequency: 'weekly' as const,
@@ -49,7 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }));
 
         return [...staticRoutes, ...saunaRoutes];
-    } catch (error) {
+    } catch {
         // If database is not available during build (e.g., in CI/CD), return static routes only
         console.warn('Database not available for sitemap generation, returning static routes only');
         return staticRoutes;

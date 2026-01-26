@@ -67,6 +67,26 @@ const navSections: NavSection[] = [
   },
 ]
 
+const UserAvatar = ({ className, userInfo }: { className: string, userInfo: { name: string, avatarUrl?: string | null } }) => {
+  const avatarLetter = userInfo.name.charAt(0).toUpperCase()
+  return (
+    <div className={className} style={userInfo.avatarUrl ? { background: 'none' } : {}}>
+      {userInfo.avatarUrl ? (
+        <Image
+          src={userInfo.avatarUrl}
+          alt={userInfo.name}
+          width={40}
+          height={40}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+          unoptimized
+        />
+      ) : (
+        avatarLetter
+      )}
+    </div>
+  )
+}
+
 function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?: boolean }) {
   const pathname = usePathname()
   const [userInfo, setUserInfo] = useState<{ name: string; role: string; username?: string; avatarUrl?: string | null }>({ name: 'Admin', role: 'Administrator' })
@@ -84,23 +104,6 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
     }
     return pathname.startsWith(href)
   }
-
-  // Get first letter for avatar fallback
-  const avatarLetter = userInfo.name.charAt(0).toUpperCase()
-
-  const UserAvatar = ({ className }: { className: string }) => (
-    <div className={className} style={userInfo.avatarUrl ? { background: 'none' } : {}}>
-      {userInfo.avatarUrl ? (
-        <img
-          src={userInfo.avatarUrl}
-          alt={userInfo.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-        />
-      ) : (
-        avatarLetter
-      )}
-    </div>
-  )
 
   return (
     <>
@@ -182,7 +185,7 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
         {!collapsed && (
           <>
             <div className={styles.userInfo}>
-              <UserAvatar className={styles.userAvatar} />
+              <UserAvatar className={styles.userAvatar} userInfo={userInfo} />
               <div className={styles.userDetails}>
                 <div className={styles.userName}>{userInfo.name}</div>
                 <div className={styles.userRole}>{userInfo.role}</div>
@@ -197,7 +200,7 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
         )}
         {collapsed && (
           <div title={userInfo.name}>
-            <UserAvatar className={styles.userAvatarCollapsed} />
+            <UserAvatar className={styles.userAvatarCollapsed} userInfo={userInfo} />
           </div>
         )}
       </div>

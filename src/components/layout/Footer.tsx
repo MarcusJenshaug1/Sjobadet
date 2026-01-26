@@ -1,5 +1,5 @@
 import React from 'react';
-import { getGlobalSettings, getActiveSaunas } from '@/lib/sauna-service';
+import { getGlobalSettings, getActiveSaunas, ActiveSauna } from '@/lib/sauna-service';
 import { FooterView } from './FooterView';
 export { FooterView };
 
@@ -9,13 +9,13 @@ export { FooterView };
  */
 export async function Footer() {
     let settings: Record<string, string> = {};
-    let saunas: any[] = [];
+    let saunas: ActiveSauna[] = [];
 
     try {
         settings = await getGlobalSettings();
         saunas = await getActiveSaunas({ includeOpeningHours: true });
-    } catch (error) {
-        console.error('Failed to fetch footer data:', error);
+    } catch {
+        // Silent fail for footer fetching to avoid entire site crash
     }
 
     const address = settings['contact_address'] || 'Nedre Langgate 44, 3126 Tønsberg';

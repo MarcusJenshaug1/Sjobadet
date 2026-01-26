@@ -18,8 +18,28 @@ export const Default: Story = {
         instagram: 'https://instagram.com',
         facebook: 'https://facebook.com',
         saunas: [
-            { id: '1', name: 'Tønsberg Brygge', driftStatus: 'open', flexibleHours: false },
-            { id: '2', name: 'Hjemseng brygge', driftStatus: 'closed', stengeArsak: 'Is på vannet' }
+            {
+                id: '1',
+                slug: 'tonsberg-brygge',
+                name: 'Tønsberg Brygge',
+                location: 'Tønsberg',
+                shortDescription: 'Badstue ved brygga',
+                capacityDropin: 8,
+                capacityPrivat: 10,
+                driftStatus: 'open',
+                flexibleHours: false
+            },
+            {
+                id: '2',
+                slug: 'hjemseng-brygge',
+                name: 'Hjemseng brygge',
+                location: 'Hjemseng',
+                shortDescription: 'Badstue med sjøutsikt',
+                capacityDropin: 6,
+                capacityPrivat: 8,
+                driftStatus: 'closed',
+                stengeArsak: 'Is på vannet'
+            }
         ]
     },
 };

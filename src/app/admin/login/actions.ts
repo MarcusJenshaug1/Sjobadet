@@ -5,7 +5,7 @@ import prisma from '@/lib/prisma'
 import * as bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
 
-export async function loginAction(prevState: any, formData: FormData) {
+export async function loginAction(prevState: { error: string } | undefined, formData: FormData) {
     const username = formData.get('username') as string
     const password = formData.get('password') as string
 
@@ -28,7 +28,12 @@ export async function loginAction(prevState: any, formData: FormData) {
             return { error: 'Feil brukernavn eller passord' }
         }
 
-        await login({ username: user.username, id: user.id })
+        await login({
+            username: user.username,
+            id: user.id,
+            name: user.username, // Use username as name if not available
+            role: 'admin' // Default role
+        })
 
     } catch (error) {
         return { error: 'En feil oppstod' }

@@ -22,33 +22,32 @@ const TrackingContext = createContext<{
  * 3. Provide a way for child components to interact with consent.
  */
 export function TrackingProvider({ children, isAdmin }: { children: React.ReactNode; isAdmin: boolean }) {
-    const [consent, setConsentState] = useState<ConsentChoices | null>(null);
-    const [showBanner, setShowBanner] = useState(false);
+    const [consent, setConsentState] = useState<ConsentChoices | null>(() => {
+        if (typeof window === 'undefined') return null;
+        return getConsent();
+    });
+    const [showBanner, setShowBanner] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        const initialConsent = getConsent();
+        return !initialConsent && !isAdmin;
+    });
     const pathname = usePathname();
 
     useEffect(() => {
-        // Set a global flag for the tracking SDK to check
+        // Global flag for tracking SDK
         if (typeof window !== 'undefined') {
-            (window as any).SJOBADET_IS_ADMIN = isAdmin;
-        }
-
-        // Initial load: check for consent
-        const c = getConsent();
-        setConsentState(c);
-
-        // Only show banner if no consent has been set yet AND user is not an admin
-        if (!c && !isAdmin) {
-            setShowBanner(true);
+            window.SJOBADET_IS_ADMIN = isAdmin;
         }
 
         // Listen for internal consent updates
-        const handleConsentChange = (e: any) => {
-            setConsentState(e.detail);
+        const handleConsentChange = (e: Event) => {
+            const customEvent = e as CustomEvent<ConsentChoices>;
+            setConsentState(customEvent.detail);
         };
 
         window.addEventListener('consentChange', handleConsentChange);
         return () => window.removeEventListener('consentChange', handleConsentChange);
-    }, [isAdmin]);
+    }, [isAdmin, consent]);
 
     // Automatic Pageview Tracking
     useEffect(() => {

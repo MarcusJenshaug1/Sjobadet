@@ -61,7 +61,7 @@ interface PrivacySession {
 export default function PrivacyPage() {
     const searchParams = useSearchParams();
     const tabParam = searchParams.get('tab') as 'overview' | 'consents' | 'sessions' | 'docs' | null;
-    
+
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<PrivacyStats | null>(null);
     const [consentLogs, setConsentLogs] = useState<ConsentLog[]>([]);
@@ -85,17 +85,6 @@ export default function PrivacyPage() {
     // Expandable session
     const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
     const [sessionPageviews, setSessionPageviews] = useState<{ [key: string]: Array<{ path: string; timestamp: string }> }>({});
-
-    // Update active tab when URL changes
-    useEffect(() => {
-        if (tabParam && ['overview', 'consents', 'sessions', 'docs'].includes(tabParam)) {
-            setActiveTab(tabParam);
-        }
-    }, [tabParam]);
-
-    useEffect(() => {
-        loadData();
-    }, [consentFilter, analysisFilter, dateRange, maskIp, currentPage, deviceFilter, browserFilter]);
 
     const loadData = async () => {
         setLoading(true);
@@ -151,6 +140,17 @@ export default function PrivacyPage() {
         setLoading(false);
     };
 
+    // Update active tab when URL changes
+    useEffect(() => {
+        if (tabParam && ['overview', 'consents', 'sessions', 'docs'].includes(tabParam)) {
+            setActiveTab(tabParam);
+        }
+    }, [tabParam]);
+
+    useEffect(() => {
+        loadData();
+    }, [consentFilter, analysisFilter, dateRange, maskIp, currentPage, deviceFilter, browserFilter]);
+
     const toggleSessionDetails = async (sessionId: string) => {
         if (expandedSessionId === sessionId) {
             setExpandedSessionId(null);
@@ -187,25 +187,25 @@ export default function PrivacyPage() {
             <div className={styles.container}>
                 {/* Tabs */}
                 <div className={styles.tabs}>
-                    <button 
+                    <button
                         className={activeTab === 'overview' ? styles.tabActive : styles.tab}
                         onClick={() => setActiveTab('overview')}
                     >
                         <Activity size={16} /> Oversikt
                     </button>
-                    <button 
+                    <button
                         className={activeTab === 'consents' ? styles.tabActive : styles.tab}
                         onClick={() => setActiveTab('consents')}
                     >
                         <CheckCircle size={16} /> Samtykkelogg
                     </button>
-                    <button 
+                    <button
                         className={activeTab === 'sessions' ? styles.tabActive : styles.tab}
                         onClick={() => setActiveTab('sessions')}
                     >
                         <Users size={16} /> Sessions
                     </button>
-                    <button 
+                    <button
                         className={activeTab === 'docs' ? styles.tabActive : styles.tab}
                         onClick={() => setActiveTab('docs')}
                     >
@@ -224,116 +224,116 @@ export default function PrivacyPage() {
                             </div>
                         ) : (
                             <>
-                        <div className={styles.kpiGrid}>
-                            <div className={styles.kpiCard}>
-                                <div className={styles.kpiIcon}>
-                                    <CheckCircle size={24} />
-                                </div>
-                                <div className={styles.kpiContent}>
-                                    <div className={styles.kpiValue}>{stats.overview.consentRate7d}%</div>
-                                    <div className={styles.kpiLabel}>Samtykke-rate (7d)</div>
-                                    <div className={styles.kpiMeta}>
-                                        {stats.overview.consents7d} totalt siste 7 dager
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={styles.kpiCard}>
-                                <div className={styles.kpiIcon}>
-                                    <Calendar size={24} />
-                                </div>
-                                <div className={styles.kpiContent}>
-                                    <div className={styles.kpiValue}>{stats.overview.consentRate30d}%</div>
-                                    <div className={styles.kpiLabel}>Samtykke-rate (30d)</div>
-                                    <div className={styles.kpiMeta}>
-                                        {stats.overview.consents30d} totalt siste 30 dager
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={styles.kpiCard}>
-                                <div className={styles.kpiIcon}>
-                                    <Users size={24} />
-                                </div>
-                                <div className={styles.kpiContent}>
-                                    <div className={styles.kpiValue}>{stats.overview.activeSessions}</div>
-                                    <div className={styles.kpiLabel}>Aktive sessions</div>
-                                    <div className={styles.kpiMeta}>
-                                        Kun sessions med samtykke
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={styles.kpiCard}>
-                                <div className={styles.kpiIcon}>
-                                    <Shield size={24} />
-                                </div>
-                                <div className={styles.kpiContent}>
-                                    <div className={styles.kpiValue}>{stats.overview.latestPolicyVersion}</div>
-                                    <div className={styles.kpiLabel}>Policy-versjon</div>
-                                    <div className={styles.kpiMeta}>
-                                        Siste aktive versjon
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className={styles.breakdownGrid}>
-                            <div className={styles.breakdownCard}>
-                                <h3>Samtykkevalg</h3>
-                                <div className={styles.breakdownList}>
-                                    {stats.consentBreakdown.byChoice.map(item => (
-                                        <div key={item.choice} className={styles.breakdownItem}>
-                                            <span className={styles.breakdownLabel}>
-                                                {item.choice === 'accepted' && 'Godta alle'}
-                                                {item.choice === 'declined' && 'Avslå'}
-                                                {item.choice === 'custom' && 'Tilpasset'}
-                                            </span>
-                                            <span className={styles.breakdownValue}>{item.count}</span>
+                                <div className={styles.kpiGrid}>
+                                    <div className={styles.kpiCard}>
+                                        <div className={styles.kpiIcon}>
+                                            <CheckCircle size={24} />
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
+                                        <div className={styles.kpiContent}>
+                                            <div className={styles.kpiValue}>{stats.overview.consentRate7d}%</div>
+                                            <div className={styles.kpiLabel}>Samtykke-rate (7d)</div>
+                                            <div className={styles.kpiMeta}>
+                                                {stats.overview.consents7d} totalt siste 7 dager
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            <div className={styles.breakdownCard}>
-                                <h3>Analyse-samtykke (siste 30 dager)</h3>
-                                <div className={styles.breakdownList}>
-                                    <div className={styles.breakdownItem}>
-                                        <span className={styles.breakdownLabel}>
-                                            <CheckCircle size={16} color="#10b981" /> Godkjent
-                                        </span>
-                                        <span className={styles.breakdownValue}>
-                                            {stats.consentBreakdown.analysis.accepted30d}
-                                        </span>
+                                    <div className={styles.kpiCard}>
+                                        <div className={styles.kpiIcon}>
+                                            <Calendar size={24} />
+                                        </div>
+                                        <div className={styles.kpiContent}>
+                                            <div className={styles.kpiValue}>{stats.overview.consentRate30d}%</div>
+                                            <div className={styles.kpiLabel}>Samtykke-rate (30d)</div>
+                                            <div className={styles.kpiMeta}>
+                                                {stats.overview.consents30d} totalt siste 30 dager
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className={styles.breakdownItem}>
-                                        <span className={styles.breakdownLabel}>
-                                            <XCircle size={16} color="#ef4444" /> Avslått
-                                        </span>
-                                        <span className={styles.breakdownValue}>
-                                            {stats.consentBreakdown.analysis.declined30d}
-                                        </span>
+
+                                    <div className={styles.kpiCard}>
+                                        <div className={styles.kpiIcon}>
+                                            <Users size={24} />
+                                        </div>
+                                        <div className={styles.kpiContent}>
+                                            <div className={styles.kpiValue}>{stats.overview.activeSessions}</div>
+                                            <div className={styles.kpiLabel}>Aktive sessions</div>
+                                            <div className={styles.kpiMeta}>
+                                                Kun sessions med samtykke
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className={styles.breakdownItem}>
-                                        <span className={styles.breakdownLabel}>
-                                            <MinusCircle size={16} color="#6b7280" /> Ignorert
-                                        </span>
-                                        <span className={styles.breakdownValue}>
-                                            {stats.consentBreakdown.analysis.ignored30d}
-                                        </span>
+
+                                    <div className={styles.kpiCard}>
+                                        <div className={styles.kpiIcon}>
+                                            <Shield size={24} />
+                                        </div>
+                                        <div className={styles.kpiContent}>
+                                            <div className={styles.kpiValue}>{stats.overview.latestPolicyVersion}</div>
+                                            <div className={styles.kpiLabel}>Policy-versjon</div>
+                                            <div className={styles.kpiMeta}>
+                                                Siste aktive versjon
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className={styles.infoBox}>
-                            <Shield size={20} />
-                            <div>
-                                <strong>GDPR-compliance:</strong> Ingen persondata samles før brukeren aktivt godtar "Analyse"-kategorien. 
-                                Admin-brukere spores aldri. All tracking er anonym og basert på session-ID.
-                            </div>
-                        </div>
-                        </>
+                                <div className={styles.breakdownGrid}>
+                                    <div className={styles.breakdownCard}>
+                                        <h3>Samtykkevalg</h3>
+                                        <div className={styles.breakdownList}>
+                                            {stats.consentBreakdown.byChoice.map(item => (
+                                                <div key={item.choice} className={styles.breakdownItem}>
+                                                    <span className={styles.breakdownLabel}>
+                                                        {item.choice === 'accepted' && 'Godta alle'}
+                                                        {item.choice === 'declined' && 'Avslå'}
+                                                        {item.choice === 'custom' && 'Tilpasset'}
+                                                    </span>
+                                                    <span className={styles.breakdownValue}>{item.count}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.breakdownCard}>
+                                        <h3>Analyse-samtykke (siste 30 dager)</h3>
+                                        <div className={styles.breakdownList}>
+                                            <div className={styles.breakdownItem}>
+                                                <span className={styles.breakdownLabel}>
+                                                    <CheckCircle size={16} color="#10b981" /> Godkjent
+                                                </span>
+                                                <span className={styles.breakdownValue}>
+                                                    {stats.consentBreakdown.analysis.accepted30d}
+                                                </span>
+                                            </div>
+                                            <div className={styles.breakdownItem}>
+                                                <span className={styles.breakdownLabel}>
+                                                    <XCircle size={16} color="#ef4444" /> Avslått
+                                                </span>
+                                                <span className={styles.breakdownValue}>
+                                                    {stats.consentBreakdown.analysis.declined30d}
+                                                </span>
+                                            </div>
+                                            <div className={styles.breakdownItem}>
+                                                <span className={styles.breakdownLabel}>
+                                                    <MinusCircle size={16} color="#6b7280" /> Ignorert
+                                                </span>
+                                                <span className={styles.breakdownValue}>
+                                                    {stats.consentBreakdown.analysis.ignored30d}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={styles.infoBox}>
+                                    <Shield size={20} />
+                                    <div>
+                                        <strong>GDPR-compliance:</strong> Ingen persondata samles før brukeren aktivt godtar &quot;Analyse&quot;-kategorien.
+                                        Admin-brukere spores aldri. All tracking er anonym og basert på session-ID.
+                                    </div>
+                                </div>
+                            </>
                         )}
                     </div>
                 )}
@@ -344,7 +344,7 @@ export default function PrivacyPage() {
                         <div className={styles.filterBar}>
                             <div className={styles.filterGroup}>
                                 <label>Valg:</label>
-                                <select value={consentFilter} onChange={e => setConsentFilter(e.target.value as any)}>
+                                <select value={consentFilter} onChange={e => setConsentFilter(e.target.value as 'all' | 'accepted' | 'declined' | 'custom')}>
                                     <option value="all">Alle</option>
                                     <option value="accepted">Godta alle</option>
                                     <option value="declined">Avslå</option>
@@ -353,7 +353,7 @@ export default function PrivacyPage() {
                             </div>
                             <div className={styles.filterGroup}>
                                 <label>Analyse:</label>
-                                <select value={analysisFilter} onChange={e => setAnalysisFilter(e.target.value as any)}>
+                                <select value={analysisFilter} onChange={e => setAnalysisFilter(e.target.value as 'all' | 'true' | 'false')}>
                                     <option value="all">Alle</option>
                                     <option value="true">Godkjent</option>
                                     <option value="false">Avslått</option>
@@ -361,7 +361,7 @@ export default function PrivacyPage() {
                             </div>
                             <div className={styles.filterGroup}>
                                 <label>Periode:</label>
-                                <select value={dateRange} onChange={e => setDateRange(e.target.value as any)}>
+                                <select value={dateRange} onChange={e => setDateRange(e.target.value as '7d' | '30d' | 'all')}>
                                     <option value="7d">Siste 7 dager</option>
                                     <option value="30d">Siste 30 dager</option>
                                     <option value="all">Alle</option>
@@ -410,7 +410,7 @@ export default function PrivacyPage() {
                         {/* Pagination */}
                         {totalConsents > pageSize && (
                             <div className={styles.pagination}>
-                                <button 
+                                <button
                                     disabled={currentPage === 1}
                                     onClick={() => setCurrentPage(p => p - 1)}
                                     className={styles.paginationButton}
@@ -418,10 +418,10 @@ export default function PrivacyPage() {
                                     Forrige
                                 </button>
                                 <span className={styles.paginationInfo}>
-                                    Side {currentPage} av {Math.ceil(totalConsents / pageSize)} 
+                                    Side {currentPage} av {Math.ceil(totalConsents / pageSize)}
                                     <span className={styles.totalCount}>({totalConsents} totalt)</span>
                                 </span>
-                                <button 
+                                <button
                                     disabled={currentPage >= Math.ceil(totalConsents / pageSize)}
                                     onClick={() => setCurrentPage(p => p + 1)}
                                     className={styles.paginationButton}
@@ -439,7 +439,7 @@ export default function PrivacyPage() {
                         <div className={styles.filterBar}>
                             <div className={styles.filterGroup}>
                                 <label>Periode:</label>
-                                <select value={dateRange} onChange={e => { setDateRange(e.target.value as any); setCurrentPage(1); }}>
+                                <select value={dateRange} onChange={e => { setDateRange(e.target.value as '7d' | '30d' | 'all'); setCurrentPage(1); }}>
                                     <option value="7d">Siste 7 dager</option>
                                     <option value="30d">Siste 30 dager</option>
                                     <option value="all">Alle</option>
@@ -447,7 +447,7 @@ export default function PrivacyPage() {
                             </div>
                             <div className={styles.filterGroup}>
                                 <label>Enhet:</label>
-                                <select value={deviceFilter} onChange={e => { setDeviceFilter(e.target.value as any); setCurrentPage(1); }}>
+                                <select value={deviceFilter} onChange={e => { setDeviceFilter(e.target.value as 'all' | 'desktop' | 'mobile'); setCurrentPage(1); }}>
                                     <option value="all">Alle</option>
                                     <option value="desktop">Desktop</option>
                                     <option value="mobile">Mobile</option>
@@ -455,14 +455,14 @@ export default function PrivacyPage() {
                             </div>
                             <div className={styles.filterGroup}>
                                 <label>Nettleser:</label>
-                                <select value={browserFilter} onChange={e => { setBrowserFilter(e.target.value as any); setCurrentPage(1); }}>
+                                <select value={browserFilter} onChange={e => { setBrowserFilter(e.target.value as 'all' | 'Chrome' | 'Firefox' | 'Safari'); setCurrentPage(1); }}>
                                     <option value="all">Alle</option>
                                     <option value="Chrome">Chrome</option>
                                     <option value="Firefox">Firefox</option>
                                     <option value="Safari">Safari</option>
                                 </select>
                             </div>
-                            <button 
+                            <button
                                 className={styles.toggleButton}
                                 onClick={() => setMaskIp(!maskIp)}
                             >
@@ -539,7 +539,7 @@ export default function PrivacyPage() {
                         {/* Pagination */}
                         {totalSessions > pageSize && (
                             <div className={styles.pagination}>
-                                <button 
+                                <button
                                     disabled={currentPage === 1}
                                     onClick={() => setCurrentPage(p => p - 1)}
                                     className={styles.paginationButton}
@@ -547,10 +547,10 @@ export default function PrivacyPage() {
                                     Forrige
                                 </button>
                                 <span className={styles.paginationInfo}>
-                                    Side {currentPage} av {Math.ceil(totalSessions / pageSize)} 
+                                    Side {currentPage} av {Math.ceil(totalSessions / pageSize)}
                                     <span className={styles.totalCount}>({totalSessions} totalt)</span>
                                 </span>
-                                <button 
+                                <button
                                     disabled={currentPage >= Math.ceil(totalSessions / pageSize)}
                                     onClick={() => setCurrentPage(p => p + 1)}
                                     className={styles.paginationButton}
@@ -610,7 +610,7 @@ export default function PrivacyPage() {
 
                                 <h3>Krav for tracking:</h3>
                                 <ul>
-                                    <li>Brukeren må aktivt godta "Analyse"-kategorien</li>
+                                    <li>Brukeren må aktivt godta &quot;Analyse&quot;-kategorien</li>
                                     <li>Admin-brukere spores aldri (flagg: SJOBADET_IS_ADMIN)</li>
                                     <li>Session-data inkluderer: ID, UTM, referrer, enhet, IP (hashet)</li>
                                 </ul>
@@ -652,7 +652,7 @@ export default function PrivacyPage() {
                             <div className={styles.docContent}>
                                 <h3>Brukerrettigheter:</h3>
                                 <ul>
-                                    <li><strong>Innsyn:</strong> Brukere kan se og endre samtykke via "Personvernvalg" i footer</li>
+                                    <li><strong>Innsyn:</strong> Brukere kan se og endre samtykke via &quot;Personvernvalg&quot; i footer</li>
                                     <li><strong>Sletting:</strong> Planlagt funksjon (ikke implementert)</li>
                                     <li><strong>Eksport:</strong> Planlagt funksjon (ikke implementert)</li>
                                 </ul>

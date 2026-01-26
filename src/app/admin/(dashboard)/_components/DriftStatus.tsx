@@ -233,7 +233,7 @@ export default function DriftStatus({ lastCacheClear, lastPreload, cacheStats, l
 
 // --- Subcomponents ---
 
-function DriftCard({ icon, title, status, statusText, children }: any) {
+function DriftCard({ icon, title, status, statusText, children }: { icon: React.ReactNode, title: string, status: any, statusText: string, children: React.ReactNode }) {
     return (
         <div style={{
             background: 'white',

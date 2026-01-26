@@ -2,33 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './ConsentBanner.module.css';
+import Link from 'next/link';
 import { Button } from '../ui/Button';
-import { Shield, Settings, Check, Info } from 'lucide-react';
+import { Shield, Settings, Check } from 'lucide-react';
 import { setConsent, getConsent, trackConsentChoice } from '@/lib/analytics/tracking';
 
 export function ConsentBanner() {
     const [showModal, setShowModal] = useState(false);
-    const [isVisible, setIsVisible] = useState(false);
+    const [isVisible, setIsVisible] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return !getConsent();
+    });
 
     // Audit finding #3: Controlled state for categories
-    const [prefs, setPrefs] = useState({
-        analysis: false,
-        marketing: false,
-        functional: false
+    const [prefs, setPrefs] = useState(() => {
+        const consent = getConsent();
+        return {
+            analysis: consent?.analysis ?? false,
+            marketing: consent?.marketing ?? false,
+            functional: consent?.functional ?? false
+        };
     });
 
     useEffect(() => {
-        // Only show if no consent is found or version mismatch (handled in getConsent)
-        const consent = getConsent();
-        if (!consent) {
-            setIsVisible(true);
-        } else {
-            setPrefs({
-                analysis: consent.analysis,
-                marketing: consent.marketing,
-                functional: consent.functional
-            });
-        }
+        // Preference synchronization handled in useState initializer
     }, [showModal]); // Re-sync when modal opens
 
     const handleAcceptAll = () => {
@@ -77,7 +74,7 @@ export function ConsentBanner() {
                             </div>
                             <p className={styles.description}>
                                 Sjøbadet bruker infokapsler (cookies) for å gi deg en bedre opplevelse, analysere trafikk og forbedre våre tjenester.
-                                Les mer i vår <a href="/info/personvern" className={styles.link}>personvernerklæring</a>.
+                                Les mer i vår <Link href="/info/personvern" className={styles.link}>personvernerklæring</Link>.
                             </p>
                         </div>
                         <div className={styles.actions}>
@@ -100,7 +97,7 @@ export function ConsentBanner() {
                     <div className={styles.modal} onClick={e => e.stopPropagation()}>
                         <div className={styles.modalHeader}>
                             <h2 className={styles.modalTitle}>Innstillinger for infokapsler</h2>
-                            <p className={styles.categoryDesc}>Velg hvilke kategorier du ønsker å tillate. Vi sporer ikke din aktivitet hvis du ikke godtar "Analyse".</p>
+                            <p className={styles.categoryDesc}>Velg hvilke kategorier du ønsker å tillate. Vi sporer ikke din aktivitet hvis du ikke godtar &quot;Analyse&quot;.</p>
                         </div>
 
                         <div className={styles.categories}>
@@ -128,7 +125,7 @@ export function ConsentBanner() {
                                     </label>
                                 </div>
                                 <p className={styles.categoryDesc}>
-                                    Uten denne vil vi ikke registrere noen informasjon om din aktivitet. 
+                                    Uten denne vil vi ikke registrere noen informasjon om din aktivitet.
                                     Hjelper oss å se hvordan besøkende bruker siden, slik at vi kan forbedre brukeropplevelsen.
                                 </p>
                             </div>

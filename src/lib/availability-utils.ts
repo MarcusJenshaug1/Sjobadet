@@ -41,8 +41,7 @@ export function formatDateNoShortTitleCase(date: string | Date, timeZone: string
         }
 
         return `${day}. ${month}`;
-    } catch (e) {
-        console.error('Error formatting date:', e);
+    } catch {
         return 'Ukjent dato';
     }
 }
@@ -61,7 +60,7 @@ export function formatTimeNo(date: string | Date, timeZone: string = 'Europe/Osl
             hour12: false,
             timeZone,
         }).format(d);
-    } catch (e) {
+    } catch {
         return '00:00';
     }
 }

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getSession } from './lib/auth'
-import { cookies } from 'next/headers'
 import { decrypt } from './lib/auth'
 
 export async function proxy(request: NextRequest) {
@@ -20,7 +18,7 @@ export async function proxy(request: NextRequest) {
         if (cookie) {
             try {
                 session = await decrypt(cookie)
-            } catch (e) {
+            } catch {
                 // invalid session
             }
         }
@@ -35,5 +33,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/admin/:path*', '/((?!_next/static|_next/image|favicon.ico).*)'  ],
+    matcher: ['/admin/:path*', '/((?!_next/static|_next/image|favicon.ico).*)'],
 }

@@ -2,10 +2,11 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import {
-    Search, Filter, Copy, ExternalLink, Trash2, Info, X,
+    Search, Copy, ExternalLink, Trash2, X,
     CheckCircle, AlertCircle, Image as ImageIcon, LayoutGrid, List,
-    ChevronDown, ArrowUpDown, Layers, Link as LinkIcon
+    ChevronDown, Layers, Link as LinkIcon
 } from 'lucide-react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import { MediaItem, deleteMediaFile, listMediaItems } from '../actions'
 import styles from '../../brukere/UserManager.module.css'
@@ -60,7 +61,7 @@ export default function MediaGrid({ initialItems }: MediaGridProps) {
     }, [items])
 
     const processedItems = useMemo(() => {
-        let filtered = items.filter(item => {
+        const filtered = items.filter(item => {
             const matchesSearch = item.path.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.name.toLowerCase().includes(searchTerm.toLowerCase())
             const matchesCategory = categoryFilter === 'all' ||
@@ -89,8 +90,8 @@ export default function MediaGrid({ initialItems }: MediaGridProps) {
             await deleteMediaFile(item.id, isGrouped)
             setItems(prev => prev.filter(i => i.id !== item.id))
             setSelectedItem(null)
-        } catch (err: any) {
-            alert('Feil ved sletting: ' + err.message)
+        } catch (err) {
+            alert('Feil ved sletting: ' + (err instanceof Error ? err.message : 'Ukjent feil'))
         } finally {
             setDeleting(false)
         }
@@ -274,10 +275,12 @@ export default function MediaGrid({ initialItems }: MediaGridProps) {
                             }}
                         >
                             <div style={{ height: '180px', background: '#f8fafc', position: 'relative', overflow: 'hidden' }}>
-                                <img
+                                <Image
                                     src={item.url}
                                     alt={item.name}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                    unoptimized
                                 />
 
                                 <div style={{
@@ -363,8 +366,8 @@ export default function MediaGrid({ initialItems }: MediaGridProps) {
                                 >
                                     <td style={{ padding: '0.75rem 1rem' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '0.4rem', overflow: 'hidden', background: '#f1f5f9', flexShrink: 0 }}>
-                                                <img src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <div style={{ width: '40px', height: '40px', borderRadius: '0.4rem', overflow: 'hidden', background: '#f1f5f9', flexShrink: 0, position: 'relative' }}>
+                                                <Image src={item.url} alt={item.name} fill style={{ objectFit: 'cover' }} unoptimized />
                                             </div>
                                             <div style={{ fontWeight: 600, color: '#1e293b' }}>
                                                 {item.name}
@@ -428,7 +431,7 @@ export default function MediaGrid({ initialItems }: MediaGridProps) {
                         </div>
 
                         <div style={{ borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid #e2e8f0', background: '#f8fafc', height: '350px', position: 'relative' }}>
-                            <img src={selectedItem.url} alt={selectedItem.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            <Image src={selectedItem.url} alt={selectedItem.name} fill style={{ objectFit: 'contain' }} unoptimized />
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -489,8 +492,8 @@ export default function MediaGrid({ initialItems }: MediaGridProps) {
                                                 borderBottom: idx === selectedItem.variants!.length - 1 ? 'none' : '1px solid #e2e8f0',
                                                 background: 'white'
                                             }}>
-                                                <div style={{ width: '32px', height: '32px', borderRadius: '0.25rem', overflow: 'hidden', flexShrink: 0 }}>
-                                                    <img src={variant.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ width: '32px', height: '32px', borderRadius: '0.25rem', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                                                    <Image src={variant.url} alt={variant.name} fill style={{ objectFit: 'cover' }} unoptimized />
                                                 </div>
                                                 <div style={{ flex: 1, fontSize: '0.85rem' }}>
                                                     <div style={{ fontWeight: 600, color: '#475569' }}>{variant.name}</div>

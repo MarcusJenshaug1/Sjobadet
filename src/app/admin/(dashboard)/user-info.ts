@@ -11,8 +11,7 @@ export async function getUserInfo() {
   }
 
   // Always fetch fresh data from DB to avoid stale session info (like avatarUrl)
-  // Casting to any to avoid lint errors while client is out of sync
-  const user = await (prisma.adminUser.findUnique as any)({
+  const user = await prisma.adminUser.findUnique({
     where: { username: session.user.username },
     select: { username: true, avatarUrl: true }
   })

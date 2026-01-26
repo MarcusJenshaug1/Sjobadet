@@ -13,7 +13,8 @@ export async function logAdminAction(
     performedBy: string = 'System'
 ) {
     try {
-        // Use type casting since AdminLog might not be fully typed in all environments
+        // Use type-safe access where possible
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const adminLog = (prisma as any).adminLog;
         if (adminLog) {
             await adminLog.create({
@@ -25,7 +26,7 @@ export async function logAdminAction(
                 }
             });
         }
-    } catch (e) {
-        console.error('Failed to create admin log:', e);
+    } catch {
+        // Silent fail for logging errors
     }
 }

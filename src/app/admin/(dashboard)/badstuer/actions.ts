@@ -82,7 +82,7 @@ export async function saveSauna(formData: FormData) {
                 })
             }
         } catch (e) {
-            console.error('Failed to link assets', e)
+            console.error('Failed to link assets', e instanceof Error ? e.message : 'Ukjent feil')
         }
     }
 

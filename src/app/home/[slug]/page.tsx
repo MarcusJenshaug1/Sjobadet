@@ -2,7 +2,7 @@ import { Header } from '@/components/layout/Header';
 import styles from './SaunaDetail.module.css';
 import { MapPin, Users, Check, AlertTriangle, Gift, CreditCard } from 'lucide-react';
 import { Metadata } from 'next';
-import { getSaunaBySlug, getActiveSaunas, getGlobalSettings } from '@/lib/sauna-service';
+import { getSaunaBySlug, getActiveSaunas, getGlobalSettings, SaunaDetail, ActiveSauna } from '@/lib/sauna-service';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -25,7 +25,7 @@ export const dynamic = 'force-static';
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
     try {
-        const sauna = await getSaunaBySlug(slug);
+        const sauna = await getSaunaBySlug(slug) as SaunaDetail | null;
         if (!sauna) return { title: 'Fant ikke badstue' };
 
         const title = sauna.seoTitle || `${sauna.name} | Sjøbadet Badstue`;
@@ -62,17 +62,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function SaunaDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
 
-    let sauna = null;
+    let sauna: SaunaDetail | null = null;
     let isAdmin = false;
     let dbError = false;
-    let otherSaunas: Awaited<ReturnType<typeof getActiveSaunas>> = [];
+    let otherSaunas: ActiveSauna[] = [];
     let settings: Record<string, string> = {};
     let isMaintenanceMode = false;
 
     try {
         const [saunaData, allSaunas, session, globalSettings, maintenanceSetting] = await Promise.all([
-            getSaunaBySlug(slug),
-            getActiveSaunas(),
+            getSaunaBySlug(slug) as Promise<SaunaDetail | null>,
+            getActiveSaunas() as Promise<ActiveSauna[]>,
             getSession(),
             getGlobalSettings(),
             prisma.siteSetting.findUnique({ where: { key: 'maintenance_mode' } })
@@ -247,7 +247,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                     <h2 className={styles.sectionTitle}>Kart og plassering</h2>
                                     <SaunaMap
                                         address={sauna.address || ''}
-                                        mapEmbedUrl={sauna.mapEmbedUrl}
+                                        mapEmbedUrl={sauna.mapEmbedUrl || null}
                                         saunaName={sauna.name}
                                     />
                                 </div>

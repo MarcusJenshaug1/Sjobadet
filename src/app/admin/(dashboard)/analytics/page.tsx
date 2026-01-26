@@ -62,7 +62,7 @@ export default async function AnalyticsPage({
     // Construct where clauses
     const eventWhere = startDate ? { timestamp: { gte: startDate } } : {};
     const sessionWhere = startDate ? { startTime: { gte: startDate } } : {};
-    
+
     // Previous period for comparison
     const prevEventWhere = prevStartDate && prevEndDate ? { timestamp: { gte: prevStartDate, lt: prevEndDate } } : {};
     const prevSessionWhere = prevStartDate && prevEndDate ? { startTime: { gte: prevStartDate, lt: prevEndDate } } : {};
@@ -72,12 +72,12 @@ export default async function AnalyticsPage({
     let sessions = 0;
     let prevPageviews = 0;
     let prevSessions = 0;
-    let topPages = [];
-    let deviceStats = [];
-    let bookingClicks: any[] = [];
-    let saunaViews: any[] = [];
-    let consentEvents: any[] = [];
-    let lastUpdated = new Date();
+    let topPages: Array<{ path: string; _count: { id: number; }; }> = [];
+    let deviceStats: Array<{ deviceType: string; _count: { id: number; }; }> = [];
+    let bookingClicks: Array<{ type: string; eventName: string; payload: string | null; sessionId: string | null; timestamp: Date; }> = [];
+    let saunaViews: Array<{ type: string; path: string; sessionId: string | null; timestamp: Date; }> = [];
+    let consentEvents: Array<{ type: string; eventName: string; payload: string | null; sessionId: string | null; timestamp: Date; }> = [];
+    const lastUpdated = new Date().toISOString();
 
     try {
         const [pvCount, sessCount, prevPvCount, prevSessCount, pages, devices, events, sViews, cEvents] = await Promise.all([
@@ -149,10 +149,10 @@ export default async function AnalyticsPage({
         declined: 0,
         notChosenYet: 0
     };
-    
+
     const acceptedSessions = new Set<string>();
     const declinedSessions = new Set<string>();
-    
+
     consentEvents.forEach(e => {
         try {
             const choice = JSON.parse(e.payload || '{}').choice;
@@ -164,10 +164,10 @@ export default async function AnalyticsPage({
             }
         } catch (e) { }
     });
-    
+
     consentStats.accepted = acceptedSessions.size;
     consentStats.declined = declinedSessions.size;
-    
+
     // Sessions without explicit consent choice (haven't interacted with banner)
     const totalSessionsTracked = sessions;
     const sessionsWithChoice = acceptedSessions.size + declinedSessions.size;
@@ -273,7 +273,7 @@ export default async function AnalyticsPage({
     }).sort((a, b) => b.views - a.views);
 
     return (
-        <PageWrapper 
+        <PageWrapper
             layout="wide"
             title="Besøksstatistikk"
             actions={
@@ -301,7 +301,7 @@ export default async function AnalyticsPage({
                     </a>
                     <RangeSelector currentDays={days} />
                     {currentUser && (
-                        <ActionMenu 
+                        <ActionMenu
                             username={currentUser.username || 'Admin'}
                         />
                     )}
@@ -363,7 +363,7 @@ export default async function AnalyticsPage({
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
                 {/* Popular Pages Table */}
-                    <PopularPagesCard pages={topPages} />
+                <PopularPagesCard pages={topPages} />
 
                 {/* Device Information */}
                 <div style={cardStyle}>

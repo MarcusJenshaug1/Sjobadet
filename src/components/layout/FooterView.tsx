@@ -6,6 +6,7 @@ import styles from './Footer.module.css';
 import { formatSmartOpeningHours } from '@/lib/sauna-utils';
 import { Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
 import { CookieSettingsTrigger } from './CookieSettingsTrigger';
+import { ActiveSauna } from '@/lib/sauna-service';
 
 interface FooterViewProps {
     address: string;
@@ -13,7 +14,7 @@ interface FooterViewProps {
     phone: string;
     instagram?: string;
     facebook?: string;
-    saunas: any[];
+    saunas: ActiveSauna[];
 }
 
 export function FooterView({ address, email, phone, instagram, facebook, saunas }: FooterViewProps) {

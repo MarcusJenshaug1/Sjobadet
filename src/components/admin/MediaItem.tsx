@@ -19,7 +19,7 @@ interface MediaItemProps {
     onDelete: (id: string) => void;
     onRetry?: (id: string) => void;
     isPrimary?: boolean;
-    dragHandleProps?: any; // For dnd-kit
+    dragHandleProps?: Record<string, unknown>; // For dnd-kit
 }
 
 export function MediaItem({ asset, onDelete, onRetry, isPrimary, dragHandleProps }: MediaItemProps) {

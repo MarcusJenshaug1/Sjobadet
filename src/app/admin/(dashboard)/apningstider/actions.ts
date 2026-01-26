@@ -4,7 +4,14 @@ import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth-guard'
 
-export async function updateOpeningHours(saunaId: string, hours: any[]) {
+interface OpeningHourUpdate {
+    id: string;
+    opens: string | null;
+    closes: string | null;
+    active: boolean;
+}
+
+export async function updateOpeningHours(saunaId: string, hours: OpeningHourUpdate[]) {
     await requireAdmin()
 
     // Validate inputs

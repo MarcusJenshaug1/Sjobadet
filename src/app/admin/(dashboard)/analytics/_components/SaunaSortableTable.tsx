@@ -22,6 +22,63 @@ interface SaunaSortableTableProps {
 type SortColumn = 'name' | 'views' | 'dropinClicks' | 'privateClicks' | 'conversion';
 type SortDirection = 'asc' | 'desc';
 
+const thStyle = {
+    padding: '1rem',
+    fontSize: '0.75rem',
+    fontWeight: '500',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: '0.025em',
+    borderBottom: '2px solid #f1f5f9',
+    transition: 'all 0.2s'
+} as const;
+
+const tdStyle = {
+    padding: '1rem',
+    fontSize: '0.9rem',
+    color: '#334155'
+} as const;
+
+const SortIcon = ({ column, currentSortColumn, sortDirection }: { column: SortColumn, currentSortColumn: SortColumn, sortDirection: SortDirection }) => {
+    if (currentSortColumn !== column) return null;
+    return sortDirection === 'asc' ? (
+        <ChevronUp size={14} style={{ display: 'inline', marginLeft: '0.25rem' }} />
+    ) : (
+        <ChevronDown size={14} style={{ display: 'inline', marginLeft: '0.25rem' }} />
+    );
+};
+
+const SortHeader = ({
+    column,
+    label,
+    title,
+    currentSortColumn,
+    sortDirection,
+    onSort
+}: {
+    column: SortColumn;
+    label: string;
+    title?: string;
+    currentSortColumn: SortColumn;
+    sortDirection: SortDirection;
+    onSort: (col: SortColumn) => void;
+}) => (
+    <th
+        style={{
+            ...thStyle,
+            textAlign: column === 'name' ? 'left' : 'right',
+            cursor: 'pointer',
+            userSelect: 'none',
+            backgroundColor: currentSortColumn === column ? '#f8fafc' : 'transparent',
+            fontWeight: currentSortColumn === column ? '700' : '500'
+        }}
+        onClick={() => onSort(column)}
+        title={title || "Klikk for å sortere"}
+    >
+        {label} <SortIcon column={column} currentSortColumn={currentSortColumn} sortDirection={sortDirection} />
+    </th>
+);
+
 export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
     const [sortColumn, setSortColumn] = useState<SortColumn>('views');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -36,12 +93,12 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
     };
 
     const sortedData = [...data].sort((a, b) => {
-        let aVal: any = a[sortColumn];
-        let bVal: any = b[sortColumn];
+        let aVal = a[sortColumn];
+        let bVal = b[sortColumn];
 
         if (sortColumn === 'conversion') {
-            aVal = parseFloat(aVal);
-            bVal = parseFloat(bVal);
+            aVal = typeof aVal === 'string' ? parseFloat(aVal) : aVal;
+            bVal = typeof bVal === 'string' ? parseFloat(bVal) : bVal;
         }
 
         if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
@@ -49,59 +106,16 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
         return 0;
     });
 
-    const SortIcon = ({ column }: { column: SortColumn }) => {
-        if (sortColumn !== column) return null;
-        return sortDirection === 'asc' ? (
-            <ChevronUp size={14} style={{ display: 'inline', marginLeft: '0.25rem' }} />
-        ) : (
-            <ChevronDown size={14} style={{ display: 'inline', marginLeft: '0.25rem' }} />
-        );
-    };
-
-    const SortHeader = ({ column, label, title }: { column: SortColumn; label: string; title?: string }) => (
-        <th
-            style={{
-                ...thStyle,
-                textAlign: column === 'name' ? 'left' : 'right',
-                cursor: 'pointer',
-                userSelect: 'none',
-                backgroundColor: sortColumn === column ? '#f8fafc' : 'transparent',
-                fontWeight: sortColumn === column ? '700' : '500'
-            }}
-            onClick={() => handleSort(column)}
-            title={title || "Klikk for å sortere"}
-        >
-            {label} <SortIcon column={column} />
-        </th>
-    );
-
-    const tdStyle = {
-        padding: '1rem',
-        fontSize: '0.9rem',
-        color: '#334155'
-    } as const;
-
-    const thStyle = {
-        padding: '1rem',
-        fontSize: '0.75rem',
-        fontWeight: '500',
-        color: '#64748b',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        borderBottom: '2px solid #f1f5f9',
-        transition: 'all 0.2s'
-    } as const;
-
     return (
         <div style={{ overflowX: 'auto', borderRadius: '0.75rem', border: '1px solid #f1f5f9' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                     <tr style={{ backgroundColor: '#f8fafc' }}>
-                        <SortHeader column="name" label="Badstue" />
-                        <SortHeader column="views" label="Visninger" />
-                        <SortHeader column="dropinClicks" label="Drop-in bookinger" />
-                        <SortHeader column="privateClicks" label="Private bookinger" />
-                        <SortHeader column="conversion" label="Konvertering %" title="Andel av visninger som endte i booking (drop-in eller private)" />
+                        <SortHeader column="name" label="Badstue" currentSortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                        <SortHeader column="views" label="Visninger" currentSortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                        <SortHeader column="dropinClicks" label="Drop-in bookinger" currentSortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                        <SortHeader column="privateClicks" label="Private bookinger" currentSortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                        <SortHeader column="conversion" label="Konvertering %" title="Andel av visninger som endte i booking (drop-in eller private)" currentSortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
                     </tr>
                 </thead>
                 <tbody>
@@ -155,7 +169,7 @@ export function SaunaSortableTable({ data }: SaunaSortableTableProps) {
                                     ...tdStyle,
                                     textAlign: 'right',
                                     fontWeight: '700',
-                                    color: parseFloat(s.conversion as string) > 5 ? '#10b981' : parseFloat(s.conversion as string) > 0 ? '#f59e0b' : '#cbd5e1'
+                                    color: (typeof s.conversion === 'string' ? parseFloat(s.conversion) : s.conversion) > 5 ? '#10b981' : (typeof s.conversion === 'string' ? parseFloat(s.conversion) : s.conversion) > 0 ? '#f59e0b' : '#cbd5e1'
                                 }}
                                 title="Andel av visninger som endte i booking (drop-in eller private)"
                             >

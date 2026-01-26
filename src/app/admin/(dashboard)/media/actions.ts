@@ -7,13 +7,20 @@ import { requireAdmin } from '@/lib/auth-guard'
 
 const BUCKET_NAME = 'images'
 
+export type MediaMetadata = {
+    size?: number
+    mimetype?: string
+    cacheControl?: string
+    [key: string]: any
+}
+
 export type MediaVariant = {
     name: string
     path: string
     url: string
     size?: number
     updated_at?: string
-    metadata?: any
+    metadata?: MediaMetadata
 }
 
 export type MediaItem = {
@@ -24,7 +31,7 @@ export type MediaItem = {
     url: string
     size?: number
     updated_at?: string
-    metadata?: any
+    metadata?: MediaMetadata
     variants?: MediaVariant[]
     inUseBy?: { type: 'sauna' | 'user' | 'mediaAsset', id: string, name: string, context?: string }[]
 }
@@ -47,14 +54,14 @@ export async function listMediaItems(groupVariants: boolean = true) {
             return []
         }
 
-        let files: any[] = []
+        const files: any[] = []
         for (const item of data || []) {
             const itemPath = path ? `${path}/${item.name}` : item.name
 
             if (!item.id) {
                 // It's a folder, recurse
                 const subFiles = await fetchAllFiles(itemPath)
-                files = [...files, ...subFiles]
+                files.push(...subFiles)
             } else {
                 // It's a file
                 files.push({ ...item, name: itemPath })
@@ -133,17 +140,23 @@ export async function listMediaItems(groupVariants: boolean = true) {
 
 async function enrichMediaWithUsage(items: MediaItem[]): Promise<MediaItem[]> {
     // Fetch all entities that use images
-    const users = await (prisma.adminUser.findMany as any)({
+    const users = await prisma.adminUser.findMany({
         where: { NOT: { avatarUrl: null } },
         select: { id: true, username: true, avatarUrl: true }
     })
 
-    const saunas = await (prisma.sauna.findMany as any)({
+    const saunas = await prisma.sauna.findMany({
         select: { id: true, name: true, imageUrl: true, gallery: true }
     })
 
-    const assets = await (prisma.mediaAsset.findMany as any)({
-        select: { id: true, storageKeyOriginal: true, storageKeyLarge: true, storageKeyThumb: true, sauna: { select: { id: true, name: true } } }
+    const assets = await prisma.mediaAsset.findMany({
+        select: {
+            id: true,
+            storageKeyOriginal: true,
+            storageKeyLarge: true,
+            storageKeyThumb: true,
+            sauna: { select: { id: true, name: true } }
+        }
     })
 
     return items.map(item => {
@@ -154,7 +167,7 @@ async function enrichMediaWithUsage(items: MediaItem[]): Promise<MediaItem[]> {
 
         const checkUsage = (pathToMatch: string) => {
             // Check users
-            users.forEach((u: any) => {
+            users.forEach((u) => {
                 if (u.avatarUrl?.includes(pathToMatch)) {
                     if (!inUseBy.some(usage => usage.id === u.id)) {
                         inUseBy.push({ type: 'user', id: u.id, name: u.username, context: 'Profilbilde' })
@@ -163,7 +176,7 @@ async function enrichMediaWithUsage(items: MediaItem[]): Promise<MediaItem[]> {
             })
 
             // Check saunas
-            saunas.forEach((s: any) => {
+            saunas.forEach((s) => {
                 if (s.imageUrl?.includes(pathToMatch)) {
                     if (!inUseBy.some(usage => usage.id === s.id && usage.context === 'Hovedbilde')) {
                         inUseBy.push({ type: 'sauna', id: s.id, name: s.name, context: 'Hovedbilde' })
@@ -177,12 +190,14 @@ async function enrichMediaWithUsage(items: MediaItem[]): Promise<MediaItem[]> {
                                 inUseBy.push({ type: 'sauna', id: s.id, name: s.name, context: 'Galleri' })
                             }
                         }
-                    } catch (e) { }
+                    } catch {
+                        // Silent fail
+                    }
                 }
             })
 
             // Check MediaAssets
-            assets.forEach((a: any) => {
+            assets.forEach((a) => {
                 if (a.storageKeyOriginal === pathToMatch || a.storageKeyLarge === pathToMatch || a.storageKeyThumb === pathToMatch) {
                     const saunaName = a.sauna?.name || 'Tilhørende badstue'
                     if (!inUseBy.some(usage => usage.id === a.id)) {

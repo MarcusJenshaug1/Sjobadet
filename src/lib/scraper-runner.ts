@@ -28,7 +28,7 @@ export async function runScraper(options: ScraperRunOptions) {
     try {
         // 1. Fetch saunas
         // START DB QUERY
-        const where: any = { status: 'active' };
+        const where: Record<string, unknown> = { status: 'active' };
         if (mode === 'selected' && saunaIds?.length) {
             where.id = { in: saunaIds };
         }
@@ -50,8 +50,9 @@ export async function runScraper(options: ScraperRunOptions) {
         try {
             browser = await createScraperBrowser();
             await ScraperService.logEvent(currentRunId, 'info', 'scraper', 'Browser launched successfully');
-        } catch (e: any) {
-            await ScraperService.logEvent(currentRunId, 'error', 'scraper', `Failed to launch browser: ${e.message}`);
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            await ScraperService.logEvent(currentRunId, 'error', 'scraper', `Failed to launch browser: ${msg}`);
             await ScraperService.finishRun(currentRunId, 'failed');
             return;
         }
@@ -136,17 +137,18 @@ export async function runScraper(options: ScraperRunOptions) {
                         }
                     });
                 }
-            } catch (error: any) {
+            } catch (error) {
                 failCount++;
                 const durationMs = Date.now() - startTime;
+                const msg = error instanceof Error ? error.message : String(error);
                 await ScraperService.updateItem(currentRunId, sauna.id, 'failed', {
                     durationMs,
                     errorCode: 'UNKNOWN',
-                    reason: error.message,
+                    reason: msg,
                     targetUrl: bookingUrl
                 });
 
-                await ScraperService.logEvent(currentRunId, 'error', 'sauna', `FEIL ved scraping av ${sauna.name}: ${error.message}`, undefined, sauna.id);
+                await ScraperService.logEvent(currentRunId, 'error', 'sauna', `FEIL ved scraping av ${sauna.name}: ${msg}`, undefined, sauna.id);
 
                 await prisma.sauna.update({
                     where: { id: sauna.id },
@@ -172,10 +174,11 @@ export async function runScraper(options: ScraperRunOptions) {
         const finalMessage = `Kjøring fullført (${finalStatus.toUpperCase()}). Suksess: ${successCount}, Feil: ${failCount}.`;
         await ScraperService.logEvent(currentRunId, finalStatus === 'failed' ? 'error' : 'info', 'run', finalMessage);
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Runner failed', error);
         if (currentRunId) {
-            await ScraperService.logEvent(currentRunId, 'error', 'run', `Runner crashed: ${error.message}`);
+            const msg = error instanceof Error ? error.message : String(error);
+            await ScraperService.logEvent(currentRunId, 'error', 'run', `Runner crashed: ${msg}`);
             await ScraperService.finishRun(currentRunId, 'failed');
         }
     }

@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     try {
-        const where: any = {};
+        const where: Prisma.ScrapeRunWhereInput = {};
         if (status) where.status = status;
         if (trigger) where.trigger = trigger;
 

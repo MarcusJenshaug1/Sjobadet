@@ -6,13 +6,16 @@ import { getNextAvailableSlot } from './availability-utils'
 const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const SAUNA_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes for public content
 
-type ActiveSauna = {
+export type ActiveSauna = {
     id: string;
     slug: string;
     name: string;
     location: string;
     shortDescription: string;
     imageUrl?: string | null;
+    facilities?: string | null;
+    gallery?: string | null;
+    address?: string | null;
     driftStatus?: string | null;
     capacityDropin: number;
     capacityPrivat: number;
@@ -31,11 +34,8 @@ type ActiveSauna = {
     nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
 };
 
-type SaunaDetail = ActiveSauna & {
+export type SaunaDetail = ActiveSauna & {
     description?: string | null;
-    gallery?: string | null;
-    facilities?: string | null;
-    address?: string | null;
     mapEmbedUrl?: string | null;
     status?: string | null;
     stengtFra?: Date | null;
@@ -199,7 +199,7 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
                         }
                     }
                     : {}),
-            } as any
+            } as unknown as { [key: string]: boolean | object }
         });
 
         activeSaunaCache.set(cacheKey, { data: result as unknown as ActiveSauna[], expiresAt: now + SAUNA_CACHE_TTL_MS });
@@ -263,11 +263,11 @@ export const getSaunaBySlug = async (slug: string) => {
                     where: { active: true },
                     orderBy: { weekday: 'asc' }
                 }
-            } as any
+            } as unknown as { [key: string]: boolean | object }
         });
 
         if (result) {
-            const saunaData = result as unknown as ActiveSauna;
+            const saunaData = result as unknown as SaunaDetail;
             const withNext = {
                 ...saunaData,
                 nextAvailableSlot: computeNextAvailableSlot(saunaData.availabilityData ?? null),

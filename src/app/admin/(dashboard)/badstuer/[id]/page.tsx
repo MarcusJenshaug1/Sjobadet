@@ -12,7 +12,8 @@ export default async function EditSaunaPage({ params }: { params: Promise<{ id: 
                     { kind: 'desc' }, // PRIMARY first
                     { orderIndex: 'asc' }
                 ]
-            }
+            },
+            openingHours: true
         }
     })
 
@@ -20,10 +21,22 @@ export default async function EditSaunaPage({ params }: { params: Promise<{ id: 
         notFound()
     }
 
+    // Serialize sauna for client component
+    const serializedSauna = {
+        ...sauna,
+        updatedAt: sauna.updatedAt.toISOString(),
+        createdAt: sauna.createdAt.toISOString(),
+        openingHours: sauna.openingHours.map(h => ({
+            ...h,
+            createdAt: h.createdAt?.toISOString() ?? null,
+            date: h.date?.toISOString() ?? null
+        }))
+    }
+
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', paddingTop: '1rem' }}>
             <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>Rediger Badstue</h1>
-            <SaunaForm sauna={sauna} />
+            <SaunaForm sauna={serializedSauna as any} />
         </div>
     )
 }
