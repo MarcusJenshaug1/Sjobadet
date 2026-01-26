@@ -6,14 +6,14 @@ export function Hero() {
     return (
         <section className={styles.hero}>
             <Image
-                src="https://images.unsplash.com/photo-1694374510393-da60c58a3375?q=80&w=2064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                src="/hero-sjobadet.jpg"
                 alt="Sjøbadet brygge"
                 fill
                 priority
                 fetchPriority="high"
                 className={styles.backgroundImage}
-                quality={90}
-                sizes="100vw"
+                quality={85}
+                sizes="(max-width: 768px) 100vw, 100vw"
             />
             <div className={styles.overlay} />
             <div className={styles.content}>

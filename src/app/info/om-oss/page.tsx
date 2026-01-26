@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import nextDynamic from 'next/dynamic';
+const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
 import { Metadata } from 'next';
 import { getActiveSaunas, getGlobalSettings } from "@/lib/sauna-service";
 import { formatSmartOpeningHours } from "@/lib/sauna-utils";

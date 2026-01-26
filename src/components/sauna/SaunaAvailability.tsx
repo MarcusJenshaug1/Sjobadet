@@ -27,6 +27,9 @@ interface SaunaAvailabilityProps {
     showAvailability?: boolean;
 }
 
+// Simple in-memory cache for availability data to prevent flickers on navigation
+const availabilityCache: Record<string, AvailabilityArea> = {};
+
 export default function SaunaAvailability({
     saunaId,
     bookingUrlDropin,
@@ -34,8 +37,8 @@ export default function SaunaAvailability({
     isAdmin = false,
     showAvailability = true
 }: SaunaAvailabilityProps) {
-    const [data, setData] = useState<AvailabilityArea | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState<AvailabilityArea | null>(availabilityCache[saunaId] || null);
+    const [loading, setLoading] = useState(!availabilityCache[saunaId]);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(false);
     const [onlyAvailable, setOnlyAvailable] = useState(true);
@@ -72,15 +75,7 @@ export default function SaunaAvailability({
         if (isMountedRef.current) setError(false);
         if (!silent) {
             if (!hasDataRef.current) {
-                if (loaderTimeoutRef.current) {
-                    clearTimeout(loaderTimeoutRef.current);
-                }
-                loaderTimeoutRef.current = setTimeout(() => {
-                    if (isMountedRef.current && !hasDataRef.current) {
-                        setLoading(true);
-                    }
-                    loaderTimeoutRef.current = null;
-                }, 250);
+                setLoading(true);
             } else {
                 setLoading(false);
             }
@@ -179,11 +174,13 @@ export default function SaunaAvailability({
                 }
 
                 if (isMountedRef.current) {
-                    setData({
+                    const finalData = {
                         ...json,
                         displaySlots: slotsToShow,
                         displayDate: activeDate
-                    });
+                    };
+                    setData(finalData);
+                    availabilityCache[saunaId] = finalData;
                     hasDataRef.current = true;
                     setLoading(false);
                 }
@@ -215,9 +212,11 @@ export default function SaunaAvailability({
         }
 
         // Reset state for new sauna
-        hasDataRef.current = false;
-        setData(null);
+        const cached = availabilityCache[saunaId];
+        hasDataRef.current = !!cached;
+        setData(cached || null);
         setError(false);
+        setLoading(!cached);
 
         fetchData();
 
@@ -233,10 +232,6 @@ export default function SaunaAvailability({
     if (loading && !data && !error) {
         return (
             <div className={styles.container}>
-                <div style={{ padding: '0 0.5rem 1rem', textAlign: 'center' }}>
-                    <p style={{ fontSize: '0.75rem', color: '#718096', fontWeight: 'bold' }}>Henter ledighet...</p>
-                    <p style={{ fontSize: '0.625rem', color: '#a0aec0' }}>Dette kan ta litt tid første gang</p>
-                </div>
                 <div className={styles.grid}>
                     {[1, 2, 3, 4, 5, 6].map(i => (
                         <div key={i} className={styles.slotCard} style={{ backgroundColor: '#f7fafc', minHeight: '50px', animation: 'refreshPulse 2s infinite' }} />

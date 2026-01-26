@@ -3,27 +3,23 @@ import prisma from '@/lib/prisma';
 import { HeaderView } from './HeaderView';
 import { AlertBar } from './AlertBar';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 300;
 
 export async function Header() {
     let isAdmin = false;
     let isMaintenanceMode = false;
-    
-    try {
-        const session = await getSession();
-        isAdmin = !!session?.user;
-    } catch (error) {
-        console.error('Failed to get session in Header:', error);
-    }
 
     try {
-        const maintenanceSetting = await prisma.siteSetting.findUnique({
-            where: { key: 'maintenance_mode' }
-        });
+        const [session, maintenanceSetting] = await Promise.all([
+            getSession(),
+            prisma.siteSetting.findUnique({
+                where: { key: 'maintenance_mode' }
+            })
+        ]);
+        isAdmin = !!session?.user;
         isMaintenanceMode = maintenanceSetting?.value === 'true';
     } catch (error) {
-        console.error('Failed to check maintenance mode:', error);
+        console.error('Error in Header fetching:', error);
     }
 
     return (

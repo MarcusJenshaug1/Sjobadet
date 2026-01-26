@@ -1,10 +1,11 @@
 import React from 'react';
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import nextDynamic from 'next/dynamic';
+const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
+const SaunaStory = nextDynamic(() => import('@/components/sauna/SaunaStory').then(mod => mod.SaunaStory));
 import styles from '../InfoPages.module.css';
 import { FAQContent } from './FAQContent';
 import { Metadata } from 'next';
-import { SaunaStory } from '@/components/sauna/SaunaStory';
 
 export const metadata: Metadata = {
     title: 'FAQ | Sjøbadet Badstue',

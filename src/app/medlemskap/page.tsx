@@ -1,10 +1,12 @@
-import React from 'react';
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/Button';
-import { Check, Info } from 'lucide-react';
 import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
+import nextDynamic from 'next/dynamic';
+
+const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
+const Check = nextDynamic(() => import('lucide-react').then(mod => mod.Check));
+const Info = nextDynamic(() => import('lucide-react').then(mod => mod.Info));
 
 export const metadata: Metadata = {
     title: 'Medlemskap | Sjøbadet Badstue',

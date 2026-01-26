@@ -1,20 +1,26 @@
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import styles from './SaunaDetail.module.css';
 import { MapPin, Users, Check, AlertTriangle, Gift, CreditCard } from 'lucide-react';
 import { Metadata } from 'next';
 import { getSaunaBySlug, getActiveSaunas, getGlobalSettings } from '@/lib/sauna-service';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
-import { SaunaGallery } from '@/components/sauna/SaunaGallery';
 import Image from 'next/image';
-import SaunaAvailability from '@/components/sauna/SaunaAvailability';
-import SaunaBookingOptions from '@/components/sauna/SaunaBookingOptions';
-import { getSession } from '@/lib/auth';
-import { SaunaCard } from '@/components/sauna/SaunaCard';
 import prisma from '@/lib/prisma';
+import nextDynamic from 'next/dynamic';
+import { getSession } from '@/lib/auth';
 
+// Lazy load non-critical components
+const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
+const ReactMarkdown = nextDynamic(() => import('react-markdown'));
+const SaunaGallery = nextDynamic(() => import('@/components/sauna/SaunaGallery').then(mod => mod.SaunaGallery));
+const SaunaAvailability = nextDynamic(() => import('@/components/sauna/SaunaAvailability'));
+const SaunaBookingOptions = nextDynamic(() => import('@/components/sauna/SaunaBookingOptions'));
+const SaunaCard = nextDynamic(() => import('@/components/sauna/SaunaCard').then(mod => mod.SaunaCard));
+const SaunaMap = nextDynamic(() => import('@/components/sauna/SaunaMap').then(mod => mod.SaunaMap));
+// Enable public caching (CDN) with a 5-minute revalidation period
+export const revalidate = 300;
+export const dynamic = 'force-static';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
@@ -64,17 +70,18 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     let isMaintenanceMode = false;
 
     try {
-        sauna = await getSaunaBySlug(slug);
-        const allSaunas = await getActiveSaunas();
+        const [saunaData, allSaunas, session, globalSettings, maintenanceSetting] = await Promise.all([
+            getSaunaBySlug(slug),
+            getActiveSaunas(),
+            getSession(),
+            getGlobalSettings(),
+            prisma.siteSetting.findUnique({ where: { key: 'maintenance_mode' } })
+        ]);
+
+        sauna = saunaData;
         otherSaunas = allSaunas.filter(s => s.slug !== slug).slice(0, 3);
-        const session = await getSession();
         isAdmin = !!session?.user;
-        settings = await getGlobalSettings();
-        
-        // Check maintenance mode
-        const maintenanceSetting = await prisma.siteSetting.findUnique({
-            where: { key: 'maintenance_mode' }
-        });
+        settings = globalSettings;
         isMaintenanceMode = maintenanceSetting?.value === 'true';
     } catch (error) {
         console.error('Failed to fetch sauna detail:', error);
@@ -238,21 +245,11 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                 {/* Map */}
                                 <div className={styles.textSection}>
                                     <h2 className={styles.sectionTitle}>Kart og plassering</h2>
-                                    <p style={{ marginBottom: '1rem', color: '#475569' }}>{sauna.address}</p>
-                                    {sauna.mapEmbedUrl && (
-                                        <div className={styles.mapWrapper}>
-                                            <iframe
-                                                src={sauna.mapEmbedUrl}
-                                                title={`Kart over ${sauna.name}`}
-                                                width="100%"
-                                                height="100%"
-                                                style={{ border: 0 }}
-                                                allowFullScreen
-                                                loading="lazy"
-                                                referrerPolicy="no-referrer-when-downgrade"
-                                            ></iframe>
-                                        </div>
-                                    )}
+                                    <SaunaMap
+                                        address={sauna.address || ''}
+                                        mapEmbedUrl={sauna.mapEmbedUrl}
+                                        saunaName={sauna.name}
+                                    />
                                 </div>
                             </div>
 
@@ -339,7 +336,11 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                     <div className={styles.contentContainer}>
                         <div style={{ marginBottom: '2rem' }}>
                             <h2 className={styles.sectionTitle} style={{ marginBottom: '1.5rem' }}>Andre badstuer</h2>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '1.5rem'
+                            }}>
                                 {otherSaunas.map((s) => (
                                     <SaunaCard key={s.id} sauna={s} />
                                 ))}

@@ -21,13 +21,18 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 86400, // 24 hours cache
+    qualities: [75, 85, 90], // Match qualities used in components to avoid runtime overhead
+    minimumCacheTTL: 31536000, // 1 year cache for optimized images
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    staleTimes: {
+      dynamic: 600, // Keep dynamic pages in router cache for 10 minutes (was 3)
+      static: 1800, // Keep static pages in router cache for 30 minutes (was 10)
+    },
   },
   outputFileTracingIncludes: {
     '/api/**': ['node_modules/@sparticuz/chromium/**'],
@@ -42,7 +47,16 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'
+            value: 'public, max-age=60, s-maxage=300, stale-while-revalidate=3600'
+          },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
           },
         ],
       },

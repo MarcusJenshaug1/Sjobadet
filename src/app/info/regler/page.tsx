@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import nextDynamic from 'next/dynamic';
+const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
 import styles from '../InfoPages.module.css';
 import { Metadata } from 'next';
 import {
@@ -155,7 +156,7 @@ export default async function RulesPage() {
                         Driftsavbrudd / Nød
                     </div>
                     <p style={{ color: '#991b1b', fontWeight: '600', fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                        Ring: <a href={`tel:${phone.replace(/\s/g, '')}`} style={{ color: 'inherit', textDecoration: 'underline' }}>{phone}</a>
+                        Ring: <a href={`tel:${phone.replace(/\s/g, '')} `} style={{ color: 'inherit', textDecoration: 'underline' }}>{phone}</a>
                     </p>
                     <p style={{ color: '#b91c1c' }}><strong>Ved fare for liv eller helse ring 113</strong></p>
                 </div>

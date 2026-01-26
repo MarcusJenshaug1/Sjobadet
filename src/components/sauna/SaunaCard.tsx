@@ -149,7 +149,7 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                         alt={`${sauna.name} - badstue`}
                         fill
                         className={styles.image}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                         loading="lazy"
                         quality={75}
                         decoding="async"

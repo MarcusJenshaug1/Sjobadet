@@ -58,6 +58,7 @@ export const metadata: Metadata = {
 import { TrackingProvider } from '@/components/analytics/TrackingProvider';
 import { getSession } from "@/lib/auth";
 import { AlertBar } from '@/components/layout/AlertBar';
+import { SmartPrefetcher } from '@/components/layout/SmartPrefetcher';
 
 export default async function RootLayout({
   children,
@@ -77,12 +78,13 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://mdmvybibiaxiezjycqgr.supabase.co" />
-        <link rel="preload" as="image" href="https://images.unsplash.com/photo-1694374510393-da60c58a3375?q=80&w=2064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
+        <link rel="preload" as="image" href="/hero-sjobadet.jpg" />
       </head>
       <body className={`${inter.className} ${outfit.className}`}>
         <ErrorBoundary>
           <TrackingProvider isAdmin={isAdmin}>
             <ScrollToTop />
+            <SmartPrefetcher />
             {children}
           </TrackingProvider>
         </ErrorBoundary>

@@ -1,9 +1,10 @@
-import React from 'react';
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/Button';
-import { Gift } from 'lucide-react';
 import { Metadata } from 'next';
+import nextDynamic from 'next/dynamic';
+
+const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
+const Gift = nextDynamic(() => import('lucide-react').then(mod => mod.Gift));
 
 export const metadata: Metadata = {
     title: 'Gavekort | Sjøbadet Badstue',

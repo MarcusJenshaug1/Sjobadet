@@ -3,7 +3,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { trackPageview, getConsent, ConsentChoices } from '@/lib/analytics/tracking';
-import { ConsentBanner } from './ConsentBanner';
+import dynamic from 'next/dynamic';
+
+const ConsentBanner = dynamic(() => import('./ConsentBanner').then(mod => mod.ConsentBanner), {
+    ssr: false, // Ensure it only loads on the client
+});
 
 const TrackingContext = createContext<{
     consent: ConsentChoices | null;

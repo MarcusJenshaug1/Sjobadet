@@ -1,8 +1,15 @@
-import React from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { ArrowRight, HelpCircle, FileText, Scale, Users, Clock, Briefcase } from 'lucide-react';
+import nextDynamic from 'next/dynamic';
+
+const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
+const HelpCircle = nextDynamic(() => import('lucide-react').then(mod => mod.HelpCircle));
+const FileText = nextDynamic(() => import('lucide-react').then(mod => mod.FileText));
+const Scale = nextDynamic(() => import('lucide-react').then(mod => mod.Scale));
+const Users = nextDynamic(() => import('lucide-react').then(mod => mod.Users));
+const Clock = nextDynamic(() => import('lucide-react').then(mod => mod.Clock));
+const Briefcase = nextDynamic(() => import('lucide-react').then(mod => mod.Briefcase));
+const ArrowRight = nextDynamic(() => import('lucide-react').then(mod => mod.ArrowRight));
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
