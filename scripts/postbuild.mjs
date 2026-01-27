@@ -40,7 +40,7 @@ async function middleware(request) {
 
     if (!user) {
       const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('next', \\`${'${'}pathname}${'${'}search}\\`);
+      loginUrl.searchParams.set('next', pathname + search);
       return NextResponse.redirect(loginUrl);
     }
   }

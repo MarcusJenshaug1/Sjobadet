@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/postbuild.mjs",
     "build:full": "next build && npm run build-storybook",
     "start": "next start",
     "lint": "eslint",
@@ -12,7 +12,6 @@
     "test:ui": "vitest --ui",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "node scripts/build-storybook.mjs",
-    "postbuild": "node scripts/postbuild.mjs",
     "postinstall": "prisma generate",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
