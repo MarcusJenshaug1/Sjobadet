@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npm run build-storybook",
+    "build": "next build",
+    "build:full": "next build && npm run build-storybook",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

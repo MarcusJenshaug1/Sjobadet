@@ -38,7 +38,8 @@ Uavklart:
 ## 3) Kommandoer og standard arbeidsflyt (repo-spesifikk)
 **Standard scripts (package.json):**
 - Dev: `npm run dev`
-- Build: `npm run build` (bygger Next.js + Storybook til `public/storybook`)
+- Build: `npm run build` (bygger kun Next.js)
+- Full build (inkl. Storybook): `npm run build:full` (bygger Next.js + Storybook til `public/storybook`)
 - Start (prod): `npm run start`
 - Lint: `npm run lint`
 - Storybook: `npm run storybook`
@@ -51,6 +52,7 @@ Uavklart:
 
 **Lokalt før deploy (obligatorisk):**
 - Etter alle kodeendringer: kjør `npm run build` lokalt og fiks feil før du pusher/deployer.
+- Hvis Storybook skal publiseres sammen med appen: kjør `npm run build:full` eller `npm run build-storybook` lokalt.
 - Hvis lokal build ikke kan kjøres, dokumenter hvorfor og hva som er gjort for å minimere risiko.
 
 **Test / typecheck:**
