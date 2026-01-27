@@ -17,7 +17,9 @@ const config: StorybookConfig = {
     "@storybook/addon-vitest"
   ],
   "framework": "@storybook/nextjs-vite",
-  "staticDirs": shouldCopyPublic ? ["../public"] : [],
+  "staticDirs": shouldCopyPublic
+    ? ["../public", { from: "../src/theme", to: "/theme" }]
+    : [{ from: "../src/theme", to: "/theme" }],
   "docs": {
     "autodocs": true
   },

@@ -4,7 +4,7 @@ export default create({
     base: 'light',
     brandTitle: 'Sjøbadet Design System',
     brandUrl: 'https://sjobadet.net',
-    brandImage: '', // Option to add logo later
+    brandImage: '/storybook/sjobadet-logo.png',
     brandTarget: '_self',
 
     // Typography
@@ -12,21 +12,21 @@ export default create({
     fontCode: 'monospace',
 
     // Colors
-    colorPrimary: '#719898', // Havgrønn
-    colorSecondary: '#5a7d7d',
+    colorPrimary: '#5a7d7d',
+    colorSecondary: '#4a6d6d',
 
     // UI
-    appBg: '#F0F4F4',
+    appBg: '#f0f4f4',
     appContentBg: '#ffffff',
-    appBorderColor: '#E0E0E0',
+    appBorderColor: '#e0e0e0',
     appBorderRadius: 8,
 
     // Text colors
-    textColor: '#3C3C3C',
+    textColor: '#3c3c3c',
     textInverseColor: '#ffffff',
 
     // Toolbar default and active colors
-    barTextColor: '#3C3C3C',
-    barSelectedColor: '#719898',
+    barTextColor: '#3c3c3c',
+    barSelectedColor: '#5a7d7d',
     barBg: '#ffffff',
 });
