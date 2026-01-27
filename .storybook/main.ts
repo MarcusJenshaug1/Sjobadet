@@ -106,6 +106,7 @@ const config: StorybookConfig = {
         };
     return {
       ...config,
+      base: '/storybook/',
       optimizeDeps: {
         ...(config.optimizeDeps ?? {}),
         exclude: [

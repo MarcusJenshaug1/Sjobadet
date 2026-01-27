@@ -1,1 +1,0 @@
-import{u as r}from"./iframe-C_JdCeVj.js";const o={push:()=>{},replace:()=>{},back:()=>{},forward:()=>{},refresh:()=>{},prefetch:async()=>{}};function t(){try{return r()}catch{return o}}export{t as u};

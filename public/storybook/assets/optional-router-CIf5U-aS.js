@@ -1,0 +1,1 @@
+import{u as r}from"./iframe-2gXNPU8n.js";const o={push:()=>{},replace:()=>{},back:()=>{},forward:()=>{},refresh:()=>{},prefetch:async()=>{}};function t(){try{return r()}catch{return o}}export{t as u};
