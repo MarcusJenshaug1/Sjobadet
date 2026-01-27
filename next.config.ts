@@ -68,10 +68,6 @@ const nextConfig: NextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=60, s-maxage=300, stale-while-revalidate=3600'
-          },
-          {
-            key: 'Link',
-            value: '<https://fonts.gstatic.com>; rel=preconnect; crossorigin, </hero-sjobadet.jpg>; rel=preload; as=image; fetchpriority=high'
           }
         ],
       },

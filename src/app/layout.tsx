@@ -78,7 +78,6 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://mdmvybibiaxiezjycqgr.supabase.co" />
-        <link rel="preload" as="image" href="/hero-sjobadet.jpg" />
       </head>
       <body className={`${inter.className} ${outfit.className}`}>
         <ErrorBoundary>

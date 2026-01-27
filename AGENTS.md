@@ -49,6 +49,10 @@ Uavklart:
 - DB seed: `npm run db:seed`
 - Lighthouse scan: `npm run lighthouse:scan`
 
+**Lokalt før deploy (obligatorisk):**
+- Etter alle kodeendringer: kjør `npm run build` lokalt og fiks feil før du pusher/deployer.
+- Hvis lokal build ikke kan kjøres, dokumenter hvorfor og hva som er gjort for å minimere risiko.
+
 **Test / typecheck:**
 - Uavklart: ingen test- eller typecheck-script i package.json.
 - Vitest er konfigurert i vitest.config.ts (Storybook-vitest). Hvis test-kommando skal brukes, avklar og legg til script.
