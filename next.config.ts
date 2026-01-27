@@ -42,6 +42,11 @@ const nextConfig: NextConfig = {
   },
   rewrites: async () => {
     return [
+      { source: '/sb-addons/:path*', destination: '/storybook/sb-addons/:path*' },
+      { source: '/sb-common-assets/:path*', destination: '/storybook/sb-common-assets/:path*' },
+      { source: '/sb-manager/:path*', destination: '/storybook/sb-manager/:path*' },
+      { source: '/addon-visual-tests-assets/:path*', destination: '/storybook/addon-visual-tests-assets/:path*' },
+      { source: '/storybookiframe.html', destination: '/storybook/iframe.html' },
       { source: '/storybook', destination: '/storybook/index.html' },
       { source: '/storybook/', destination: '/storybook/index.html' },
     ];

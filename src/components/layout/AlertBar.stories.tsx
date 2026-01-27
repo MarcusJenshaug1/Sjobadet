@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { AlertBarView } from './AlertBar';
+import { AlertBarView } from './AlertBarView';
 import readme from './AlertBar.README.md?raw';
 
 const meta: Meta<typeof AlertBarView> = {

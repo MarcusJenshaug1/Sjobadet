@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { FooterView } from './Footer';
+import { FooterView } from './FooterView';
 import readme from './Footer.README.md?raw';
 
 const meta: Meta<typeof FooterView> = {
