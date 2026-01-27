@@ -35,12 +35,15 @@ interface NavItem {
   target?: string
   rel?: string
   adminOnly?: boolean
+  requiresUserId?: string
 }
 
 interface NavSection {
   title: string
   items: NavItem[]
 }
+
+const MARCUS_USER_ID = 'cmkfd6c5l0000gmleddopok2f'
 
 const navSections: NavSection[] = [
   {
@@ -59,6 +62,7 @@ const navSections: NavSection[] = [
       { href: '/admin/medlemskap', label: 'Medlemskap', icon: CreditCard },
       { href: '/admin/brukere', label: 'Brukere', icon: Users },
       { href: '/admin/settings', label: 'Innstillinger', icon: Settings },
+      { href: '/admin/demo-logg', label: 'Demo-logg', icon: Shield, adminOnly: true, requiresUserId: MARCUS_USER_ID },
     ]
   },
   {
@@ -93,7 +97,7 @@ const UserAvatar = ({ className, userInfo }: { className: string, userInfo: { na
 
 function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?: boolean }) {
   const pathname = usePathname()
-  const [userInfo, setUserInfo] = useState<{ name: string; role: string; username?: string; avatarUrl?: string | null; isAdmin?: boolean }>({ name: 'Admin', role: 'Administrator', isAdmin: false })
+  const [userInfo, setUserInfo] = useState<{ id?: string; name: string; role: string; username?: string; avatarUrl?: string | null; isAdmin?: boolean }>({ name: 'Admin', role: 'Administrator', isAdmin: false })
 
   useEffect(() => {
     getUserInfo().then(info => {
@@ -180,6 +184,9 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
             <ul className={styles.navList}>
               {section.items.map((item) => {
                 if (item.adminOnly && !userInfo.isAdmin) {
+                  return null
+                }
+                if (item.requiresUserId && userInfo.id !== item.requiresUserId) {
                   return null
                 }
                 const active = isActive(item.href)

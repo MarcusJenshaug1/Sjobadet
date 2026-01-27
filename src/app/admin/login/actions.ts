@@ -3,6 +3,7 @@
 import { login } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import * as bcrypt from 'bcryptjs'
+import { logAdminAction } from '@/lib/admin-log'
 import { redirect } from 'next/navigation'
 
 export async function loginAction(prevState: { error: string } | undefined, formData: FormData) {
@@ -35,6 +36,15 @@ export async function loginAction(prevState: { error: string } | undefined, form
             name: user.username, // Use username as name if not available
             role: user.role || 'admin'
         })
+        
+            if (user.role === 'demo') {
+                await logAdminAction(
+                    'DEMO_LOGIN',
+                    `Demo innlogging: ${user.username} (${user.id})`,
+                    'INFO',
+                    user.username
+                )
+            }
 
     } catch (error) {
         return { error: 'En feil oppstod' }
