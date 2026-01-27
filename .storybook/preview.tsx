@@ -26,55 +26,93 @@ const infoLinks = [
 ];
 
 const preview: Preview = {
+  globalTypes: {
+    sjobadetChrome: {
+      name: 'Sjøbadet chrome',
+      description: 'Vis header/footer i preview',
+      defaultValue: 'auto',
+      toolbar: {
+        icon: 'menu',
+        items: [
+          { value: 'auto', title: 'Auto (kun Docs)' },
+          { value: 'on', title: 'På' },
+          { value: 'off', title: 'Av' },
+        ],
+        dynamicTitle: true,
+      },
+    },
+  },
   decorators: [
-    (Story) => (
-      <ErrorBoundary>
-        <TrackingProvider isAdmin={false}>
-          <ScrollToTop />
-          <SmartPrefetcher />
-          <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--background)', color: 'var(--foreground)' }}>
-            <AlertBarView alert_enabled={false} alert_text="" />
-            <HeaderView isAdmin={false} saunaLinks={saunaLinks} infoLinks={infoLinks} />
-            <main className="section" style={{ flex: 1 }}>
-              <div className="container">
-                <Story />
-              </div>
-            </main>
-            <FooterView
-              address="Nedre Langgate 44, 3126 Tønsberg"
-              email="booking@sjobadet.com"
-              phone="+47 401 55 365"
-              instagram="https://www.instagram.com/sjobadet_badstue/"
-              facebook="https://www.facebook.com/Sjobadetbadstue"
-              saunas={[
-                {
-                  id: '1',
-                  slug: 'tonsberg-brygge',
-                  name: 'Tønsberg Brygge',
-                  location: 'Tønsberg',
-                  shortDescription: 'Badstue ved brygga',
-                  capacityDropin: 8,
-                  capacityPrivat: 10,
-                  driftStatus: 'open',
-                  flexibleHours: false,
-                },
-                {
-                  id: '2',
-                  slug: 'hjemseng-brygge',
-                  name: 'Hjemseng brygge',
-                  location: 'Hjemseng',
-                  shortDescription: 'Badstue ved sjøen',
-                  capacityDropin: 6,
-                  capacityPrivat: 10,
-                  driftStatus: 'open',
-                  flexibleHours: false,
-                },
-              ]}
-            />
+    (Story, context) => {
+      const chromeSetting = context.globals?.sjobadetChrome ?? 'auto';
+      const chromeFromParams = context.parameters?.sjobadetChrome;
+      const chromeEnabled = chromeFromParams === true
+        ? true
+        : chromeFromParams === false
+          ? false
+          : chromeSetting === 'on'
+            ? true
+            : chromeSetting === 'off'
+              ? false
+              : context.viewMode === 'docs';
+
+      if (!chromeEnabled) {
+        return (
+          <div style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
+            <Story />
           </div>
-        </TrackingProvider>
-      </ErrorBoundary>
-    )
+        );
+      }
+
+      return (
+        <ErrorBoundary>
+          <TrackingProvider isAdmin={false}>
+            <ScrollToTop />
+            <SmartPrefetcher />
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--background)', color: 'var(--foreground)' }}>
+              <AlertBarView alert_enabled={false} alert_text="" />
+              <HeaderView isAdmin={false} saunaLinks={saunaLinks} infoLinks={infoLinks} />
+              <main className="section" style={{ flex: 1 }}>
+                <div className="container">
+                  <Story />
+                </div>
+              </main>
+              <FooterView
+                address="Nedre Langgate 44, 3126 Tønsberg"
+                email="booking@sjobadet.com"
+                phone="+47 401 55 365"
+                instagram="https://www.instagram.com/sjobadet_badstue/"
+                facebook="https://www.facebook.com/Sjobadetbadstue"
+                saunas={[
+                  {
+                    id: '1',
+                    slug: 'tonsberg-brygge',
+                    name: 'Tønsberg Brygge',
+                    location: 'Tønsberg',
+                    shortDescription: 'Badstue ved brygga',
+                    capacityDropin: 8,
+                    capacityPrivat: 10,
+                    driftStatus: 'open',
+                    flexibleHours: false,
+                  },
+                  {
+                    id: '2',
+                    slug: 'hjemseng-brygge',
+                    name: 'Hjemseng brygge',
+                    location: 'Hjemseng',
+                    shortDescription: 'Badstue ved sjøen',
+                    capacityDropin: 6,
+                    capacityPrivat: 10,
+                    driftStatus: 'open',
+                    flexibleHours: false,
+                  },
+                ]}
+              />
+            </div>
+          </TrackingProvider>
+        </ErrorBoundary>
+      );
+    }
   ],
   parameters: {
     controls: {

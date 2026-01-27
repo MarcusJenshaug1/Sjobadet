@@ -18,8 +18,15 @@ const config: StorybookConfig = {
   ],
   "framework": "@storybook/nextjs-vite",
   "staticDirs": shouldCopyPublic
-    ? ["../public", { from: "../src/theme", to: "/theme" }]
-    : [{ from: "../src/theme", to: "/theme" }],
+    ? [
+        "../public",
+        { from: "../src/theme", to: "/theme" },
+        { from: "../.storybook/manager-tokens.css", to: "/manager-tokens.css" }
+      ]
+    : [
+        { from: "../src/theme", to: "/theme" },
+        { from: "../.storybook/manager-tokens.css", to: "/manager-tokens.css" }
+      ],
   "docs": {
     "autodocs": true
   },
