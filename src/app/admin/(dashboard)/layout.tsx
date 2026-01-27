@@ -58,7 +58,6 @@ const navSections: NavSection[] = [
       { href: '/admin/medlemskap', label: 'Medlemskap', icon: CreditCard },
       { href: '/admin/brukere', label: 'Brukere', icon: Users },
       { href: '/admin/settings', label: 'Innstillinger', icon: Settings },
-      { href: '/storybook', label: 'Storybook', icon: ExternalLink, target: '_blank', rel: 'noopener noreferrer', adminOnly: true },
     ]
   },
   {
@@ -128,6 +127,15 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
               <ExternalLink size={16} />
               <span>Åpne nettsted</span>
             </a>
+            <a
+              href="/storybook"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.storybookLink}
+            >
+              <ExternalLink size={16} />
+              <span>Storybook</span>
+            </a>
           </>
         )}
         {collapsed && (
@@ -147,6 +155,15 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
               rel="noopener noreferrer"
               className={styles.externalLinkCollapsed}
               title="Åpne nettsted"
+            >
+              <ExternalLink size={18} />
+            </a>
+            <a
+              href="/storybook"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.storybookLinkCollapsed}
+              title="Storybook"
             >
               <ExternalLink size={18} />
             </a>
