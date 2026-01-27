@@ -19,6 +19,7 @@ import { useOptionalRouter } from '@/lib/optional-router';
 import { BookingModal } from './BookingModal';
 
 import { formatDateNoShortTitleCase, getRelativeDayLabel } from '@/lib/availability-utils';
+import { getOverrideForDate } from '@/lib/sauna-utils';
 
 interface SaunaProps {
     id: string;
@@ -32,6 +33,13 @@ interface SaunaProps {
     driftStatus?: string | null;
     capacityDropin?: number; // Added to help with status calculation
     nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
+    openingHourOverrides?: {
+        date: string | Date;
+        opens?: string | null;
+        closes?: string | null;
+        active?: boolean | null;
+        note?: string | null;
+    }[];
 }
 
 export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaProps; isMaintenanceMode?: boolean }) {
@@ -105,6 +113,14 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
 
     const nextSlotLabel = formatNextSlotLabel();
     const isClosed = sauna.driftStatus === 'closed';
+    const todayOverride = getOverrideForDate(sauna.openingHourOverrides, new Date(), 'Europe/Oslo');
+    const overrideLabel = todayOverride
+        ? todayOverride.active === false
+            ? 'Stengt i dag (avvik)'
+            : todayOverride.opens && todayOverride.closes
+                ? `Avvik i dag: ${todayOverride.opens}–${todayOverride.closes}`
+                : 'Avvikende åpningstid i dag'
+        : null;
 
     // Status calculation for colors
     const getStatusState = () => {
@@ -185,6 +201,13 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                         {sauna.location}
                     </div>
                 </div>
+
+                {overrideLabel && (
+                    <div className={styles.overrideNote} onClick={(e) => e.stopPropagation()}>
+                        <Clock size={16} />
+                        <span>{overrideLabel}</span>
+                    </div>
+                )}
 
                 {!isMaintenanceMode && (
                     <div className={styles.chipsContainer} onClick={(e) => e.stopPropagation()}>

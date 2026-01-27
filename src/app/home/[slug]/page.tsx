@@ -9,6 +9,7 @@ import Image from 'next/image';
 import prisma from '@/lib/prisma';
 import nextDynamic from 'next/dynamic';
 import { getSession } from '@/lib/auth';
+import { getOverrideForDate } from '@/lib/sauna-utils';
 
 // Lazy load non-critical components
 const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
@@ -105,6 +106,14 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     const facilities = sauna ? parseJSON(sauna.facilities) : [];
     const gallery = sauna ? parseJSON(sauna.gallery) : [];
     const phone = settings['contact_phone'] || '+47 401 55 365';
+    const todayOverride = sauna ? getOverrideForDate(sauna.openingHourOverrides) : null;
+    const overrideLabel = todayOverride
+        ? todayOverride.active === false
+            ? 'Stengt i dag (avvikende åpningstid)'
+            : todayOverride.opens && todayOverride.closes
+                ? `Avvikende åpningstid i dag: ${todayOverride.opens}–${todayOverride.closes}`
+                : 'Avvikende åpningstid i dag'
+        : null;
 
     return (
         <>
@@ -177,6 +186,23 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                         <div className={styles.grid}>
                             {/* Left Column: Main Content */}
                             <div className={styles.leftColumn}>
+
+                                {todayOverride && (
+                                    <div style={{
+                                        padding: '1rem 1.25rem',
+                                        backgroundColor: '#eff6ff',
+                                        border: '1px solid #bfdbfe',
+                                        borderRadius: '0.75rem',
+                                        color: '#1e3a8a',
+                                        marginBottom: '1.5rem'
+                                    }}>
+                                        <p style={{ fontWeight: 700, marginBottom: '0.25rem' }}>Avvikende åpningstid</p>
+                                        <p style={{ fontWeight: 600 }}>{overrideLabel}</p>
+                                        {todayOverride.note && (
+                                            <p style={{ marginTop: '0.5rem' }}>{todayOverride.note}</p>
+                                        )}
+                                    </div>
+                                )}
 
                                 {sauna.driftStatus === 'closed' && sauna.kundeMelding && (
                                     <div style={{

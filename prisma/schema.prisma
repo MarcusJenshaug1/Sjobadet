@@ -54,6 +54,7 @@ model Sauna {
   hasDropinAvailability        Boolean       @default(true)
   mediaAssets                  MediaAsset[]
   openingHours                 OpeningHour[]
+  openingHourOverrides         OpeningHourOverride[]
   priceItems                   PriceItem[]
 
   // Scraper Health
@@ -66,6 +67,23 @@ model Sauna {
   @@index([status, sorting])
   @@index([status])
   @@index([driftStatus])
+}
+
+model OpeningHourOverride {
+  id        String   @id @default(cuid())
+  saunaId   String
+  date      DateTime
+  opens     String?
+  closes    String?
+  active    Boolean  @default(true)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sauna     Sauna    @relation(fields: [saunaId], references: [id], onDelete: Cascade)
+
+  @@unique([saunaId, date])
+  @@index([saunaId])
+  @@index([date])
 }
 
 model OpeningHour {

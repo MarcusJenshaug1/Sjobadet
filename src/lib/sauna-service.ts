@@ -2,6 +2,7 @@ import prisma from './prisma'
 import type { OpeningHour } from '@prisma/client'
 import saunasJson from '@/data/saunas.json'
 import { getNextAvailableSlot } from './availability-utils'
+import { getOverrideForDate } from './sauna-utils'
 
 const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const SAUNA_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes for public content
@@ -29,6 +30,13 @@ export type ActiveSauna = {
     seoTitle?: string | null;
     seoDescription?: string | null;
     openingHours?: OpeningHour[];
+    openingHourOverrides?: {
+        date: Date;
+        opens?: string | null;
+        closes?: string | null;
+        active?: boolean | null;
+        note?: string | null;
+    }[];
     availabilityData?: string | null;
     lastScrapedAt?: Date | null;
     nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
@@ -134,6 +142,7 @@ function mapStaticSaunaDetail(slug: string): SaunaDetail | null {
         lastScrapedAt: null,
         nextAvailableSlot: null,
         openingHours: [],
+        openingHourOverrides: [],
     };
 }
 
@@ -183,6 +192,9 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
         stengeArsak: true,
         seoTitle: true,
         seoDescription: true,
+        openingHourOverrides: {
+            orderBy: { date: 'asc' }
+        }
     };
 
     try {
@@ -220,7 +232,10 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
 export const getSaunaBySlug = async (slug: string) => {
     const cached = saunaBySlugCache.get(slug);
     const now = Date.now();
-    if (cached && cached.expiresAt > now) {
+    const hasTodayOverride = cached?.data?.openingHourOverrides
+        ? !!getOverrideForDate(cached.data.openingHourOverrides, new Date(), 'Europe/Oslo')
+        : false;
+    if (cached && cached.expiresAt > now && !hasTodayOverride) {
         return {
             ...cached.data,
             nextAvailableSlot: computeNextAvailableSlot(cached.data.availabilityData)
@@ -262,6 +277,9 @@ export const getSaunaBySlug = async (slug: string) => {
                 openingHours: {
                     where: { active: true },
                     orderBy: { weekday: 'asc' }
+                },
+                openingHourOverrides: {
+                    orderBy: { date: 'asc' }
                 }
             } as unknown as { [key: string]: boolean | object }
         });

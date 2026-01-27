@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 
 import OpeningHoursList from './OpeningHoursList'
+import OpeningHourOverrides from './OpeningHourOverrides'
 
 interface OpeningHour {
     id: string;
@@ -18,11 +19,20 @@ interface SaunaWithHours {
     name: string;
     flexibleHours?: boolean | null;
     openingHours: OpeningHour[];
+    openingHourOverrides: {
+        id: string;
+        saunaId: string;
+        date: string;
+        opens: string | null;
+        closes: string | null;
+        active: boolean;
+        note: string | null;
+    }[];
 }
 
 export default async function OpeningHoursPage() {
     const saunas = await prisma.sauna.findMany({
-        include: { openingHours: true },
+        include: { openingHours: true, openingHourOverrides: true },
         orderBy: { sorting: 'asc' }
     })
 
@@ -45,7 +55,7 @@ export default async function OpeningHoursPage() {
 
     // Re-fetch to get the newly created hours
     const allSaunas = await prisma.sauna.findMany({
-        include: { openingHours: true },
+        include: { openingHours: true, openingHourOverrides: true },
         orderBy: { sorting: 'asc' }
     })
 
@@ -57,6 +67,12 @@ export default async function OpeningHoursPage() {
         openingHours: s.openingHours.map((h) => ({
             ...h,
             createdAt: h.createdAt?.toISOString() ?? null
+        })),
+        openingHourOverrides: s.openingHourOverrides.map((o) => ({
+            ...o,
+            date: o.date.toISOString(),
+            createdAt: o.createdAt?.toISOString() ?? null,
+            updatedAt: o.updatedAt?.toISOString() ?? null
         }))
     }))
 
@@ -71,15 +87,15 @@ export default async function OpeningHoursPage() {
         }))
 
     return (
-        <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem', paddingTop: '2rem' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '4rem', paddingTop: '2rem' }}>
             <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Åpningstider (Ukentlig)</h1>
             <p style={{ color: '#64748b', marginBottom: '2rem' }}>
                 Her kan du overstyre de faste åpningstidene som er satt for hver badstue.
                 Klikk på &quot;Rediger&quot; for å endre tidene for en spesifikk badstue.
-                Avvikende åpningstider administreres under &quot;Avvik&quot;.
             </p>
 
             <OpeningHoursList saunas={saunasWithHours} />
+            <OpeningHourOverrides saunas={saunasWithHours} />
         </div>
     )
 }
