@@ -28,6 +28,24 @@ export async function proxy(request: NextRequest) {
         }
     }
 
+    if (path.startsWith('/storybook')) {
+        const cookie = request.cookies.get('session')?.value
+        let session = null
+        if (cookie) {
+            try {
+                session = await decrypt(cookie)
+            } catch {
+                // invalid session
+            }
+        }
+
+        if (!session?.user) {
+            const loginUrl = new URL('/admin/login', request.url)
+            loginUrl.searchParams.set('next', `${path}${request.nextUrl.search}`)
+            return NextResponse.redirect(loginUrl)
+        }
+    }
+
     // NO MORE MAINTENANCE REDIRECTS - handled by banner in layout
     return NextResponse.next()
 }
