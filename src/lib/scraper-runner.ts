@@ -39,7 +39,8 @@ export async function runScraper(options: ScraperRunOptions) {
             select: {
                 id: true,
                 name: true,
-                bookingAvailabilityUrlDropin: true
+                bookingAvailabilityUrlDropin: true,
+                bookingUrlDropin: true
             }
         });
 
