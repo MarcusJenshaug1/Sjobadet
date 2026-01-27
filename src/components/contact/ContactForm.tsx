@@ -3,6 +3,10 @@
 import React, { useState } from 'react';
 import styles from './ContactForm.module.css';
 import { Send, CheckCircle } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { Button } from '@/components/ui/Button';
 
 export function ContactForm() {
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
@@ -30,30 +34,29 @@ export function ContactForm() {
 
     if (status === 'success') {
         return (
-            <div className={styles.successMessage}>
+            <Card className={styles.successMessage} padding="lg">
                 <CheckCircle size={40} style={{ marginBottom: '1rem' }} />
                 <h3>Melding sendt!</h3>
                 <p>Takk for at du kontakter oss. Vi svarer deg så fort vi kan.</p>
-                <button
+                <Button
                     onClick={() => setStatus('idle')}
-                    className={styles.submitButton}
-                    style={{ marginTop: '1.5rem', width: 'auto', padding: '0.75rem 2rem' }}
+                    className={styles.successButton}
+                    size="md"
                 >
                     Send ny melding
-                </button>
-            </div>
+                </Button>
+            </Card>
         );
     }
 
     return (
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <Card as="form" className={styles.form} onSubmit={handleSubmit} padding="lg">
             <div className={styles.formGroup}>
                 <label htmlFor="name" className={styles.label}>Navn</label>
-                <input
+                <Input
                     type="text"
                     id="name"
                     required
-                    className={styles.input}
                     placeholder="Ditt fulle navn"
                     value={formData.name}
                     onChange={handleChange}
@@ -62,11 +65,10 @@ export function ContactForm() {
 
             <div className={styles.formGroup}>
                 <label htmlFor="email" className={styles.label}>E-post</label>
-                <input
+                <Input
                     type="email"
                     id="email"
                     required
-                    className={styles.input}
                     placeholder="din@epost.no"
                     value={formData.email}
                     onChange={handleChange}
@@ -75,11 +77,10 @@ export function ContactForm() {
 
             <div className={styles.formGroup}>
                 <label htmlFor="subject" className={styles.label}>Emne</label>
-                <input
+                <Input
                     type="text"
                     id="subject"
                     required
-                    className={styles.input}
                     placeholder="Hva gjelder det?"
                     value={formData.subject}
                     onChange={handleChange}
@@ -88,20 +89,19 @@ export function ContactForm() {
 
             <div className={styles.formGroup}>
                 <label htmlFor="message" className={styles.label}>Melding</label>
-                <textarea
+                <Textarea
                     id="message"
                     required
-                    className={styles.textarea}
                     placeholder="Skriv din melding her..."
                     value={formData.message}
                     onChange={handleChange}
-                ></textarea>
+                />
             </div>
 
-            <button
+            <Button
                 type="submit"
-                className={styles.submitButton}
                 disabled={status === 'submitting'}
+                size="lg"
             >
                 {status === 'submitting' ? 'Sender...' : (
                     <>
@@ -109,7 +109,7 @@ export function ContactForm() {
                         <Send size={18} />
                     </>
                 )}
-            </button>
-        </form>
+            </Button>
+        </Card>
     );
 }

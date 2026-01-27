@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useOptionalRouter } from '@/lib/optional-router';
 
 interface NetworkInformation {
     saveData?: boolean;
@@ -14,7 +14,7 @@ interface NetworkInformation {
  * for an actual 0ms transition.
  */
 export function SmartPrefetcher() {
-    const router = useRouter();
+    const router = useOptionalRouter();
     const [prerenderUrls, setPrerenderUrls] = useState<string[]>([]);
 
     useEffect(() => {

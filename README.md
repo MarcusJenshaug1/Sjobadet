@@ -31,6 +31,10 @@ Dette åpner et dashboard på `http://localhost:6006`.
 
 Nye komponenter skal alltid ha en tilhørende `.stories.tsx`-fil i samme mappe.
 
+### Dokumentasjon
+- UI system og regler: [docs/ui-system.md](docs/ui-system.md)
+- Global UI audit: [docs/ui-audit.md](docs/ui-audit.md)
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.

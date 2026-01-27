@@ -1,11 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { SaunaStory } from './SaunaStory';
+import readme from './SaunaStory.README.md?raw';
 
 const meta: Meta<typeof SaunaStory> = {
-    title: 'Sauna/SaunaStory',
+    title: 'Komponenter/Badstue/SaunaStory',
     component: SaunaStory,
     parameters: {
         layout: 'centered',
+        docs: {
+            description: {
+                component: readme,
+            },
+        },
     },
     tags: ['autodocs'],
 };
@@ -13,6 +19,4 @@ const meta: Meta<typeof SaunaStory> = {
 export default meta;
 type Story = StoryObj<typeof SaunaStory>;
 
-export const Default: Story = {
-    args: {},
-};
+export const Standard: Story = {};

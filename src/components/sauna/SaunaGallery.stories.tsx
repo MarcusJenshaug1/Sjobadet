@@ -1,22 +1,49 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { SaunaGallery } from './SaunaGallery';
+import readme from './SaunaGallery.README.md?raw';
 
 const meta: Meta<typeof SaunaGallery> = {
-    title: 'Components/Sauna/SaunaGallery',
+    title: 'Komponenter/Badstue/SaunaGallery',
     component: SaunaGallery,
     tags: ['autodocs'],
+    parameters: {
+        docs: {
+            description: {
+                component: readme,
+            },
+        },
+    },
+    argTypes: {
+        images: {
+            control: 'object',
+            description: 'Liste over bilde-URL-er.',
+        },
+        saunaName: {
+            control: 'text',
+            description: 'Navn på badstuen (brukes i alt-tekst).',
+        },
+    },
 };
 
 export default meta;
 type Story = StoryObj<typeof SaunaGallery>;
 
-export const Default: Story = {
+export const Standard: Story = {
     args: {
         saunaName: 'Tønsberg Brygge',
         images: [
-            'https://impro.usercontent.one/appid/uniwebWsb/domain/sjobadet.net/media/sjobadet.net/onewebmedia/IMG_7224.jpg?etag=null&sourceContentType=image%2Fjpeg&ignoreAspectRatio&resize=685%2B514&extract=151%2B0%2B514%2B514&quality=85',
-            'https://impro.usercontent.one/appid/uniwebWsb/domain/sjobadet.net/media/sjobadet.net/onewebmedia/IMG_3888.jpeg?etag=undefined&sourceContentType=image%2Fjpeg&ignoreAspectRatio&resize=607%2B455&extract=0%2B0%2B546%2B417&quality=85',
-            'https://impro.usercontent.one/appid/uniwebWsb/domain/sjobadet.net/media/sjobadet.net/onewebmedia/Skjermbilde%202025-11-18%20kl.%2010.39.23.png?etag=undefined&sourceContentType=image%2Fpng&ignoreAspectRatio&resize=969%2B514&extract=147%2B0%2B713%2B514&quality=85'
+            'https://images.unsplash.com/photo-1605614307370-f7a1e58ae751?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+            'https://images.unsplash.com/photo-1678988227223-45112511eca2?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+            'https://images.unsplash.com/photo-1728404259075-209cfb5bb89c?q=80&w=1742&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+        ]
+    },
+};
+
+export const EttBilde: Story = {
+    args: {
+        saunaName: 'Tønsberg Brygge',
+        images: [
+            'https://images.unsplash.com/photo-1605614307370-f7a1e58ae751?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
         ]
     },
 };

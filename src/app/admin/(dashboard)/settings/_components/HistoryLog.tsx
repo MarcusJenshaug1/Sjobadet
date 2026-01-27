@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { getAdminLogs } from '../actions'
 import { RefreshCw, Clock, Activity, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Select } from '@/components/ui/Select'
 
 type LogEntry = {
     id: string
@@ -48,22 +50,15 @@ export default function HistoryLog() {
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a' }}>Siste aktivitet ({data.total} totalt)</h3>
 
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <select
+                    <Select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        style={{
-                            fontSize: '0.875rem',
-                            padding: '0.3rem 0.5rem',
-                            borderRadius: '0.375rem',
-                            border: '1px solid #e2e8f0',
-                            background: 'white',
-                            color: '#4b5563'
-                        }}
+                        size="sm"
                     >
                         {uniqueActions.map(action => (
                             <option key={action} value={action}>{action === 'ALL' ? 'Alle typer' : action}</option>
                         ))}
-                    </select>
+                    </Select>
 
                     <Button size="sm" variant="secondary" onClick={() => fetchLogs(data.page)} disabled={loading}>
                         <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -190,48 +185,33 @@ export default function HistoryLog() {
 function SourceBadge({ source }: { source: string }) {
     const isAdmin = source === 'Admin';
     return (
-        <span style={{
-            fontSize: '0.7rem',
-            fontWeight: 600,
-            padding: '0.1rem 0.4rem',
-            borderRadius: '4px',
-            background: isAdmin ? '#e0f2fe' : '#f1f5f9',
-            color: isAdmin ? '#0369a1' : '#64748b',
-            border: `1px solid ${isAdmin ? '#bae6fd' : '#e2e8f0'}`,
-            textTransform: 'uppercase'
-        }}>
+        <Badge
+            size="sm"
+            variant={isAdmin ? 'info' : 'neutral'}
+            style={{ textTransform: 'uppercase' }}
+        >
             {source}
-        </span>
+        </Badge>
     );
 }
 
 function StatusBadge({ status }: { status: string }) {
-    let color = '#64748b'
-    let bg = '#f1f5f9'
+    let variant: 'success' | 'info' | 'danger' | 'warning' | 'neutral' = 'neutral'
 
     if (status === 'SUCCESS') {
-        color = '#16a34a'
-        bg = '#dcfce7'
+        variant = 'success'
     } else if (status === 'OK') {
-        color = '#0ea5e9'
-        bg = '#e0f2fe'
+        variant = 'info'
     } else if (status === 'FAILURE') {
-        color = '#dc2626'
-        bg = '#fee2e2'
+        variant = 'danger'
     } else if (status === 'WARNING') {
-        color = '#d97706'
-        bg = '#fef3c7'
+        variant = 'warning'
     }
 
     return (
-        <span style={{
-            background: bg, color: color,
-            padding: '0.15rem 0.5rem', borderRadius: '99px',
-            fontSize: '0.75rem', fontWeight: 600,
-            display: 'inline-block'
-        }}>
+        <Badge size="sm" variant={variant}>
             {status}
-        </span>
+        </Badge>
     )
 }
 

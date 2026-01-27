@@ -1,0 +1,15 @@
+.section {
+  width: 100%;
+}
+
+.sm {
+  padding: var(--space-4) 0;
+}
+
+.md {
+  padding: var(--space-6) 0;
+}
+
+.lg {
+  padding: var(--space-8) 0;
+}

@@ -16,6 +16,11 @@
     font-size: 0.875rem;
 }
 
+.md {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
 .lg {
     padding: 1rem 2rem;
     font-size: 1.125rem;
@@ -52,6 +57,24 @@
 
 .outline:hover {
     background-color: rgba(113, 152, 152, 0.1);
+}
+
+.ghost {
+    background-color: transparent;
+    color: var(--foreground);
+}
+
+.ghost:hover {
+    background-color: var(--secondary);
+}
+
+.danger {
+    background-color: var(--danger);
+    color: var(--danger-foreground);
+}
+
+.danger:hover {
+    background-color: #b91c1c;
 }
 
 .fullWidth {

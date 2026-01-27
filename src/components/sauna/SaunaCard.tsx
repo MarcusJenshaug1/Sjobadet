@@ -13,8 +13,9 @@ import {
 } from 'lucide-react';
 import styles from './SaunaCard.module.css';
 import { Button } from '../ui/Button';
+import { Badge } from '../ui/Badge';
 import { trackEvent } from '@/lib/analytics/tracking';
-import { useRouter } from 'next/navigation';
+import { useOptionalRouter } from '@/lib/optional-router';
 import { BookingModal } from './BookingModal';
 
 import { formatDateNoShortTitleCase, getRelativeDayLabel } from '@/lib/availability-utils';
@@ -34,7 +35,7 @@ interface SaunaProps {
 }
 
 export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaProps; isMaintenanceMode?: boolean }) {
-    const router = useRouter();
+    const router = useOptionalRouter();
     const cardRef = useRef<HTMLDivElement | null>(null);
     const prefetchedRef = useRef(false);
     const [bookingUrl, setBookingUrl] = useState<string | null>(null);
@@ -162,15 +163,15 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                 <div className={styles.imageGradient} />
 
                 {isClosed ? (
-                    <div className={`${styles.badge} ${styles.badgeStengt}`}>
+                    <Badge className={styles.badge} variant="danger" size="sm">
                         <Ban size={14} />
                         Stengt
-                    </div>
+                    </Badge>
                 ) : statusState === 'LOW' ? (
-                    <div className={`${styles.badge} ${styles.badgeFew}`}>
+                    <Badge className={styles.badge} variant="warning" size="sm">
                         <AlertTriangle size={14} />
                         Få plasser
-                    </div>
+                    </Badge>
                 ) : null}
             </div>
 

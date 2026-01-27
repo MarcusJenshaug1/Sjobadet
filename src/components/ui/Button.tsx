@@ -4,8 +4,8 @@ import { clsx } from 'clsx';
 import Link from 'next/link';
 
 interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
-    variant?: 'primary' | 'secondary' | 'outline' | 'danger';
-    size?: 'default' | 'sm' | 'lg';
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+    size?: 'default' | 'sm' | 'md' | 'lg';
     fullWidth?: boolean;
     href?: string;
     external?: boolean;

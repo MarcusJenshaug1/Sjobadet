@@ -1,0 +1,54 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.sm {
+  width: 32px;
+  height: 32px;
+}
+
+.md {
+  width: 40px;
+  height: 40px;
+}
+
+.lg {
+  width: 48px;
+  height: 48px;
+}
+
+.ghost:hover:not(:disabled) {
+  background-color: #f1f5f9;
+}
+
+.outline {
+  border-color: #e2e8f0;
+  background-color: #f8fafc;
+  color: #475569;
+}
+
+.outline:hover:not(:disabled) {
+  background-color: #f1f5f9;
+}
+
+.solid {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.solid:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

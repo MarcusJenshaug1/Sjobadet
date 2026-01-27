@@ -1,5 +1,6 @@
 import type { Preview } from '@storybook/nextjs-vite'
 import '../src/app/globals.css';
+import theme from './theme';
 
 const preview: Preview = {
   parameters: {
@@ -9,9 +10,21 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    backgrounds: {
+      default: 'base',
+      values: [
+        { name: 'base', value: '#ffffff' },
+        { name: 'soft', value: '#F0F4F4' },
+        { name: 'dark', value: '#1E1E1E' }
+      ],
+    },
+    docs: {
+      theme,
+    },
+    layout: 'padded',
     options: {
       storySort: {
-        order: ['Foundations', ['Colors', 'Surfaces', 'Typography'], 'Components'],
+        order: ['Grunnlag', ['Farger', 'Flater', 'Typografi'], 'Komponenter'],
       },
     },
     a11y: {

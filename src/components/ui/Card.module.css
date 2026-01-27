@@ -1,0 +1,34 @@
+.card {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.default {
+  background-color: #ffffff;
+}
+
+.muted {
+  background-color: var(--secondary);
+}
+
+.outline {
+  background-color: transparent;
+}
+
+.paddingNone {
+  padding: 0;
+}
+
+.paddingSm {
+  padding: var(--space-3);
+}
+
+.paddingMd {
+  padding: var(--space-5);
+}
+
+.paddingLg {
+  padding: var(--space-6);
+}

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
+import { IconButton } from '@/components/ui/IconButton'
 import { MediaItem, deleteMediaFile, listMediaItems } from '../actions'
 import styles from '../../brukere/UserManager.module.css'
 
@@ -425,9 +426,9 @@ export default function MediaGrid({ initialItems }: MediaGridProps) {
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>Bildedetaljer</h2>
-                            <button onClick={() => setSelectedItem(null)} style={{ background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#64748b', padding: '0.5rem', borderRadius: '50%' }}>
+                            <IconButton onClick={() => setSelectedItem(null)} variant="outline" aria-label="Lukk">
                                 <X size={20} />
-                            </button>
+                            </IconButton>
                         </div>
 
                         <div style={{ borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid #e2e8f0', background: '#f8fafc', height: '350px', position: 'relative' }}>

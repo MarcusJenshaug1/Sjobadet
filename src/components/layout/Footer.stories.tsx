@@ -1,16 +1,50 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { FooterView } from './Footer';
+import readme from './Footer.README.md?raw';
 
 const meta: Meta<typeof FooterView> = {
-    title: 'Components/Layout/Footer',
+    title: 'Komponenter/Layout/Footer',
     component: FooterView,
     tags: ['autodocs'],
+    parameters: {
+        docs: {
+            description: {
+                component: readme,
+            },
+        },
+    },
+    argTypes: {
+        address: {
+            control: 'text',
+            description: 'Adresse som vises i footer.',
+        },
+        email: {
+            control: 'text',
+            description: 'Kontakt e-postadresse.',
+        },
+        phone: {
+            control: 'text',
+            description: 'Telefonnummer.',
+        },
+        instagram: {
+            control: 'text',
+            description: 'Instagram-lenke.',
+        },
+        facebook: {
+            control: 'text',
+            description: 'Facebook-lenke.',
+        },
+        saunas: {
+            control: 'object',
+            description: 'Liste over badstuer som vises i footer.',
+        },
+    },
 };
 
 export default meta;
 type Story = StoryObj<typeof FooterView>;
 
-export const Default: Story = {
+export const Standard: Story = {
     args: {
         address: 'Nedre Langgate 44, 3126 Tønsberg',
         email: 'booking@sjobadet.com',

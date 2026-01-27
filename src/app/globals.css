@@ -1,24 +1,4 @@
-:root {
-  --background: #FFFFFF;
-  --foreground: #3C3C3C;
-
-  /* Primary: Havgrønn - darkened for WCAG AA contrast (4.5:1 with white) */
-  --primary: #5a7d7d;
-  --primary-foreground: #FFFFFF;
-  --primary-hover: #4a6d6d;
-
-  /* Secondary / Muted */
-  --secondary: #F0F4F4;
-  --secondary-foreground: #3C3C3C;
-
-  /* UI Elements */
-  --border: #E0E0E0;
-  --input: #E0E0E0;
-  --ring: #5a7d7d;
-
-  --radius: 0.5rem;
-  --max-width: 1200px;
-}
+@import '../theme/tokens.css';
 
 * {
   box-sizing: border-box;

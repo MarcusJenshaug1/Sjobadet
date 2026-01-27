@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
 import { saveSettings } from '../actions'
 import { Save, AlertTriangle, Check, Undo, Mail, Phone, MapPin, Instagram, Facebook, Globe } from 'lucide-react'
 import styles from './SettingsForm.module.css'
@@ -59,7 +62,7 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
     return (
         <form onSubmit={handleSubmit} className={styles.form}>
             {/* Alert Bar Section */}
-            <section className={styles.section}>
+            <Card as="section" className={styles.section} padding="lg">
                 <h2 className={styles.sectionTitle}>
                     <AlertTriangle size={20} className="text-amber-500" />
                     Varslingslinje (Topp)
@@ -81,19 +84,18 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
 
                 <div className={styles.field}>
                     <label className={styles.label}>Varslingsmelding</label>
-                    <textarea
+                    <Textarea
                         name="alert_text"
                         value={settings['alert_text'] || ''}
                         onChange={handleChange}
                         placeholder="F.eks. 'Vi holder stengt i romjulen. Velkommen tilbake 2. januar!'"
-                        className={styles.textarea}
                         rows={3}
                     />
                 </div>
-            </section>
+            </Card>
 
             {/* Contact Info Section */}
-            <section className={styles.section}>
+            <Card as="section" className={styles.section} padding="lg">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                     <div style={{ background: 'var(--secondary)', padding: '0.5rem', borderRadius: '0.5rem' }}>
                         <Globe size={20} color="var(--primary)" />
@@ -107,12 +109,11 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                             <Mail size={14} style={{ display: 'inline', marginRight: '0.375rem' }} />
                             E-post
                         </label>
-                        <input
+                        <Input
                             type="email"
                             name="contact_email"
                             value={settings['contact_email'] || ''}
                             onChange={handleChange}
-                            className={styles.input}
                         />
                     </div>
                     <div className={styles.field}>
@@ -120,12 +121,11 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                             <Phone size={14} style={{ display: 'inline', marginRight: '0.375rem' }} />
                             Telefon
                         </label>
-                        <input
+                        <Input
                             type="text"
                             name="contact_phone"
                             value={settings['contact_phone'] || ''}
                             onChange={handleChange}
-                            className={styles.input}
                         />
                     </div>
                 </div>
@@ -135,18 +135,17 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                         <MapPin size={14} style={{ display: 'inline', marginRight: '0.375rem' }} />
                         Adresse / Lokasjon (Hovedkontor)
                     </label>
-                    <input
+                    <Input
                         type="text"
                         name="contact_address"
                         value={settings['contact_address'] || ''}
                         onChange={handleChange}
-                        className={styles.input}
                     />
                 </div>
-            </section>
+            </Card>
 
             {/* Social Media Section */}
-            <section className={styles.section}>
+            <Card as="section" className={styles.section} padding="lg">
                 <h2 className={styles.sectionTitle}>Sosiale Medier</h2>
                 <div className={styles.grid}>
                     <div className={styles.field}>
@@ -154,12 +153,11 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                             <Instagram size={14} style={{ display: 'inline', marginRight: '0.375rem' }} />
                             Instagram URL
                         </label>
-                        <input
+                        <Input
                             type="url"
                             name="social_instagram"
                             value={settings['social_instagram'] || ''}
                             onChange={handleChange}
-                            className={styles.input}
                             placeholder="https://instagram.com/..."
                         />
                     </div>
@@ -168,17 +166,16 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                             <Facebook size={14} style={{ display: 'inline', marginRight: '0.375rem' }} />
                             Facebook URL
                         </label>
-                        <input
+                        <Input
                             type="url"
                             name="social_facebook"
                             value={settings['social_facebook'] || ''}
                             onChange={handleChange}
-                            className={styles.input}
                             placeholder="https://facebook.com/..."
                         />
                     </div>
                 </div>
-            </section>
+            </Card>
 
             {/* Floating Action Bar */}
             <div className={`${styles.stickyFooter} ${isDirty ? styles.footerVisible : ''}`}>
