@@ -30,7 +30,7 @@ const preview: Preview = {
     sjobadetChrome: {
       name: 'Sjøbadet chrome',
       description: 'Vis header/footer i preview',
-      defaultValue: 'auto',
+      defaultValue: 'off',
       toolbar: {
         icon: 'menu',
         items: [
@@ -135,7 +135,7 @@ const preview: Preview = {
     layout: 'fullscreen',
     options: {
       storySort: {
-        order: ['Grunnlag', ['Farger', 'Flater', 'Typografi'], 'Komponenter'],
+        order: ['Forside', 'Grunnlag', ['Farger', 'Flater', 'Typografi'], 'Komponenter'],
       },
     },
     a11y: {

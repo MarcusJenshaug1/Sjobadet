@@ -3,7 +3,7 @@ import { create } from 'storybook/theming';
 export default create({
     base: 'light',
     brandTitle: 'Sjøbadet Design System',
-    brandUrl: 'https://sjobadet.net',
+    brandUrl: '/admin',
     brandImage: '/storybook/sjobadet-logo.png',
     brandTarget: '_self',
 

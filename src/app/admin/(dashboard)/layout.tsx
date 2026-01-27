@@ -24,7 +24,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LucideIcon,
-  Shield
+  Shield,
+  Palette
 } from 'lucide-react'
 
 interface NavItem {
@@ -133,8 +134,8 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
               rel="noopener noreferrer"
               className={styles.storybookLink}
             >
-              <ExternalLink size={16} />
-              <span>Storybook</span>
+              <Palette size={16} />
+              <span>Designsystem</span>
             </a>
           </>
         )}
@@ -163,9 +164,9 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
               target="_blank"
               rel="noopener noreferrer"
               className={styles.storybookLinkCollapsed}
-              title="Storybook"
+              title="Designsystem"
             >
-              <ExternalLink size={18} />
+              <Palette size={18} />
             </a>
           </div>
         )}
