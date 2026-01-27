@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Search, MoreVertical, Edit2, Trash2, Power, Clock } from 'lucide-react'
 import styles from './SaunaList.module.css'
 import { toggleSaunaStatus, deleteSauna } from '../actions'
+import { formatSmartOpeningHours } from '@/lib/sauna-utils'
 
 interface Sauna {
     id: string
@@ -17,6 +18,7 @@ interface Sauna {
     openingHours?: any[]
     flexibleHours?: boolean
     hoursMessage?: string
+    stengeArsak?: string | null
 }
 
 export default function SaunaList({ initialSaunas }: { initialSaunas: Sauna[] }) {
@@ -87,9 +89,9 @@ export default function SaunaList({ initialSaunas }: { initialSaunas: Sauna[] })
     }
 
     const getOpeningHoursSummary = (sauna: Sauna) => {
-        if (sauna.flexibleHours) return 'Fleksible åpningstider'
-        // Simple logic for now, ideally analyzed from openingHours array
-        return 'Man–Søn 07:00–21:00' // Placeholder dynamic logic would go here
+        if (sauna.driftStatus === 'closed') return sauna.stengeArsak || 'Midlertidig stengt'
+        if (sauna.flexibleHours) return sauna.hoursMessage || 'Tilgjengelig ved leie'
+        return formatSmartOpeningHours(sauna.openingHours)
     }
 
     return (
