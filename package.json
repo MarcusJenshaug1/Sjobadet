@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node scripts/postbuild.mjs",
+    "build": "next build",
     "build:full": "next build && npm run build-storybook",
     "start": "next start",
     "lint": "eslint",
