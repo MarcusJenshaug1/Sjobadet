@@ -6,8 +6,17 @@ import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth-guard'
 import { clearSaunaCaches } from '@/lib/sauna-service'
 
-export async function saveSauna(formData: FormData) {
-    await requireAdmin()
+export type SaveSaunaResult = {
+    success: boolean
+    demo?: boolean
+    message?: string
+}
+
+export async function saveSauna(_: SaveSaunaResult | void, formData: FormData): Promise<SaveSaunaResult | void> {
+    const user = await requireAdmin()
+    if (user.role === 'demo') {
+        return { success: false, demo: true, message: 'Demo-modus: Endringer lagres ikke.' }
+    }
     const id = formData.get('id') as string
     const isNew = formData.get('isNew') === 'true'
 
@@ -94,7 +103,10 @@ export async function saveSauna(formData: FormData) {
 }
 
 export async function toggleSaunaStatus(id: string, currentStatus: string) {
-    await requireAdmin()
+    const user = await requireAdmin()
+    if (user.role === 'demo') {
+        return { success: false, demo: true, message: 'Demo-modus: Endringer lagres ikke.' }
+    }
     await prisma.sauna.update({
         where: { id },
         data: { status: currentStatus === 'active' ? 'inactive' : 'active' }
@@ -102,14 +114,19 @@ export async function toggleSaunaStatus(id: string, currentStatus: string) {
     clearSaunaCaches()
     revalidatePath('/admin/badstuer')
     revalidatePath('/')
+    return { success: true }
 }
 
 export async function deleteSauna(id: string) {
-    await requireAdmin()
+    const user = await requireAdmin()
+    if (user.role === 'demo') {
+        return { success: false, demo: true, message: 'Demo-modus: Endringer lagres ikke.' }
+    }
     await prisma.sauna.delete({
         where: { id }
     })
     clearSaunaCaches()
     revalidatePath('/admin/badstuer')
     revalidatePath('/')
+    return { success: true }
 }

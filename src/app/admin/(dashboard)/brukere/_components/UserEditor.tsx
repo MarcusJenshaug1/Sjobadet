@@ -11,6 +11,7 @@ interface User {
     id: string
     username: string
     avatarUrl?: string | null
+    role: string
     createdAt: Date
 }
 
@@ -23,6 +24,7 @@ export default function UserEditor({ user, onClose }: UserEditorProps) {
     const isNew = !user
     const [username, setUsername] = useState(user?.username || '')
     const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatarUrl || null)
+    const [role, setRole] = useState(user?.role || 'admin')
     const [uploading, setUploading] = useState(false)
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
@@ -113,6 +115,7 @@ export default function UserEditor({ user, onClose }: UserEditorProps) {
             <form action={handleSubmit} onChange={handleDirty}>
                 {user && <input type="hidden" name="id" value={user.id} />}
                 <input type="hidden" name="avatarUrl" value={avatarUrl || ''} />
+                <input type="hidden" name="role" value={role} />
 
                 {/* Avatar Section */}
                 <div className={styles.fieldGroup}>
@@ -198,7 +201,16 @@ export default function UserEditor({ user, onClose }: UserEditorProps) {
                         <div style={{ display: 'flex', gap: '2rem' }}>
                             <div>
                                 <span className={styles.label} style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>Rolle</span>
-                                <span className={`${styles.badge} ${styles.badgeAdmin}`}>Administrator</span>
+                                <div className={styles.selectWrap}>
+                                    <select
+                                        className={styles.select}
+                                        value={role}
+                                        onChange={(e) => setRole(e.target.value)}
+                                    >
+                                        <option value="admin">Administrator</option>
+                                        <option value="demo">Demo</option>
+                                    </select>
+                                </div>
                             </div>
                             <div>
                                 <span className={styles.label} style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>Status</span>
@@ -206,7 +218,7 @@ export default function UserEditor({ user, onClose }: UserEditorProps) {
                             </div>
                         </div>
                         <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.75rem' }}>
-                            * Rollestyring er foreløpig låst til Administrator.
+                            Demo-brukere har full tilgang, men endringer lagres ikke.
                         </p>
                     </div>
                 </div>

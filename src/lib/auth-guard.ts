@@ -11,5 +11,19 @@ export async function requireAdmin() {
         throw new Error('Unauthorized: Admin access required')
     }
 
+    if (!['admin', 'demo'].includes(session.user.role)) {
+        throw new Error('Unauthorized: Admin access required')
+    }
+
     return session.user
+}
+
+export async function assertNotDemo() {
+    const user = await requireAdmin()
+
+    if (user.role === 'demo') {
+        throw new Error('Demo-modus: Endringer lagres ikke')
+    }
+
+    return user
 }

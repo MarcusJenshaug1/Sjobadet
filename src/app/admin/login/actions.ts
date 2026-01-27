@@ -33,7 +33,7 @@ export async function loginAction(prevState: { error: string } | undefined, form
             username: user.username,
             id: user.id,
             name: user.username, // Use username as name if not available
-            role: 'admin' // Default role
+            role: user.role || 'admin'
         })
 
     } catch (error) {

@@ -11,6 +11,7 @@ interface User {
     id: string
     username: string
     avatarUrl?: string | null
+    role: string
     createdAt: Date
 }
 
@@ -49,8 +50,12 @@ export default function UserList({ initialUsers }: { initialUsers: User[] }) {
             return
         }
 
-        await deleteUser(user.id)
-        setActiveMenuId(null)
+        try {
+            await deleteUser(user.id)
+            setActiveMenuId(null)
+        } catch (error: any) {
+            alert(error?.message || 'Kunne ikke slette bruker')
+        }
     }
 
     const handleDeactivate = (user: User) => {
@@ -122,7 +127,9 @@ export default function UserList({ initialUsers }: { initialUsers: User[] }) {
                             {user.username}
                         </div>
                         <div>
-                            <span className={`${styles.badge} ${styles.badgeAdmin}`}>Administrator</span>
+                            <span className={`${styles.badge} ${user.role === 'demo' ? styles.badgeDemo : styles.badgeAdmin}`}>
+                                {user.role === 'demo' ? 'Demo' : 'Administrator'}
+                            </span>
                         </div>
                         <div>
                             <span className={`${styles.badge} ${styles.badgeActive}`}>Aktiv</span>

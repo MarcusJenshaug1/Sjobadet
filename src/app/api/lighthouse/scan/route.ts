@@ -9,6 +9,9 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (session.user?.role === 'demo') {
+      return NextResponse.json({ error: 'Demo-modus: Endringer lagres ikke' }, { status: 403 });
+    }
 
     // Parse scan options from request body (with fallback for empty body)
     let body: { homepage?: boolean; saunas?: boolean; subpages?: boolean } = {};

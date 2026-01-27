@@ -7,6 +7,9 @@ export async function POST(request: Request) {
     if (!session) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    if (session.user?.role === 'demo') {
+        return NextResponse.json({ error: 'Demo-modus: Endringer lagres ikke' }, { status: 403 })
+    }
 
     // Only allow Marcus to clear analytics
     const username = session.user?.username || session.user?.name || ''

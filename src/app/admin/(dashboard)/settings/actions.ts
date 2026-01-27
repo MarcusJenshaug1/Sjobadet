@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/lib/auth-guard'
+import { requireAdmin, assertNotDemo } from '@/lib/auth-guard'
 import { clearSaunaCaches, getCacheStats } from '@/lib/sauna-service'
 import { headers } from 'next/headers'
 import { logAdminAction } from '@/lib/admin-log'
@@ -12,7 +12,7 @@ export type CacheType = 'all' | 'public' | 'sauna-details' | 'availability'
 
 // --- Settings Actions ---
 export async function saveSettings(formData: FormData) {
-    await requireAdmin()
+    await assertNotDemo()
     const entries = Array.from(formData.entries())
     const settingsMap: Record<string, string> = {}
     let changesCount = 0
@@ -43,7 +43,7 @@ export async function saveSettings(formData: FormData) {
 // --- Operations Actions ---
 
 export async function clearCacheAction(type: CacheType) {
-    await requireAdmin()
+    await assertNotDemo()
     const startTime = Date.now()
 
     try {
@@ -112,7 +112,7 @@ export async function getPreloadTargets() {
 }
 
 export async function logPreloadResult(successCount: number, failCount: number, errors: string[]) {
-    await requireAdmin()
+    await assertNotDemo()
     const details = `Preload ferdig. Suksess: ${successCount}. Feil: ${failCount}. ${errors.length > 0 ? 'Feil: ' + errors.slice(0, 3).join(', ') : ''}`
     const status = failCount > 0 ? (successCount > 0 ? 'WARNING' : 'FAILURE') : 'SUCCESS'
 

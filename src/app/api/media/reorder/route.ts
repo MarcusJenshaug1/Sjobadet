@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth-guard';
+import { assertNotDemo } from '@/lib/auth-guard';
 import prisma from '@/lib/prisma';
 
 export async function PATCH(request: Request) {
     try {
-        await requireAdmin();
+        await assertNotDemo();
         const body = await request.json();
         const { saunaId, assetOrders } = body; // assetOrders: { id: string, orderIndex: number }[]
 

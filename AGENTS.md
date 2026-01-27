@@ -63,9 +63,6 @@ Uavklart:
 - .github/workflows/scraper.yml kjører `npm ci`, installerer Playwright Chromium og kjører `npx tsx scripts/run_scraper.ts` (Node 22).
 
 ## 4) Obligatorisk build/lint-løkke (policy for fremtidige endringer)
-**Merk:** Denne policyen skal ikke kjøres i denne oppgaven.
-
-Du er en senior utvikler som jobber i dette repoet. Målet er at prosjektet skal bygge og linte helt uten feil.
 
 Oppgave:
 1. Kjør repoets build-kommando.

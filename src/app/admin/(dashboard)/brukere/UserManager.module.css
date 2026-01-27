@@ -141,6 +141,45 @@
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
+.selectWrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    background: white;
+    font-size: 0.875rem;
+    color: #0f172a;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 170px;
+}
+
+.select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.selectWrap::after {
+    content: '';
+    position: absolute;
+    right: 0.75rem;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-right: 2px solid #64748b;
+    border-bottom: 2px solid #64748b;
+    transform: rotate(45deg);
+    pointer-events: none;
+}
+
 .inputError {
     border-color: #ef4444;
 }
@@ -162,6 +201,11 @@
 .badgeAdmin {
     background: #e0e7ff;
     color: #3730a3;
+}
+
+.badgeDemo {
+    background: #fef3c7;
+    color: #92400e;
 }
 
 .badgeActive {

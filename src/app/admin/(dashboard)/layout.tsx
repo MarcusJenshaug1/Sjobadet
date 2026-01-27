@@ -242,6 +242,13 @@ export default function AdminLayout({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [demoInfo, setDemoInfo] = useState<{ isDemo?: boolean }>({ isDemo: false })
+
+  useEffect(() => {
+    getUserInfo().then(info => {
+      setDemoInfo({ isDemo: info.isDemo })
+    })
+  }, [])
 
   return (
     <div className={styles.container}>
@@ -289,6 +296,11 @@ export default function AdminLayout({
 
       {/* Main Content */}
       <main className={`${styles.content} ${sidebarCollapsed ? styles.contentExpanded : ''}`}>
+        {demoInfo.isDemo && (
+          <div className={styles.demoBanner} role="status">
+            Demo-modus: Endringer blir ikke lagret.
+          </div>
+        )}
         {children}
       </main>
     </div>

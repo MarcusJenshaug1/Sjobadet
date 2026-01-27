@@ -1,6 +1,6 @@
 'use server'
 
-import { requireAdmin } from '@/lib/auth-guard'
+import { assertNotDemo } from '@/lib/auth-guard'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { nanoid } from 'nanoid'
 import sharp from 'sharp'
@@ -8,7 +8,7 @@ import sharp from 'sharp'
 const BUCKET_NAME = 'images'
 
 export async function uploadAvatar(formData: FormData) {
-    await requireAdmin()
+    await assertNotDemo()
 
     const file = formData.get('file') as File
     if (!file) {
@@ -45,7 +45,7 @@ export async function uploadAvatar(formData: FormData) {
 }
 
 export async function deleteAvatarFromStorage(url: string) {
-    await requireAdmin()
+    await assertNotDemo()
 
     try {
         const urlObj = new URL(url)

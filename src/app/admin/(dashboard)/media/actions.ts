@@ -3,7 +3,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase'
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/lib/auth-guard'
+import { requireAdmin, assertNotDemo } from '@/lib/auth-guard'
 
 const BUCKET_NAME = 'images'
 
@@ -214,7 +214,7 @@ async function enrichMediaWithUsage(items: MediaItem[]): Promise<MediaItem[]> {
 }
 
 export async function deleteMediaFile(pathOrBaseKey: string, isGroup: boolean = false) {
-    await requireAdmin()
+    await assertNotDemo()
     const supabase = getSupabaseAdmin()
 
     let pathsToDelete: string[] = []

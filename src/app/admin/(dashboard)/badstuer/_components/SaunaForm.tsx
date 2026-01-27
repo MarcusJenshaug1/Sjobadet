@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { SubmitButton } from './SubmitButton'
 import { saveSauna } from '../actions'
+import { useFormState } from 'react-dom'
 import { useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import 'easymde/dist/easymde.min.css'
@@ -52,6 +53,7 @@ interface AdminSauna extends Omit<ActiveSauna, 'openingHours'> {
 const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false })
 
 export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
+    const [saveState, formAction] = useFormState(saveSauna, { success: true })
     const [id] = useState(() => sauna?.id || crypto.randomUUID())
     const [isMounted, setIsMounted] = useState(false)
     const isNew = !sauna
@@ -125,7 +127,7 @@ export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
     }
 
     return (
-        <form action={saveSauna} onChange={handleFormChange}>
+        <form action={formAction} onChange={handleFormChange}>
             <input type="hidden" name="id" value={id} />
             <input type="hidden" name="isNew" value={isNew ? 'true' : 'false'} />
 
@@ -414,6 +416,11 @@ export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
                             • Ulagrede endringer
                         </span>
                     </div>
+                    {saveState?.demo && (
+                        <div style={{ color: '#b45309', fontSize: '0.875rem', fontWeight: 600 }}>
+                            {saveState.message}
+                        </div>
+                    )}
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         <Button type="button" variant="outline" onClick={() => window.location.reload()}>
                             Angre endringer

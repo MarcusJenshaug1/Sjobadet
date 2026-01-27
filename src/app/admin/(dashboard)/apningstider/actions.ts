@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/lib/auth-guard'
+import { assertNotDemo } from '@/lib/auth-guard'
 import { clearSaunaCaches } from '@/lib/sauna-service'
 
 interface OpeningHourUpdate {
@@ -21,7 +21,7 @@ interface OpeningHourOverrideInput {
 }
 
 export async function updateOpeningHours(saunaId: string, hours: OpeningHourUpdate[]) {
-    await requireAdmin()
+    await assertNotDemo()
 
     // Validate inputs
     if (!saunaId) {
@@ -69,7 +69,7 @@ async function revalidateSaunaViews(saunaId: string) {
 }
 
 export async function createOpeningHourOverride(saunaId: string, input: OpeningHourOverrideInput) {
-    await requireAdmin()
+    await assertNotDemo()
 
     if (!saunaId) {
         return { success: false, error: 'Mangler sauna ID' }
@@ -121,7 +121,7 @@ export async function createOpeningHourOverride(saunaId: string, input: OpeningH
 }
 
 export async function updateOpeningHourOverride(id: string, input: OpeningHourOverrideInput) {
-    await requireAdmin()
+    await assertNotDemo()
 
     if (!id) {
         return { success: false, error: 'Mangler avvik-ID' }
@@ -173,7 +173,7 @@ export async function updateOpeningHourOverride(id: string, input: OpeningHourOv
 }
 
 export async function deleteOpeningHourOverride(id: string) {
-    await requireAdmin()
+    await assertNotDemo()
 
     if (!id) {
         return { success: false, error: 'Mangler avvik-ID' }

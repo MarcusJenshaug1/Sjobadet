@@ -3,10 +3,10 @@
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { requireAdmin } from '@/lib/auth-guard'
+import { assertNotDemo } from '@/lib/auth-guard'
 
 export async function saveSubscription(formData: FormData) {
-    await requireAdmin()
+    await assertNotDemo()
     const id = formData.get('id') as string
     const name = formData.get('name') as string
     const price = parseFloat(formData.get('price') as string) || 0
@@ -48,7 +48,7 @@ export async function saveSubscription(formData: FormData) {
 }
 
 export async function deleteSubscription(formData: FormData) {
-    await requireAdmin()
+    await assertNotDemo()
     const id = formData.get('id') as string
     if (id) {
         await prisma.subscription.delete({ where: { id } })
@@ -58,7 +58,7 @@ export async function deleteSubscription(formData: FormData) {
 }
 
 export async function toggleStatus(id: string, currentStatus: boolean) {
-    await requireAdmin()
+    await assertNotDemo()
     await prisma.subscription.update({
         where: { id },
         data: { active: !currentStatus }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth-guard';
+import { assertNotDemo } from '@/lib/auth-guard';
 import prisma from '@/lib/prisma';
 import { deleteMediaFiles } from '@/lib/media-service';
 
@@ -8,7 +8,7 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        await requireAdmin();
+        await assertNotDemo();
         const { id } = await params;
 
         const asset = await prisma.mediaAsset.findUnique({ where: { id } });

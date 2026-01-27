@@ -12,6 +12,7 @@ export default async function AdminUsersPage() {
             id: true,
             username: true,
             avatarUrl: true,
+            role: true,
             createdAt: true
         }
     })

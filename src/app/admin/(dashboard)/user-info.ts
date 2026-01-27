@@ -5,20 +5,23 @@ import prisma from '@/lib/prisma'
 
 export async function getUserInfo() {
   const session = await getSession()
-  const isAdmin = session?.user?.role === 'admin'
+  const roleValue = session?.user?.role || 'admin'
+  const isAdmin = roleValue === 'admin'
+  const isDemo = roleValue === 'demo'
+  const roleLabel = isDemo ? 'Demo' : 'Administrator'
 
   if (!session?.user?.username) {
-    return { name: 'Admin', role: 'Administrator', avatarUrl: null, isAdmin }
+    return { name: 'Admin', role: roleLabel, avatarUrl: null, isAdmin, isDemo }
   }
 
   // Always fetch fresh data from DB to avoid stale session info (like avatarUrl)
   const user = await prisma.adminUser.findUnique({
     where: { username: session.user.username },
-    select: { username: true, avatarUrl: true }
+    select: { username: true, avatarUrl: true, role: true }
   })
 
   if (!user) {
-    return { name: 'Admin', role: 'Administrator', avatarUrl: null, isAdmin }
+    return { name: 'Admin', role: roleLabel, avatarUrl: null, isAdmin, isDemo }
   }
 
   // Capitalize first letter of username for display
@@ -26,9 +29,10 @@ export async function getUserInfo() {
 
   return {
     name,
-    role: 'Administrator',
+    role: user.role === 'demo' ? 'Demo' : 'Administrator',
     username: user.username,
     avatarUrl: user.avatarUrl,
-    isAdmin
+    isAdmin,
+    isDemo: user.role === 'demo'
   }
 }

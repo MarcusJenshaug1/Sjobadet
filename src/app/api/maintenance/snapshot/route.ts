@@ -15,6 +15,9 @@ export async function POST(req: NextRequest) {
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
+        if (session.user?.role === 'demo') {
+            return NextResponse.json({ error: 'Demo-modus: Endringer lagres ikke' }, { status: 403 })
+        }
 
         // Fetch all active saunas with booking info
         const saunas = await prisma.sauna.findMany({

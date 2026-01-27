@@ -73,7 +73,11 @@ export default function SaunaList({ initialSaunas }: { initialSaunas: Sauna[] })
         if (!saunaToDelete) return
         setIsDeleting(true)
         try {
-            await deleteSauna(saunaToDelete.id)
+            const result = await deleteSauna(saunaToDelete.id)
+            if (result && result.demo) {
+                alert(result.message || 'Demo-modus: Endringer lagres ikke.')
+                return
+            }
             setDeleteModalOpen(false)
             setSaunaToDelete(null)
         } catch (error) {
@@ -84,7 +88,10 @@ export default function SaunaList({ initialSaunas }: { initialSaunas: Sauna[] })
     }
 
     const handleToggleStatus = async (sauna: Sauna) => {
-        await toggleSaunaStatus(sauna.id, sauna.status)
+        const result = await toggleSaunaStatus(sauna.id, sauna.status)
+        if (result && result.demo) {
+            alert(result.message || 'Demo-modus: Endringer lagres ikke.')
+        }
         setActiveMenuId(null)
     }
 

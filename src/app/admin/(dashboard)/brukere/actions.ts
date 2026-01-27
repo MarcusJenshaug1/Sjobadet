@@ -3,16 +3,18 @@
 import prisma from '@/lib/prisma'
 import * as bcrypt from 'bcryptjs'
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/lib/auth-guard'
+import { assertNotDemo } from '@/lib/auth-guard'
 
 import { deleteAvatarFromStorage } from './avatar-actions'
 
 export async function saveUser(formData: FormData) {
-    await requireAdmin()
+    await assertNotDemo()
     const username = formData.get('username') as string
     const password = formData.get('password') as string
     const id = formData.get('id') as string
     const avatarUrl = formData.get('avatarUrl') as string
+    const roleInput = (formData.get('role') as string) || 'admin'
+    const role = roleInput === 'demo' ? 'demo' : 'admin'
 
     if (!username) {
         throw new Error('Brukernavn er påkrevd')
@@ -24,7 +26,8 @@ export async function saveUser(formData: FormData) {
 
     const data: any = {
         username,
-        avatarUrl: avatarUrl || null
+        avatarUrl: avatarUrl || null,
+        role
     }
 
     if (password) {
@@ -56,7 +59,7 @@ export async function saveUser(formData: FormData) {
 }
 
 export async function deleteUser(id: string) {
-    await requireAdmin()
+    await assertNotDemo()
 
     // Fetch user to check for avatar
     const user = await (prisma.adminUser.findUnique as any)({
