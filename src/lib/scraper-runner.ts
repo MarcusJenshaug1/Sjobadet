@@ -62,12 +62,13 @@ export async function runScraper(options: ScraperRunOptions) {
         let failCount = 0;
 
         for (const sauna of saunas) {
-            if (!sauna.bookingAvailabilityUrlDropin) {
+            const availabilityUrl = sauna.bookingAvailabilityUrlDropin || sauna.bookingUrlDropin;
+            if (!availabilityUrl) {
                 await ScraperService.updateItem(currentRunId, sauna.id, 'skipped', { reason: 'No booking URL' });
                 continue;
             }
 
-            const bookingUrl: string = sauna.bookingAvailabilityUrlDropin;
+            const bookingUrl: string = availabilityUrl;
             await ScraperService.logEvent(currentRunId, 'info', 'sauna', `Starting scrape for ${sauna.name}`, undefined, sauna.id);
 
             const startTime = Date.now();

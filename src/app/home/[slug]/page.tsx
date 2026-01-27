@@ -114,6 +114,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                 ? `Avvikende åpningstid i dag: ${todayOverride.opens}–${todayOverride.closes}`
                 : 'Avvikende åpningstid i dag'
         : null;
+    const showAvailability = !isMaintenanceMode && (((sauna as any)?.hasDropinAvailability ?? true) || !!sauna?.bookingUrlDropin);
 
     return (
         <>
@@ -231,13 +232,25 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                 {/* Real-time Availability (Mobile Only) */}
                                 {(sauna.bookingUrlDropin || sauna.bookingUrlPrivat) && (
                                     <div className={styles.mobileOnly} style={{ marginBottom: '2rem' }}>
-                                        <SaunaAvailability
-                                            saunaId={sauna.id}
-                                            bookingUrlDropin={sauna.bookingUrlDropin}
-                                            capacityDropin={sauna.capacityDropin || 0}
-                                            isAdmin={isAdmin}
-                                            showAvailability={!isMaintenanceMode && ((sauna as any).hasDropinAvailability ?? true)}
-                                        />
+                                        {showAvailability ? (
+                                            <SaunaAvailability
+                                                saunaId={sauna.id}
+                                                bookingUrlDropin={sauna.bookingUrlDropin}
+                                                capacityDropin={sauna.capacityDropin || 0}
+                                                isAdmin={isAdmin}
+                                                showAvailability={showAvailability}
+                                            />
+                                        ) : (
+                                            <div style={{
+                                                padding: '1rem 1.25rem',
+                                                backgroundColor: '#f8fafc',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '0.75rem',
+                                                color: '#475569'
+                                            }}>
+                                                Drop-in ledighet er ikke tilgjengelig for denne badstuen.
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -284,13 +297,25 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                 {/* Real-time Availability (Desktop Sidebar) */}
                                 {(sauna.bookingUrlDropin || sauna.bookingUrlPrivat) && (
                                     <div className={`${styles.sidebarCard} ${styles.desktopOnly}`} style={{ marginBottom: '1.5rem', padding: 0, border: 'none' }}>
-                                        <SaunaAvailability
-                                            saunaId={sauna.id}
-                                            bookingUrlDropin={sauna.bookingUrlDropin}
-                                            capacityDropin={sauna.capacityDropin || 0}
-                                            isAdmin={isAdmin}
-                                            showAvailability={!isMaintenanceMode && ((sauna as any).hasDropinAvailability ?? true)}
-                                        />
+                                        {showAvailability ? (
+                                            <SaunaAvailability
+                                                saunaId={sauna.id}
+                                                bookingUrlDropin={sauna.bookingUrlDropin}
+                                                capacityDropin={sauna.capacityDropin || 0}
+                                                isAdmin={isAdmin}
+                                                showAvailability={showAvailability}
+                                            />
+                                        ) : (
+                                            <div style={{
+                                                padding: '1rem 1.25rem',
+                                                backgroundColor: '#f8fafc',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '0.75rem',
+                                                color: '#475569'
+                                            }}>
+                                                Drop-in ledighet er ikke tilgjengelig for denne badstuen.
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

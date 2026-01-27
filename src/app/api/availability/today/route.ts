@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
                 availabilityData: true,
                 lastScrapedAt: true,
                 bookingAvailabilityUrlDropin: true,
+                bookingUrlDropin: true,
             }
         });
 
@@ -35,7 +36,8 @@ export async function GET(req: NextRequest) {
             return ageMs > 5 * 60 * 1000; // 5 minutes
         })();
 
-        if (shouldScrape && sauna.bookingAvailabilityUrlDropin) {
+        const availabilityUrl = sauna.bookingAvailabilityUrlDropin || sauna.bookingUrlDropin;
+        if (shouldScrape && availabilityUrl) {
             try {
                 const refreshedData = await updateSaunaAvailability(saunaId);
                 if (refreshedData) return NextResponse.json(refreshedData.data);

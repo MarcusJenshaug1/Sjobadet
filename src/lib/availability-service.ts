@@ -18,11 +18,14 @@ export async function updateSaunaAvailability(saunaId: string, options: { browse
             slug: true,
             availabilityData: true,
             bookingAvailabilityUrlDropin: true,
+            bookingUrlDropin: true,
             name: true,
         }
     });
 
-    if (!sauna || !sauna.bookingAvailabilityUrlDropin) {
+    const availabilityUrl = sauna?.bookingAvailabilityUrlDropin || sauna?.bookingUrlDropin || null;
+
+    if (!sauna || !availabilityUrl) {
         console.log(`[AvailabilityService] Skipping ${sauna?.name || saunaId} - no URL`);
         return null;
     }
@@ -32,7 +35,7 @@ export async function updateSaunaAvailability(saunaId: string, options: { browse
         // lastScrapeAttemptAt removed from schema
 
 
-        const fresh = await fetchAvailability(sauna.bookingAvailabilityUrlDropin, { browser: options.browser });
+        const fresh = await fetchAvailability(availabilityUrl, { browser: options.browser });
 
         const existing = (() => {
             try {
