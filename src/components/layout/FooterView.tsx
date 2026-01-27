@@ -8,16 +8,25 @@ import { Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
 import { CookieSettingsTrigger } from './CookieSettingsTrigger';
 
 type OpeningHour = {
+    id?: string;
+    saunaId?: string;
     type?: string | null;
     weekday?: number | null;
+    date?: Date | null;
     opens?: string | null;
     closes?: string | null;
     active?: boolean | null;
+    createdAt?: Date;
 };
 
 type FooterSauna = {
     id: string;
     name: string;
+    slug?: string | null;
+    location?: string | null;
+    shortDescription?: string | null;
+    capacityDropin?: number | null;
+    capacityPrivat?: number | null;
     driftStatus?: string | null;
     flexibleHours?: boolean | null;
     hoursMessage?: string | null;

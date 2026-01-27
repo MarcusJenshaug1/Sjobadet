@@ -15,7 +15,15 @@ export function getTodayOpeningHours(openingHours: OpeningHour[]) {
     return todayHours
 }
 
-export function formatSmartOpeningHours(openingHours: OpeningHour[] | undefined | null) {
+type OpeningHourLike = {
+    type?: string | null;
+    weekday?: number | null;
+    opens?: string | null;
+    closes?: string | null;
+    active?: boolean | null;
+}
+
+export function formatSmartOpeningHours(openingHours: OpeningHourLike[] | undefined | null) {
     if (!openingHours || openingHours.length === 0) return 'Kontakt oss for åpningstider';
     const weekly = openingHours
         .filter(h => h.type === 'weekly')
