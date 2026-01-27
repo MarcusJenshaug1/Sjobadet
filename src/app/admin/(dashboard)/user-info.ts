@@ -5,9 +5,10 @@ import prisma from '@/lib/prisma'
 
 export async function getUserInfo() {
   const session = await getSession()
+  const isAdmin = session?.user?.role === 'admin'
 
   if (!session?.user?.username) {
-    return { name: 'Admin', role: 'Administrator', avatarUrl: null }
+    return { name: 'Admin', role: 'Administrator', avatarUrl: null, isAdmin }
   }
 
   // Always fetch fresh data from DB to avoid stale session info (like avatarUrl)
@@ -17,7 +18,7 @@ export async function getUserInfo() {
   })
 
   if (!user) {
-    return { name: 'Admin', role: 'Administrator', avatarUrl: null }
+    return { name: 'Admin', role: 'Administrator', avatarUrl: null, isAdmin }
   }
 
   // Capitalize first letter of username for display
@@ -27,6 +28,7 @@ export async function getUserInfo() {
     name,
     role: 'Administrator',
     username: user.username,
-    avatarUrl: user.avatarUrl
+    avatarUrl: user.avatarUrl,
+    isAdmin
   }
 }

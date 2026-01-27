@@ -5,8 +5,15 @@ import ActionableKPIs from './_components/ActionableKPIs'
 import RecentActivity from './_components/RecentActivity'
 import QuickActions from './_components/QuickActions'
 import { Users } from 'lucide-react'
+import { getSession } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
 export default async function AdminDashboard() {
+    const session = await getSession()
+    if (!session?.user) {
+        redirect('/admin/login?next=/admin')
+    }
+
     const [stats, drift, logs] = await Promise.all([
         getDashboardStats(),
         getDriftStatus(),

@@ -31,6 +31,9 @@ interface NavItem {
   href: string
   label: string
   icon: LucideIcon
+  target?: string
+  rel?: string
+  adminOnly?: boolean
 }
 
 interface NavSection {
@@ -55,6 +58,7 @@ const navSections: NavSection[] = [
       { href: '/admin/medlemskap', label: 'Medlemskap', icon: CreditCard },
       { href: '/admin/brukere', label: 'Brukere', icon: Users },
       { href: '/admin/settings', label: 'Innstillinger', icon: Settings },
+      { href: '/storybook', label: 'Storybook', icon: ExternalLink, target: '_blank', rel: 'noopener noreferrer', adminOnly: true },
     ]
   },
   {
@@ -89,7 +93,7 @@ const UserAvatar = ({ className, userInfo }: { className: string, userInfo: { na
 
 function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?: boolean }) {
   const pathname = usePathname()
-  const [userInfo, setUserInfo] = useState<{ name: string; role: string; username?: string; avatarUrl?: string | null }>({ name: 'Admin', role: 'Administrator' })
+  const [userInfo, setUserInfo] = useState<{ name: string; role: string; username?: string; avatarUrl?: string | null; isAdmin?: boolean }>({ name: 'Admin', role: 'Administrator', isAdmin: false })
 
   useEffect(() => {
     getUserInfo().then(info => {
@@ -157,6 +161,9 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
             {!collapsed && <div className={styles.navSectionTitle}>{section.title}</div>}
             <ul className={styles.navList}>
               {section.items.map((item) => {
+                if (item.adminOnly && !userInfo.isAdmin) {
+                  return null
+                }
                 const active = isActive(item.href)
                 const Icon = item.icon
 
@@ -168,6 +175,8 @@ function AdminSidebar({ onClose, collapsed }: { onClose?: () => void; collapsed?
                       aria-current={active ? 'page' : undefined}
                       onClick={onClose}
                       title={collapsed ? item.label : undefined}
+                      target={item.target}
+                      rel={item.rel}
                     >
                       <Icon size={18} />
                       {!collapsed && <span>{item.label}</span>}

@@ -1,11 +1,14 @@
 'use client'
 
 import { useActionState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { loginAction } from './actions'
 import { Lock, LogIn } from 'lucide-react'
 
 export default function LoginPage() {
     const [state, formAction, isPending] = useActionState(loginAction, undefined)
+    const searchParams = useSearchParams()
+    const nextPath = searchParams.get('next') || ''
 
     return (
         <div style={{
@@ -26,6 +29,7 @@ export default function LoginPage() {
                 maxWidth: '420px',
                 border: '1px solid #e2e8f0'
             }}>
+                <input type="hidden" name="next" value={nextPath} />
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <div style={{

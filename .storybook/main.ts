@@ -1,6 +1,8 @@
 import type { StorybookConfig } from '@storybook/nextjs-vite';
 import path from 'node:path';
 
+const shouldCopyPublic = process.env.STORYBOOK_DISABLE_STATIC_DIRS !== 'true'
+
 const config: StorybookConfig = {
   "stories": [
     "../src/**/*.mdx",
@@ -15,12 +17,11 @@ const config: StorybookConfig = {
     "@storybook/addon-vitest"
   ],
   "framework": "@storybook/nextjs-vite",
-  "staticDirs": [
-    "../public"
-  ],
+  "staticDirs": shouldCopyPublic ? ["../public"] : [],
   "docs": {
     "autodocs": true
   },
+  managerHead: (head) => `${head}<base href="/storybook/" />`,
   async viteFinal(config) {
     const root = process.cwd();
     const existingAlias = config.resolve?.alias ?? [];

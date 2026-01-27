@@ -11,6 +11,18 @@ export const usePathname = () => '/';
 export const useSearchParams = () => new URLSearchParams();
 export const useParams = () => ({});
 
+export const RedirectType = {
+    push: 'push',
+    replace: 'replace',
+} as const;
+
+export const useSelectedLayoutSegment = () => null;
+export const useSelectedLayoutSegments = () => [] as string[];
+export const useServerInsertedHTML = (callback: () => void) => {
+    callback();
+    return null;
+};
+
 export const redirect = () => undefined;
 export const permanentRedirect = () => undefined;
 export const notFound = () => undefined;

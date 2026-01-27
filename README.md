@@ -25,6 +25,13 @@ npm run storybook
 ```
 Dette åpner et dashboard på `http://localhost:6006`.
 
+### Hostet Storybook (/storybook)
+Storybook bygges statisk til `public/storybook` via:
+```bash
+npm run build-storybook
+```
+I deploys er Storybook tilgjengelig på `/storybook`, men er beskyttet av middleware som krever innlogget admin-session. Uautoriserte brukere blir redirectet til `/admin/login`.
+
 ### Struktur
 - **Foundations**: Dokumentasjon av farger, flater og typografi.
 - **Components**: Alle React-komponenter, organisert etter kategori (UI, Layout, Sauna, Admin).

@@ -40,8 +40,23 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  rewrites: async () => {
+    return [
+      { source: '/storybook', destination: '/storybook/index.html' },
+      { source: '/storybook/', destination: '/storybook/index.html' },
+    ];
+  },
   headers: async () => {
     return [
+      {
+        source: '/storybook/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow'
+          }
+        ],
+      },
       {
         source: '/:path*',
         headers: [

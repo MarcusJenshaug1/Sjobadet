@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation'
 export async function loginAction(prevState: { error: string } | undefined, formData: FormData) {
     const username = formData.get('username') as string
     const password = formData.get('password') as string
+    const nextParam = (formData.get('next') as string | null)?.trim() || ''
 
     if (!username || !password) {
         return { error: 'Fyll ut alle felt' }
@@ -39,5 +40,6 @@ export async function loginAction(prevState: { error: string } | undefined, form
         return { error: 'En feil oppstod' }
     }
 
-    redirect('/admin')
+    const safeNext = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/admin'
+    redirect(safeNext)
 }

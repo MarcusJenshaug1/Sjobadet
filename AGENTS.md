@@ -38,11 +38,11 @@ Uavklart:
 ## 3) Kommandoer og standard arbeidsflyt (repo-spesifikk)
 **Standard scripts (package.json):**
 - Dev: `npm run dev`
-- Build: `npm run build`
+- Build: `npm run build` (bygger Next.js + Storybook til `public/storybook`)
 - Start (prod): `npm run start`
 - Lint: `npm run lint`
 - Storybook: `npm run storybook`
-- Storybook build: `npm run build-storybook`
+- Storybook build: `npm run build-storybook` (output: `public/storybook`)
 - Prisma generate (postinstall): `npm run postinstall`
 - DB migrate deploy: `npm run db:migrate:deploy`
 - DB push: `npm run db:push`
