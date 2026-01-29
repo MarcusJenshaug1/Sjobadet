@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import type { WaterTemperatureData } from '@/lib/water-temperature-service';
 import styles from './WaterTemperatureCard.module.css';
 
@@ -22,6 +25,7 @@ function formatTimestamp(value: string) {
 }
 
 export function WaterTemperatureCard({ data }: WaterTemperatureCardProps) {
+    const [showDetails, setShowDetails] = useState(false);
     const timestamp = data?.time ? formatTimestamp(data.time) : null;
     const temperature = data?.temperature;
     const locationName = data?.locationName;
@@ -48,27 +52,39 @@ export function WaterTemperatureCard({ data }: WaterTemperatureCardProps) {
                 </span>
             </div>
 
-            <div className={styles.metaRow}>
-                <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Siste måling</span>
-                    <span className={styles.metaValue}>{timestamp ?? 'Ikke tilgjengelig'}</span>
-                </div>
-                <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Målt ved</span>
-                    <span className={styles.metaValue}>{locationName || 'Ukjent sted'}</span>
-                </div>
-                <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Avstand</span>
-                    <span className={styles.metaValue}>
-                        {typeof distanceKm === 'number' ? `ca. ${formatDistance(distanceKm)} km unna` : 'Ukjent'}
-                    </span>
-                </div>
-            </div>
+            <button
+                type="button"
+                className={styles.toggleButton}
+                onClick={() => setShowDetails((prev) => !prev)}
+            >
+                {showDetails ? 'Skjul info' : 'Vis mer info'}
+            </button>
 
-            {!hasData && (
-                <p className={styles.emptyState}>
-                    Ingen registrerte badetemperaturer innen 50 km akkurat nå.
-                </p>
+            {showDetails && (
+                <>
+                    <div className={styles.metaRow}>
+                        <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Siste måling</span>
+                            <span className={styles.metaValue}>{timestamp ?? 'Ikke tilgjengelig'}</span>
+                        </div>
+                        <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Målt ved</span>
+                            <span className={styles.metaValue}>{locationName || 'Ukjent sted'}</span>
+                        </div>
+                        <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Avstand</span>
+                            <span className={styles.metaValue}>
+                                {typeof distanceKm === 'number' ? `ca. ${formatDistance(distanceKm)} km unna` : 'Ukjent'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {!hasData && (
+                        <p className={styles.emptyState}>
+                            Ingen registrerte badetemperaturer innen 50 km akkurat nå.
+                        </p>
+                    )}
+                </>
             )}
 
             <p className={styles.sourceLabel}>{data?.sourceLabel || 'Badetemperaturer levert av Yr'}</p>

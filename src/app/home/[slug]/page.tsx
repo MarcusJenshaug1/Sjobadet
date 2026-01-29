@@ -291,9 +291,6 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                 {/* Map */}
                                 <div className={styles.textSection}>
                                     <h2 className={styles.sectionTitle}>Kart og plassering</h2>
-                                    <div style={{ marginBottom: '1.5rem' }}>
-                                        <WaterTemperatureCard data={waterTemperature} />
-                                    </div>
                                     <SaunaMap
                                         address={sauna.address || ''}
                                         mapEmbedUrl={sauna.mapEmbedUrl || null}
@@ -369,6 +366,8 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                     ))}
                                     {facilities.length === 0 && <span style={{ color: '#94a3b8' }}>Ingen fasiliteter oppført</span>}
                                 </div>
+
+                                <WaterTemperatureCard data={waterTemperature} />
 
                                 {/* Actions */}
                                 <div style={{ marginTop: '0.5rem' }}>
