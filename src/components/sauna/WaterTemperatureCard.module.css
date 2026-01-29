@@ -109,3 +109,39 @@
     color: #64748b;
     font-weight: 600;
 }
+
+.adminRow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.adminButton {
+    background: #0f766e;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.adminButton:hover {
+    background: #0d9488;
+}
+
+.adminMessage {
+    font-size: 0.8rem;
+    color: #475569;
+    font-weight: 600;
+}
+
+.adminMessage[data-status='error'] {
+    color: #b91c1c;
+}
+
+.adminMessage[data-status='success'] {
+    color: #0f766e;
+}

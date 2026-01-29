@@ -367,7 +367,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                     {facilities.length === 0 && <span style={{ color: '#94a3b8' }}>Ingen fasiliteter oppført</span>}
                                 </div>
 
-                                <WaterTemperatureCard data={waterTemperature} />
+                                <WaterTemperatureCard data={waterTemperature} saunaId={sauna.id} isAdmin={isAdmin} />
 
                                 {/* Actions */}
                                 <div style={{ marginTop: '0.5rem' }}>

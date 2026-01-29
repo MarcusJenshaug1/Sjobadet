@@ -46,6 +46,7 @@ export type ActiveSauna = {
     waterTempLocationName?: string | null;
     waterTempDistanceKm?: number | null;
     waterTempFetchedAt?: Date | null;
+    waterTempSource?: string | null;
     nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
 };
 
@@ -123,6 +124,7 @@ function mapStaticSaunaBase() {
             waterTempLocationName: null,
             waterTempDistanceKm: null,
             waterTempFetchedAt: null,
+            waterTempSource: null,
             nextAvailableSlot: null,
         }));
 }
@@ -163,6 +165,7 @@ function mapStaticSaunaDetail(slug: string): SaunaDetail | null {
         waterTempLocationName: null,
         waterTempDistanceKm: null,
         waterTempFetchedAt: null,
+        waterTempSource: null,
         nextAvailableSlot: null,
         openingHours: [],
         openingHourOverrides: [],
@@ -216,6 +219,7 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
         waterTempLocationName: true,
         waterTempDistanceKm: true,
         waterTempFetchedAt: true,
+        waterTempSource: true,
         kundeMelding: true,
         flexibleHours: true,
         hoursMessage: true,
@@ -309,6 +313,7 @@ export const getSaunaBySlug = async (slug: string) => {
                 waterTempLocationName: true,
                 waterTempDistanceKm: true,
                 waterTempFetchedAt: true,
+                waterTempSource: true,
                 seoTitle: true,
                 seoDescription: true,
                 openingHours: {

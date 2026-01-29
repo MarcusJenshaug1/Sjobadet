@@ -97,6 +97,8 @@ export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
     )
     const [geocodeStatus, setGeocodeStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle')
     const [geocodeMessage, setGeocodeMessage] = useState<string>('')
+    const [waterTempStatus, setWaterTempStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle')
+    const [waterTempMessage, setWaterTempMessage] = useState<string>('')
 
     const toggleSection = (key: keyof typeof sections) => {
         setSections(prev => ({ ...prev, [key]: !prev[key] }))
@@ -139,6 +141,44 @@ export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
         } catch (error) {
             setGeocodeStatus('error')
             setGeocodeMessage('Kunne ikke hente koordinater.')
+        }
+    }
+
+    const handleWaterTempRefresh = async () => {
+        if (isNew) {
+            setWaterTempStatus('error')
+            setWaterTempMessage('Lagre badstuen før du henter temperatur.')
+            return
+        }
+
+        if (!latitudeValue.trim() || !longitudeValue.trim()) {
+            setWaterTempStatus('error')
+            setWaterTempMessage('Sett koordinater først.')
+            return
+        }
+
+        setWaterTempStatus('loading')
+        setWaterTempMessage('Henter badetemperatur...')
+
+        try {
+            const response = await fetch('/api/admin/water-temperature/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ saunaId: id }),
+            })
+
+            if (!response.ok) {
+                const payload = await response.json().catch(() => ({}))
+                setWaterTempStatus('error')
+                setWaterTempMessage(payload?.message || 'Fant ingen temperatur.')
+                return
+            }
+
+            setWaterTempStatus('success')
+            setWaterTempMessage('Badetemperatur oppdatert.')
+        } catch (error) {
+            setWaterTempStatus('error')
+            setWaterTempMessage('Kunne ikke hente temperatur.')
         }
     }
 
@@ -382,6 +422,16 @@ export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
                                 {geocodeStatus !== 'idle' && (
                                     <span style={{ fontSize: '0.875rem', color: geocodeStatus === 'error' ? '#b91c1c' : '#475569' }}>
                                         {geocodeMessage}
+                                    </span>
+                                )}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                                <Button type="button" variant="outline" size="sm" onClick={handleWaterTempRefresh}>
+                                    Hent badetemperatur nå
+                                </Button>
+                                {waterTempStatus !== 'idle' && (
+                                    <span style={{ fontSize: '0.875rem', color: waterTempStatus === 'error' ? '#b91c1c' : '#475569' }}>
+                                        {waterTempMessage}
                                     </span>
                                 )}
                             </div>

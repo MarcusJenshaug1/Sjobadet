@@ -60,6 +60,7 @@ model Sauna {
   waterTempLocationName        String?
   waterTempDistanceKm          Float?
   waterTempFetchedAt           DateTime?
+  waterTempSource              String?
   mediaAssets                  MediaAsset[]
   openingHours                 OpeningHour[]
   openingHourOverrides         OpeningHourOverride[]

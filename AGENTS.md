@@ -206,6 +206,7 @@ Leveranse:
 | Lighthouse scan (manuell) | HTTP POST fra admin | src/app/api/lighthouse/scan/route.ts | Oppdaterer status på error/exit | scripts/daily_lighthouse_scan.mjs, Prisma, Chrome |
 | Lighthouse batch (script) | NPM script | scripts/daily_lighthouse_scan.mjs | Håndterer errors per URL | Prisma, Chrome Launcher |
 | Warm cache (script) | Manuell kjøring | scripts/warm_cache.mjs | Loggfører errors, fortsetter | /api/saunas/slugs, HTTP fetch |
+| Water temperature refresh (cron) | HTTP GET (CRON_SECRET) | src/app/api/cron/water-temperature/route.ts | Fortsetter ved per-sauna feil | Prisma, water-temperature-service |
 
 ## 7) Kontrakter du ikke bryter
 - Prisma schema og migrasjoner: prisma/schema.prisma og prisma/migrations/**/migration.sql

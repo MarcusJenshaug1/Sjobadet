@@ -1,7 +1,6 @@
 import prisma from './prisma';
 
 const YR_BASE_URL = 'https://badetemperaturer.yr.no';
-const SOURCE_LABEL = 'Badetemperaturer levert av Yr';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 8000;
 
@@ -10,7 +9,7 @@ export type WaterTemperatureData = {
     time: string;
     locationName?: string | null;
     distanceKm?: number | null;
-    sourceLabel: string;
+    source: 'yr' | 'open-meteo' | null;
 };
 
 type SaunaWaterTempCache = {
@@ -22,6 +21,7 @@ type SaunaWaterTempCache = {
     waterTempLocationName?: string | null;
     waterTempDistanceKm?: number | null;
     waterTempFetchedAt?: Date | string | null;
+    waterTempSource?: string | null;
 };
 
 type YrNearestEntry = {
@@ -156,7 +156,7 @@ export async function fetchNearestWaterTemperature(latitude: number, longitude: 
 
         return {
             ...best,
-            sourceLabel: SOURCE_LABEL,
+            source: 'yr',
         };
     } catch (error) {
         if ((error as Error).name === 'AbortError') {
@@ -180,22 +180,25 @@ function buildCacheData(sauna: SaunaWaterTempCache): WaterTemperatureData | null
         time,
         locationName: sauna.waterTempLocationName ?? null,
         distanceKm: sauna.waterTempDistanceKm ?? null,
-        sourceLabel: SOURCE_LABEL,
+        source: (sauna.waterTempSource as 'yr' | 'open-meteo' | null) ?? null,
     };
 }
 
 async function refreshWaterTemperature(saunaId: string, latitude: number, longitude: number) {
-    const result = await fetchNearestWaterTemperature(latitude, longitude);
+    const result = await fetchWithFallback(latitude, longitude);
+    if (!result) return null;
+
     const now = new Date();
 
     await prisma.sauna.update({
         where: { id: saunaId },
         data: {
-            waterTempValue: result?.temperature ?? null,
-            waterTempTime: result?.time ? new Date(result.time) : null,
-            waterTempLocationName: result?.locationName ?? null,
-            waterTempDistanceKm: result?.distanceKm ?? null,
+            waterTempValue: result.temperature,
+            waterTempTime: new Date(result.time),
+            waterTempLocationName: result.locationName ?? null,
+            waterTempDistanceKm: result.distanceKm ?? null,
             waterTempFetchedAt: now,
+            waterTempSource: result.source,
         },
     });
 
@@ -207,6 +210,7 @@ export async function getWaterTemperatureForSauna(sauna: SaunaWaterTempCache): P
     const longitude = sauna.longitude ?? null;
 
     if (!isValidCoordinate(latitude, -90, 90) || !isValidCoordinate(longitude, -180, 180)) {
+        console.warn('[WaterTemp] Missing or invalid coordinates for sauna:', sauna.id);
         return null;
     }
 
@@ -219,11 +223,13 @@ export async function getWaterTemperatureForSauna(sauna: SaunaWaterTempCache): P
     if (cached) {
         void refreshWaterTemperature(sauna.id, latitude, longitude)
             .then((result) => {
-                sauna.waterTempValue = result?.temperature ?? null;
-                sauna.waterTempTime = result?.time ? new Date(result.time) : null;
-                sauna.waterTempLocationName = result?.locationName ?? null;
-                sauna.waterTempDistanceKm = result?.distanceKm ?? null;
+                if (!result) return;
+                sauna.waterTempValue = result.temperature;
+                sauna.waterTempTime = new Date(result.time);
+                sauna.waterTempLocationName = result.locationName ?? null;
+                sauna.waterTempDistanceKm = result.distanceKm ?? null;
                 sauna.waterTempFetchedAt = new Date();
+                sauna.waterTempSource = result.source;
             })
             .catch((error) => {
                 console.error('[Yr] Background refresh failed:', error);
@@ -232,4 +238,93 @@ export async function getWaterTemperatureForSauna(sauna: SaunaWaterTempCache): P
     }
 
     return await refreshWaterTemperature(sauna.id, latitude, longitude);
+}
+
+type OpenMeteoResult = {
+    valueC: number;
+    observedAtIso: string;
+} | null;
+
+async function fetchOpenMeteoSeaSurfaceTemp(latitude: number, longitude: number): Promise<WaterTemperatureData | null> {
+    try {
+        const url = new URL('https://marine-api.open-meteo.com/v1/marine');
+        url.searchParams.set('latitude', String(latitude));
+        url.searchParams.set('longitude', String(longitude));
+        url.searchParams.set('hourly', 'sea_surface_temperature');
+        url.searchParams.set('timeformat', 'unixtime');
+        url.searchParams.set('timezone', 'UTC');
+        url.searchParams.set('forecast_hours', '48');
+
+        const response = await fetch(url.toString(), { method: 'GET' });
+        if (!response.ok) {
+            const text = await response.text().catch(() => '');
+            console.error('[Open-Meteo] Non-OK response:', response.status, text.slice(0, 300));
+            return null;
+        }
+
+        const json = await response.json();
+        const times = json?.hourly?.time as number[] | undefined;
+        const temps = json?.hourly?.sea_surface_temperature as number[] | undefined;
+
+        if (!Array.isArray(times) || !Array.isArray(temps) || times.length === 0 || temps.length === 0) {
+            console.error('[Open-Meteo] Missing hourly arrays');
+            return null;
+        }
+
+        const nowSec = Math.floor(Date.now() / 1000);
+        let idx = -1;
+        for (let i = 0; i < times.length; i += 1) {
+            if (times[i] <= nowSec) idx = i;
+            else break;
+        }
+        if (idx < 0) idx = 0;
+
+        const valueC = temps[idx];
+        if (typeof valueC !== 'number' || Number.isNaN(valueC)) return null;
+
+        const result: OpenMeteoResult = {
+            valueC,
+            observedAtIso: new Date(times[idx] * 1000).toISOString(),
+        };
+
+        if (!result) return null;
+
+        return {
+            temperature: result.valueC,
+            time: result.observedAtIso,
+            locationName: null,
+            distanceKm: null,
+            source: 'open-meteo',
+        };
+    } catch (error) {
+        console.error('[Open-Meteo] Failed to fetch sea surface temperature:', error);
+        return null;
+    }
+}
+
+async function fetchWithFallback(latitude: number, longitude: number): Promise<WaterTemperatureData | null> {
+    const yrResult = await fetchNearestWaterTemperature(latitude, longitude);
+    if (yrResult) return yrResult;
+    const openMeteoResult = await fetchOpenMeteoSeaSurfaceTemp(latitude, longitude);
+    if (!openMeteoResult) {
+        console.warn('[WaterTemp] Yr empty and Open-Meteo empty for coordinates:', {
+            latitude,
+            longitude,
+        });
+    }
+    return openMeteoResult;
+}
+
+export async function refreshWaterTemperatureForSaunaId(saunaId: string): Promise<WaterTemperatureData | null> {
+    const sauna = await prisma.sauna.findUnique({
+        where: { id: saunaId },
+        select: { id: true, latitude: true, longitude: true },
+    });
+
+    if (!sauna) return null;
+    if (!isValidCoordinate(sauna.latitude, -90, 90) || !isValidCoordinate(sauna.longitude, -180, 180)) {
+        return null;
+    }
+
+    return await refreshWaterTemperature(sauna.id, sauna.latitude, sauna.longitude);
 }

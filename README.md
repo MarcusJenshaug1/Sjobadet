@@ -44,7 +44,7 @@ Nye komponenter skal alltid ha en tilhørende `.stories.tsx`-fil i samme mappe.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Yr badetemperaturer (nærmeste)
+## Yr badetemperaturer (nærmeste) + Open-Meteo fallback
 
 Vi viser nærmeste badetemperatur på badstue-sidene via Yr sitt API. Nøkkelen må ligge på serveren og må ikke eksponeres i klienten.
 
@@ -59,8 +59,12 @@ Vi viser nærmeste badetemperatur på badstue-sidene via Yr sitt API. Nøkkelen 
 ### Geokoding
 - Når `latitude`/`longitude` mangler ved lagring i admin, forsøker vi å geokode `Gateadresse` via Nominatim.
 
+### Datakilder
+- Yr er primærkilde (målt temperatur).
+- Open-Meteo Marine brukes som fallback (modellert sjøoverflatetemperatur) hvis Yr ikke leverer.
+
 ### Feil og ingen data
-- Hvis Yr ikke har data (f.eks. eldre enn 5 døgn), vises en nøytral «Ingen data»-tilstand.
+- Hvis både Yr og Open-Meteo feiler, vises en nøytral «Ingen data»-tilstand.
 - UI fungerer også hvis Yr er nede.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.

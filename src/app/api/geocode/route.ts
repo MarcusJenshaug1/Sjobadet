@@ -9,10 +9,14 @@ export async function GET(request: Request) {
         return NextResponse.json({ message: 'Mangler adresse.' }, { status: 400 });
     }
 
-    const result = await geocodeAddress(address);
-    if (!result) {
-        return NextResponse.json({ message: 'Fant ingen koordinater.' }, { status: 404 });
-    }
+    try {
+        const result = await geocodeAddress(address);
+        if (!result) {
+            return NextResponse.json({ message: 'Fant ingen koordinater.' }, { status: 404 });
+        }
 
-    return NextResponse.json(result);
+        return NextResponse.json(result);
+    } catch {
+        return NextResponse.json({ message: 'Geokoding feilet.' }, { status: 502 });
+    }
 }

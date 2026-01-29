@@ -31,10 +31,14 @@ export async function saveSauna(_: SaveSaunaResult | void, formData: FormData): 
     let longitude = parseOptionalFloat(formData.get('longitude'))
 
     if ((!latitude || !longitude) && address?.trim()) {
-        const geocoded = await geocodeAddress(address)
-        if (geocoded) {
-            latitude = geocoded.latitude
-            longitude = geocoded.longitude
+        try {
+            const geocoded = await geocodeAddress(address)
+            if (geocoded) {
+                latitude = geocoded.latitude
+                longitude = geocoded.longitude
+            }
+        } catch (error) {
+            console.warn('[Geocoding] Failed during save:', error)
         }
     }
 

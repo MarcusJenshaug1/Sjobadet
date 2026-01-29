@@ -6,6 +6,8 @@ import styles from './WaterTemperatureCard.module.css';
 
 type WaterTemperatureCardProps = {
     data: WaterTemperatureData | null;
+    saunaId?: string;
+    isAdmin?: boolean;
 };
 
 function formatTemperature(value: number) {
@@ -24,13 +26,50 @@ function formatTimestamp(value: string) {
     return `${dateLabel} kl. ${timeLabel}`;
 }
 
-export function WaterTemperatureCard({ data }: WaterTemperatureCardProps) {
+export function WaterTemperatureCard({ data, saunaId, isAdmin = false }: WaterTemperatureCardProps) {
     const [showDetails, setShowDetails] = useState(false);
+    const [refreshStatus, setRefreshStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
+    const [refreshMessage, setRefreshMessage] = useState('');
     const timestamp = data?.time ? formatTimestamp(data.time) : null;
     const temperature = data?.temperature;
     const locationName = data?.locationName;
     const distanceKm = data?.distanceKm ?? null;
     const hasData = typeof temperature === 'number' && !!timestamp;
+    const hasLocation = !!locationName;
+    const hasDistance = typeof distanceKm === 'number';
+    const inferredSource = data?.source ?? ((hasLocation || hasDistance) ? 'yr' : null);
+    const sourceLabel = inferredSource === 'open-meteo'
+        ? 'Sjøtemperatur (modell) levert av Open-Meteo'
+        : inferredSource === 'yr'
+            ? 'Badetemperaturer levert av Yr'
+            : 'Temperaturkilde ukjent';
+
+    const handleRefresh = async () => {
+        if (!saunaId) return;
+        setRefreshStatus('loading');
+        setRefreshMessage('Henter badetemperatur...');
+
+        try {
+            const response = await fetch('/api/admin/water-temperature/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ saunaId }),
+            });
+
+            if (!response.ok) {
+                const payload = await response.json().catch(() => ({}));
+                setRefreshStatus('error');
+                setRefreshMessage(payload?.message || 'Fant ingen temperatur.');
+                return;
+            }
+
+            setRefreshStatus('success');
+            setRefreshMessage('Badetemperatur oppdatert. Oppdater siden.');
+        } catch (error) {
+            setRefreshStatus('error');
+            setRefreshMessage('Kunne ikke hente temperatur.');
+        }
+    };
 
     return (
         <div className={styles.card}>
@@ -67,16 +106,20 @@ export function WaterTemperatureCard({ data }: WaterTemperatureCardProps) {
                             <span className={styles.metaLabel}>Siste måling</span>
                             <span className={styles.metaValue}>{timestamp ?? 'Ikke tilgjengelig'}</span>
                         </div>
-                        <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Målt ved</span>
-                            <span className={styles.metaValue}>{locationName || 'Ukjent sted'}</span>
-                        </div>
-                        <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Avstand</span>
-                            <span className={styles.metaValue}>
-                                {typeof distanceKm === 'number' ? `ca. ${formatDistance(distanceKm)} km unna` : 'Ukjent'}
-                            </span>
-                        </div>
+                        {hasLocation && (
+                            <div className={styles.metaItem}>
+                                <span className={styles.metaLabel}>Målt ved</span>
+                                <span className={styles.metaValue}>{locationName}</span>
+                            </div>
+                        )}
+                        {hasDistance && (
+                            <div className={styles.metaItem}>
+                                <span className={styles.metaLabel}>Avstand</span>
+                                <span className={styles.metaValue}>
+                                    {`ca. ${formatDistance(distanceKm)} km unna`}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {!hasData && (
@@ -87,7 +130,20 @@ export function WaterTemperatureCard({ data }: WaterTemperatureCardProps) {
                 </>
             )}
 
-            <p className={styles.sourceLabel}>{data?.sourceLabel || 'Badetemperaturer levert av Yr'}</p>
+            {isAdmin && saunaId && (
+                <div className={styles.adminRow}>
+                    <button type="button" className={styles.adminButton} onClick={handleRefresh}>
+                        Hent badetemperatur nå
+                    </button>
+                    {refreshStatus !== 'idle' && (
+                        <span className={styles.adminMessage} data-status={refreshStatus}>
+                            {refreshMessage}
+                        </span>
+                    )}
+                </div>
+            )}
+
+            <p className={styles.sourceLabel}>{sourceLabel}</p>
         </div>
     );
 }
