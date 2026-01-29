@@ -17,6 +17,8 @@ export type ActiveSauna = {
     facilities?: string | null;
     gallery?: string | null;
     address?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     driftStatus?: string | null;
     capacityDropin: number;
     capacityPrivat: number;
@@ -39,6 +41,12 @@ export type ActiveSauna = {
     }[];
     availabilityData?: string | null;
     lastScrapedAt?: Date | null;
+    waterTempValue?: number | null;
+    waterTempTime?: Date | null;
+    waterTempLocationName?: string | null;
+    waterTempDistanceKm?: number | null;
+    waterTempFetchedAt?: Date | null;
+    waterTempSource?: string | null;
     nextAvailableSlot?: { time: string; availableSpots: number; date: string } | null;
 };
 
@@ -80,6 +88,8 @@ type StaticSauna = {
     facilities?: unknown[];
     address?: string;
     mapEmbedUrl?: string;
+    latitude?: number;
+    longitude?: number;
     capacity?: { dropin?: number; privat?: number };
     bookingUrls?: { dropin?: string; privat?: string };
     active: boolean;
@@ -95,6 +105,8 @@ function mapStaticSaunaBase() {
             location: s.location,
             shortDescription: s.shortDescription,
             imageUrl: s.imageUrl,
+            latitude: s.latitude ?? null,
+            longitude: s.longitude ?? null,
             driftStatus: 'open',
             capacityDropin: s.capacity?.dropin ?? 0,
             capacityPrivat: s.capacity?.privat ?? 0,
@@ -107,6 +119,12 @@ function mapStaticSaunaBase() {
             stengeArsak: null,
             availabilityData: null,
             lastScrapedAt: null,
+            waterTempValue: null,
+            waterTempTime: null,
+            waterTempLocationName: null,
+            waterTempDistanceKm: null,
+            waterTempFetchedAt: null,
+            waterTempSource: null,
             nextAvailableSlot: null,
         }));
 }
@@ -126,6 +144,8 @@ function mapStaticSaunaDetail(slug: string): SaunaDetail | null {
         facilities: JSON.stringify(match.facilities || []),
         address: match.address,
         mapEmbedUrl: match.mapEmbedUrl,
+        latitude: match.latitude ?? null,
+        longitude: match.longitude ?? null,
         driftStatus: 'open',
         capacityDropin: match.capacity?.dropin ?? 0,
         capacityPrivat: match.capacity?.privat ?? 0,
@@ -140,6 +160,12 @@ function mapStaticSaunaDetail(slug: string): SaunaDetail | null {
         hasDropinAvailability: true,
         availabilityData: null,
         lastScrapedAt: null,
+        waterTempValue: null,
+        waterTempTime: null,
+        waterTempLocationName: null,
+        waterTempDistanceKm: null,
+        waterTempFetchedAt: null,
+        waterTempSource: null,
         nextAvailableSlot: null,
         openingHours: [],
         openingHourOverrides: [],
@@ -178,6 +204,8 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
         location: true,
         shortDescription: true,
         imageUrl: true,
+        latitude: true,
+        longitude: true,
         driftStatus: true,
         capacityDropin: true,
         capacityPrivat: true,
@@ -186,6 +214,12 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
         hasDropinAvailability: true,
         availabilityData: true,
         lastScrapedAt: true,
+        waterTempValue: true,
+        waterTempTime: true,
+        waterTempLocationName: true,
+        waterTempDistanceKm: true,
+        waterTempFetchedAt: true,
+        waterTempSource: true,
         kundeMelding: true,
         flexibleHours: true,
         hoursMessage: true,
@@ -256,6 +290,8 @@ export const getSaunaBySlug = async (slug: string) => {
                 gallery: true,
                 address: true,
                 mapEmbedUrl: true,
+                latitude: true,
+                longitude: true,
                 facilities: true,
                 capacityDropin: true,
                 capacityPrivat: true,
@@ -272,6 +308,12 @@ export const getSaunaBySlug = async (slug: string) => {
                 hasDropinAvailability: true,
                 availabilityData: true,
                 lastScrapedAt: true,
+                waterTempValue: true,
+                waterTempTime: true,
+                waterTempLocationName: true,
+                waterTempDistanceKm: true,
+                waterTempFetchedAt: true,
+                waterTempSource: true,
                 seoTitle: true,
                 seoDescription: true,
                 openingHours: {

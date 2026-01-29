@@ -44,6 +44,29 @@ Nye komponenter skal alltid ha en tilhørende `.stories.tsx`-fil i samme mappe.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Yr badetemperaturer (nærmeste) + Open-Meteo fallback
+
+Vi viser nærmeste badetemperatur på badstue-sidene via Yr sitt API. Nøkkelen må ligge på serveren og må ikke eksponeres i klienten.
+
+### Miljøvariabel
+- `YR_BADETEMP_APIKEY`: Hent nøkkel ved å sende e-post til support@yr.no med emne “Forespørsel om API-nøkkel til badetemperaturer”.
+- `GEOCODING_USER_AGENT` og `GEOCODING_CONTACT_EMAIL`: Brukes av Nominatim (OpenStreetMap) for automatisk geokoding av gateadresse.
+
+### Caching
+- On-demand caching med 24t TTL lagres per badstue i databasen.
+- Hvis cache er eldre enn 24t, returneres sist kjente verdi umiddelbart, og oppdatering skjer i bakgrunnen.
+
+### Geokoding
+- Når `latitude`/`longitude` mangler ved lagring i admin, forsøker vi å geokode `Gateadresse` via Nominatim.
+
+### Datakilder
+- Yr er primærkilde (målt temperatur).
+- Open-Meteo Marine brukes som fallback (modellert sjøoverflatetemperatur) hvis Yr ikke leverer.
+
+### Feil og ingen data
+- Hvis både Yr og Open-Meteo feiler, vises en nøytral «Ingen data»-tilstand.
+- UI fungerer også hvis Yr er nede.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

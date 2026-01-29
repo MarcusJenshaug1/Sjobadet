@@ -10,6 +10,8 @@ import prisma from '@/lib/prisma';
 import nextDynamic from 'next/dynamic';
 import { getSession } from '@/lib/auth';
 import { getOverrideForDate } from '@/lib/sauna-utils';
+import { getWaterTemperatureForSauna, type WaterTemperatureData } from '@/lib/water-temperature-service';
+import { WaterTemperatureCard } from '@/components/sauna/WaterTemperatureCard';
 
 // Lazy load non-critical components
 const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
@@ -69,6 +71,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     let otherSaunas: ActiveSauna[] = [];
     let settings: Record<string, string> = {};
     let isMaintenanceMode = false;
+    let waterTemperature: WaterTemperatureData | null = null;
 
     try {
         const [saunaData, allSaunas, session, globalSettings, maintenanceSetting] = await Promise.all([
@@ -84,6 +87,10 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
         isAdmin = !!session?.user;
         settings = globalSettings;
         isMaintenanceMode = maintenanceSetting?.value === 'true';
+
+        if (saunaData?.latitude != null && saunaData?.longitude != null) {
+            waterTemperature = await getWaterTemperatureForSauna(saunaData);
+        }
     } catch (error) {
         console.error('Failed to fetch sauna detail:', error);
         dbError = true;
@@ -359,6 +366,8 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                     ))}
                                     {facilities.length === 0 && <span style={{ color: '#94a3b8' }}>Ingen fasiliteter oppført</span>}
                                 </div>
+
+                                <WaterTemperatureCard data={waterTemperature} saunaId={sauna.id} isAdmin={isAdmin} />
 
                                 {/* Actions */}
                                 <div style={{ marginTop: '0.5rem' }}>
