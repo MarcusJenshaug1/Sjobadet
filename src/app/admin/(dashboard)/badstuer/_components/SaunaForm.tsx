@@ -87,12 +87,59 @@ export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
         status: true
     })
 
+    // Address + Coordinates
+    const [addressValue, setAddressValue] = useState(sauna?.address || '')
+    const [latitudeValue, setLatitudeValue] = useState<string>(
+        sauna?.latitude !== undefined && sauna?.latitude !== null ? String(sauna.latitude) : ''
+    )
+    const [longitudeValue, setLongitudeValue] = useState<string>(
+        sauna?.longitude !== undefined && sauna?.longitude !== null ? String(sauna.longitude) : ''
+    )
+    const [geocodeStatus, setGeocodeStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle')
+    const [geocodeMessage, setGeocodeMessage] = useState<string>('')
+
     const toggleSection = (key: keyof typeof sections) => {
         setSections(prev => ({ ...prev, [key]: !prev[key] }))
     }
 
     const handleFormChange = () => {
         setIsDirty(true)
+    }
+
+    const handleGeocode = async () => {
+        if (!addressValue.trim()) {
+            setGeocodeStatus('error')
+            setGeocodeMessage('Legg inn gateadresse først.')
+            return
+        }
+
+        setGeocodeStatus('loading')
+        setGeocodeMessage('Henter koordinater...')
+
+        try {
+            const response = await fetch(`/api/geocode?address=${encodeURIComponent(addressValue)}`)
+            if (!response.ok) {
+                const payload = await response.json().catch(() => ({}))
+                setGeocodeStatus('error')
+                setGeocodeMessage(payload?.message || 'Fant ingen koordinater.')
+                return
+            }
+            const data = await response.json()
+            if (typeof data?.latitude !== 'number' || typeof data?.longitude !== 'number') {
+                setGeocodeStatus('error')
+                setGeocodeMessage('Fant ingen koordinater.')
+                return
+            }
+
+            setLatitudeValue(String(data.latitude))
+            setLongitudeValue(String(data.longitude))
+            setGeocodeStatus('success')
+            setGeocodeMessage('Koordinater oppdatert.')
+            setIsDirty(true)
+        } catch (error) {
+            setGeocodeStatus('error')
+            setGeocodeMessage('Kunne ikke hente koordinater.')
+        }
     }
 
     useEffect(() => {
@@ -292,7 +339,55 @@ export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
                             <ChevronDown style={{ transform: sections.address ? 'rotate(180deg)' : 'rotate(0)' }} />
                         </div>
                         <div className={`${styles.sectionBody} ${!sections.address && styles.sectionBodyHidden}`}>
-                            <LabelInput label="Gateadresse" name="address" defaultValue={sauna?.address || undefined} placeholder="Storgaten 1, 3126 Tønsberg" />
+                            <LabelInput
+                                label="Gateadresse"
+                                name="address"
+                                value={addressValue}
+                                onChange={(event) => {
+                                    setAddressValue(event.target.value)
+                                    setIsDirty(true)
+                                }}
+                                placeholder="Storgaten 1, 3126 Tønsberg"
+                            />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1rem' }}>
+                                <LabelInput
+                                    label="Breddegrad (lat)"
+                                    name="latitude"
+                                    type="number"
+                                    step="any"
+                                    value={latitudeValue}
+                                    onChange={(event) => {
+                                        setLatitudeValue(event.target.value)
+                                        setIsDirty(true)
+                                    }}
+                                    placeholder="59.12345"
+                                />
+                                <LabelInput
+                                    label="Lengdegrad (lon)"
+                                    name="longitude"
+                                    type="number"
+                                    step="any"
+                                    value={longitudeValue}
+                                    onChange={(event) => {
+                                        setLongitudeValue(event.target.value)
+                                        setIsDirty(true)
+                                    }}
+                                    placeholder="10.12345"
+                                />
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                                <Button type="button" variant="outline" size="sm" onClick={handleGeocode}>
+                                    Hent koordinater fra adresse
+                                </Button>
+                                {geocodeStatus !== 'idle' && (
+                                    <span style={{ fontSize: '0.875rem', color: geocodeStatus === 'error' ? '#b91c1c' : '#475569' }}>
+                                        {geocodeMessage}
+                                    </span>
+                                )}
+                            </div>
+                            <div className={styles.helperText} style={{ marginTop: '0.75rem' }}>
+                                Bruk desimalgrader. Kreves for badetemperatur fra Yr.
+                            </div>
                         </div>
                     </div>
 

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth-guard'
 import { clearSaunaCaches } from '@/lib/sauna-service'
+import { geocodeAddress } from '@/lib/geocoding-service'
 
 export type SaveSaunaResult = {
     success: boolean
@@ -19,6 +20,23 @@ export async function saveSauna(_: SaveSaunaResult | void, formData: FormData): 
     }
     const id = formData.get('id') as string
     const isNew = formData.get('isNew') === 'true'
+    const parseOptionalFloat = (value: FormDataEntryValue | null) => {
+        if (typeof value !== 'string' || value.trim() === '') return null
+        const parsed = Number.parseFloat(value)
+        return Number.isFinite(parsed) ? parsed : null
+    }
+
+    const address = formData.get('address') as string
+    let latitude = parseOptionalFloat(formData.get('latitude'))
+    let longitude = parseOptionalFloat(formData.get('longitude'))
+
+    if ((!latitude || !longitude) && address?.trim()) {
+        const geocoded = await geocodeAddress(address)
+        if (geocoded) {
+            latitude = geocoded.latitude
+            longitude = geocoded.longitude
+        }
+    }
 
     const data = {
         name: formData.get('name') as string,
@@ -27,7 +45,9 @@ export async function saveSauna(_: SaveSaunaResult | void, formData: FormData): 
         shortDescription: formData.get('shortDescription') as string,
         description: formData.get('description') as string,
         imageUrl: formData.get('imageUrl') as string,
-        address: formData.get('address') as string,
+        address,
+        latitude,
+        longitude,
         mapEmbedUrl: (formData.get('mapEmbedUrl') as string) ||
             (formData.get('address') ? `https://maps.google.com/maps?q=${encodeURIComponent(formData.get('address') as string)}&output=embed` : ''),
         capacityDropin: parseInt(formData.get('capacityDropin') as string || '0'),

@@ -31,6 +31,8 @@ Andre env som brukes i kode (ikke dokumentert i .env.example per nå):
 - CRON_SECRET (src/app/api/cron/*)
 - LIGHTHOUSE_BASE_URL, SCAN_HOMEPAGE, SCAN_SAUNAS, SCAN_SUBPAGES, SCAN_ID (scripts/daily_lighthouse_scan.mjs, src/app/api/lighthouse/scan/route.ts)
 - PUPPETEER_EXECUTABLE_PATH, CHROME_PATH (src/lib/availability-scraper.ts)
+- YR_BADETEMP_APIKEY (src/lib/water-temperature-service.ts)
+- GEOCODING_USER_AGENT, GEOCODING_CONTACT_EMAIL (src/lib/geocoding-service.ts)
 
 Uavklart:
 - .env.development.example beskriver SQLite, men Prisma datasource er postgresql i prisma/schema.prisma. Avklar og oppdater dokumentasjon ved behov.

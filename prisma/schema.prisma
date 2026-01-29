@@ -29,6 +29,8 @@ model Sauna {
   gallery                      String?
   address                      String?
   mapEmbedUrl                  String?
+  latitude                     Float?
+  longitude                    Float?
   facilities                   String?
   capacityDropin               Int           @default(0)
   capacityPrivat               Int           @default(0)
@@ -53,6 +55,11 @@ model Sauna {
   previousAvailabilityData     String?
   lastScrapedAt                DateTime?
   hasDropinAvailability        Boolean       @default(true)
+  waterTempValue               Float?
+  waterTempTime                DateTime?
+  waterTempLocationName        String?
+  waterTempDistanceKm          Float?
+  waterTempFetchedAt           DateTime?
   mediaAssets                  MediaAsset[]
   openingHours                 OpeningHour[]
   openingHourOverrides         OpeningHourOverride[]
