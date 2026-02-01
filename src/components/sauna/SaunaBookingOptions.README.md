@@ -28,7 +28,7 @@ Kort beskrivelse: Kort med valg for drop-in og privat booking.
 - Kortene er knapper med tydelig tekst.
 
 ## Vedlikehold/Notater
-- Bruker `BookingModal` for å vise booking-iframe.
+- Åpner booking direkte i ny fane fra kortene.
 
 ## Gjør
 - Gi tydelige beskrivelser av booking-typer.

@@ -28,6 +28,11 @@ export function BookingModal({ url, open, onClose, title }: BookingModalProps) {
 
     if (!open) return null;
 
+    const handleOpenExternal = () => {
+        if (!url) return;
+        window.open(url, '_blank', 'noopener,noreferrer');
+    };
+
     return createPortal(
         <div
             className={styles.backdrop}
@@ -42,17 +47,33 @@ export function BookingModal({ url, open, onClose, title }: BookingModalProps) {
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.header}>
                     <div className={styles.title}>{title || 'Fullfør booking'}</div>
+                    <div className={styles.headerActions}>
+                        <button
+                            type="button"
+                            className={styles.externalButton}
+                            onClick={handleOpenExternal}
+                        >
+                            Åpne i ny fane
+                        </button>
                     <button className={styles.closeButton} onClick={onClose} aria-label="Lukk">
                         ×
                     </button>
+                    </div>
                 </div>
                 <div className={styles.body}>
-                    <iframe
-                        src={url}
-                        title={title || 'Booking'}
-                        className={styles.iframe}
-                        allow="payment *; fullscreen"
-                    />
+                    <div className={styles.blockedNotice}>
+                        <p className={styles.blockedTitle}>Booking åpnes i ny fane</p>
+                        <p className={styles.blockedText}>
+                            For å sikre innlogging og betaling, åpnes booking nå i en egen fane.
+                        </p>
+                        <button
+                            type="button"
+                            className={styles.externalButton}
+                            onClick={handleOpenExternal}
+                        >
+                            Åpne booking i ny fane
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>,

@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import styles from '@/app/home/[slug]/SaunaDetail.module.css';
 import { ExternalLink } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/tracking';
-import { BookingModal } from './BookingModal';
 
 interface SaunaBookingOptionsProps {
     saunaId: string;
@@ -23,13 +22,17 @@ export default function SaunaBookingOptions({
     bookingUrlDropin,
     bookingUrlPrivat
 }: SaunaBookingOptionsProps) {
-    const [bookingUrl, setBookingUrl] = useState<string | null>(null);
     const handleTrack = (type: 'drop-in' | 'private') => {
         trackEvent('booking_click', {
             type,
             saunaId,
             saunaName
         });
+    };
+
+    const openBooking = (url: string, type: 'drop-in' | 'private') => {
+        handleTrack(type);
+        window.open(url, '_blank', 'noopener,noreferrer');
     };
 
     return (
@@ -43,8 +46,7 @@ export default function SaunaBookingOptions({
                             type="button"
                             className={`${styles.bookingOptionCard} ${styles.dropinCard}`}
                             onClick={() => {
-                                handleTrack('drop-in');
-                                setBookingUrl(bookingUrlDropin);
+                                if (bookingUrlDropin) openBooking(bookingUrlDropin, 'drop-in');
                             }}
                         >
                             <div className={styles.cardHeader}>
@@ -73,8 +75,7 @@ export default function SaunaBookingOptions({
                             type="button"
                             className={`${styles.bookingOptionCard} ${styles.privateCard}`}
                             onClick={() => {
-                                handleTrack('private');
-                                setBookingUrl(bookingUrlPrivat);
+                                if (bookingUrlPrivat) openBooking(bookingUrlPrivat, 'private');
                             }}
                         >
                             <div className={styles.cardHeader}>
@@ -96,12 +97,6 @@ export default function SaunaBookingOptions({
                     )
                 )}
             </div>
-            <BookingModal
-                open={Boolean(bookingUrl)}
-                url={bookingUrl || ''}
-                onClose={() => setBookingUrl(null)}
-                title={`${saunaName} booking`}
-            />
         </div>
     );
 }

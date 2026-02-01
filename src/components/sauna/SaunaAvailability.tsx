@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './SaunaAvailability.module.css';
-import { BookingModal } from './BookingModal';
 import { getNextAvailableSlot, getRelativeDayLabel, formatDateNoShortTitleCase } from '@/lib/availability-utils';
 
 interface ScrapedSlot {
@@ -42,7 +41,6 @@ export default function SaunaAvailability({
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(false);
     const [onlyAvailable, setOnlyAvailable] = useState(true);
-    const [bookingUrl, setBookingUrl] = useState<string | null>(null);
     const hasDataRef = useRef(false);
     const [mounted, setMounted] = useState(false);
     const abortRef = useRef<AbortController | null>(null);
@@ -401,7 +399,6 @@ export default function SaunaAvailability({
                                 baseBookingUrl={bookingUrlDropin}
                                 displayDate={currentData.displayDate}
                                 isPast={isPast}
-                                onOpenBooking={(url) => setBookingUrl(url)}
                             />
                         );
                     })
@@ -414,12 +411,6 @@ export default function SaunaAvailability({
                     </div>
                 )}
             </div>
-            <BookingModal
-                open={Boolean(bookingUrl)}
-                url={bookingUrl || ''}
-                onClose={() => setBookingUrl(null)}
-                title="Booking"
-            />
         </div>
     );
 }
@@ -429,15 +420,13 @@ function SlotCard({
     totalCapacity,
     baseBookingUrl,
     displayDate,
-    isPast = false,
-    onOpenBooking
+    isPast = false
 }: {
     slot: ScrapedSlot,
     totalCapacity: number,
     baseBookingUrl?: string | null,
     displayDate?: string,
-    isPast?: boolean,
-    onOpenBooking: (url: string) => void
+    isPast?: boolean
 }) {
     const isFull = slot.availableSpots === 0;
     const availablePlaces = slot.availableSpots;
@@ -474,13 +463,14 @@ function SlotCard({
 
     if (isClickable && bookingLink) {
         return (
-            <button
-                type="button"
+            <a
+                href={bookingLink}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`${styles.slotCard} ${styles.slotCardClickable} ${stateClass}`}
-                onClick={() => onOpenBooking(bookingLink)}
             >
                 {cardContent}
-            </button>
+            </a>
         );
     }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import Image from 'next/image';
 import {
@@ -16,7 +16,6 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { trackEvent } from '@/lib/analytics/tracking';
 import { useOptionalRouter } from '@/lib/optional-router';
-import { BookingModal } from './BookingModal';
 
 import { formatDateNoShortTitleCase, getRelativeDayLabel } from '@/lib/availability-utils';
 import { getOverrideForDate } from '@/lib/sauna-utils';
@@ -46,7 +45,6 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
     const router = useOptionalRouter();
     const cardRef = useRef<HTMLDivElement | null>(null);
     const prefetchedRef = useRef(false);
-    const [bookingUrl, setBookingUrl] = useState<string | null>(null);
     const targetHref = `/home/${sauna.slug}`;
 
     useEffect(() => {
@@ -242,10 +240,9 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                         {sauna.bookingUrlDropin ? (
                             <Button
                                 href={sauna.bookingUrlDropin || '#'}
+                                external
                                 onClick={(e) => {
-                                    e.preventDefault();
                                     e.stopPropagation();
-                                    setBookingUrl(sauna.bookingUrlDropin || null);
                                     trackEvent('booking_click', { type: 'drop-in', saunaId: sauna.id, saunaName: sauna.name });
                                 }}
                                 className={styles.btnDropin}
@@ -261,10 +258,9 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                         {sauna.bookingUrlPrivat ? (
                             <Button
                                 href={sauna.bookingUrlPrivat || '#'}
+                                external
                                 onClick={(e) => {
-                                    e.preventDefault();
                                     e.stopPropagation();
-                                    setBookingUrl(sauna.bookingUrlPrivat || null);
                                     trackEvent('booking_click', { type: 'private', saunaId: sauna.id, saunaName: sauna.name });
                                 }}
                                 className={styles.btnPrivat}
@@ -293,14 +289,6 @@ export function SaunaCard({ sauna, isMaintenanceMode = false }: { sauna: SaunaPr
                         </button>
                     )}
                 </div>
-            </div>
-            <div onClick={(e) => e.stopPropagation()}>
-                <BookingModal
-                    open={Boolean(bookingUrl)}
-                    url={bookingUrl || ''}
-                    onClose={() => setBookingUrl(null)}
-                    title={`${sauna.name} booking`}
-                />
             </div>
         </div>
     );
