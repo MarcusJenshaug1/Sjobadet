@@ -28,6 +28,16 @@ export type ActiveSauna = {
     kundeMelding?: string | null;
     flexibleHours?: boolean | null;
     hoursMessage?: string | null;
+    priceCurrency?: string | null;
+    priceDropinMember?: number | null;
+    priceDropinRegular?: number | null;
+    pricePrivatMember?: number | null;
+    pricePrivatRegular?: number | null;
+    priceNote?: string | null;
+    parkingInfo?: string | null;
+    lockerInfo?: string | null;
+    accessibilityInfo?: string | null;
+    coldPlungeInfo?: string | null;
     stengeArsak?: string | null;
     seoTitle?: string | null;
     seoDescription?: string | null;
@@ -116,6 +126,16 @@ function mapStaticSaunaBase() {
             kundeMelding: null,
             flexibleHours: null,
             hoursMessage: null,
+            priceCurrency: null,
+            priceDropinMember: null,
+            priceDropinRegular: null,
+            pricePrivatMember: null,
+            pricePrivatRegular: null,
+            priceNote: null,
+            parkingInfo: null,
+            lockerInfo: null,
+            accessibilityInfo: null,
+            coldPlungeInfo: null,
             stengeArsak: null,
             availabilityData: null,
             lastScrapedAt: null,
@@ -157,6 +177,16 @@ function mapStaticSaunaDetail(slug: string): SaunaDetail | null {
         kundeMelding: null,
         flexibleHours: null,
         hoursMessage: null,
+    priceCurrency: null,
+    priceDropinMember: null,
+    priceDropinRegular: null,
+    pricePrivatMember: null,
+    pricePrivatRegular: null,
+    priceNote: null,
+    parkingInfo: null,
+    lockerInfo: null,
+    accessibilityInfo: null,
+    coldPlungeInfo: null,
         hasDropinAvailability: true,
         availabilityData: null,
         lastScrapedAt: null,
@@ -223,6 +253,16 @@ export const getActiveSaunas = async (options: { includeOpeningHours?: boolean }
         kundeMelding: true,
         flexibleHours: true,
         hoursMessage: true,
+    priceCurrency: true,
+    priceDropinMember: true,
+    priceDropinRegular: true,
+    pricePrivatMember: true,
+    pricePrivatRegular: true,
+    priceNote: true,
+    parkingInfo: true,
+    lockerInfo: true,
+    accessibilityInfo: true,
+    coldPlungeInfo: true,
         stengeArsak: true,
         seoTitle: true,
         seoDescription: true,
@@ -305,6 +345,16 @@ export const getSaunaBySlug = async (slug: string) => {
                 kundeMelding: true,
                 flexibleHours: true,
                 hoursMessage: true,
+                priceCurrency: true,
+                priceDropinMember: true,
+                priceDropinRegular: true,
+                pricePrivatMember: true,
+                pricePrivatRegular: true,
+                priceNote: true,
+                parkingInfo: true,
+                lockerInfo: true,
+                accessibilityInfo: true,
+                coldPlungeInfo: true,
                 hasDropinAvailability: true,
                 availabilityData: true,
                 lastScrapedAt: true,

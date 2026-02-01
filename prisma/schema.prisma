@@ -45,6 +45,16 @@ model Sauna {
   kundeMelding                 String?
   flexibleHours                Boolean       @default(false)
   hoursMessage                 String?
+  priceCurrency                String        @default("NOK")
+  priceDropinMember            Float?
+  priceDropinRegular           Float?
+  pricePrivatMember            Float?
+  pricePrivatRegular           Float?
+  priceNote                    String?
+  parkingInfo                  String?
+  lockerInfo                   String?
+  accessibilityInfo            String?
+  coldPlungeInfo               String?
   seoTitle                     String?
   seoDescription               String?
   updatedAt                    DateTime      @updatedAt

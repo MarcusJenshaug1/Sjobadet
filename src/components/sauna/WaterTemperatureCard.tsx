@@ -27,7 +27,6 @@ function formatTimestamp(value: string) {
 }
 
 export function WaterTemperatureCard({ data, saunaId, isAdmin = false }: WaterTemperatureCardProps) {
-    const [showDetails, setShowDetails] = useState(false);
     const [refreshStatus, setRefreshStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
     const [refreshMessage, setRefreshMessage] = useState('');
     const timestamp = data?.time ? formatTimestamp(data.time) : null;
@@ -72,78 +71,73 @@ export function WaterTemperatureCard({ data, saunaId, isAdmin = false }: WaterTe
     };
 
     return (
-        <div className={styles.card}>
-            <div className={styles.headerRow}>
-                <span className={styles.title}>Badetemperatur</span>
-                {hasData ? (
-                    <span className={styles.statusBadge}>Oppdatert</span>
-                ) : (
-                    <span className={styles.statusBadgeMuted}>Ingen data</span>
-                )}
-            </div>
-
-            <div className={styles.temperatureRow}>
-                <span className={styles.temperatureValue}>
-                    {hasData ? `${formatTemperature(temperature)} °C` : '-- °C'}
-                </span>
-                <span className={styles.temperatureHint}>
-                    {hasData ? 'Nærmeste måling' : 'Venter på måling'}
-                </span>
-            </div>
-
-            <button
-                type="button"
-                className={styles.toggleButton}
-                onClick={() => setShowDetails((prev) => !prev)}
-            >
-                {showDetails ? 'Skjul info' : 'Vis mer info'}
-            </button>
-
-            {showDetails && (
-                <>
-                    <div className={styles.metaRow}>
-                        <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Siste måling</span>
-                            <span className={styles.metaValue}>{timestamp ?? 'Ikke tilgjengelig'}</span>
-                        </div>
-                        {hasLocation && (
-                            <div className={styles.metaItem}>
-                                <span className={styles.metaLabel}>Målt ved</span>
-                                <span className={styles.metaValue}>{locationName}</span>
-                            </div>
-                        )}
-                        {hasDistance && (
-                            <div className={styles.metaItem}>
-                                <span className={styles.metaLabel}>Avstand</span>
-                                <span className={styles.metaValue}>
-                                    {`ca. ${formatDistance(distanceKm)} km unna`}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-
-                    {!hasData && (
-                        <p className={styles.emptyState}>
-                            Ingen registrerte badetemperaturer innen 50 km akkurat nå.
-                        </p>
+        <details className={styles.card}>
+            <summary className={styles.summaryRow}>
+                <span className={styles.summaryTitle}>Badetemperatur</span>
+                <span className={styles.summaryPreview}>
+                    <span className={styles.summaryTemp}>
+                        {hasData ? `${formatTemperature(temperature)} °C` : '-- °C'}
+                    </span>
+                    {hasData ? (
+                        <span className={styles.statusBadge}>Oppdatert</span>
+                    ) : (
+                        <span className={styles.statusBadgeMuted}>Ingen data</span>
                     )}
-                </>
-            )}
+                </span>
+            </summary>
 
-            {isAdmin && saunaId && (
-                <div className={styles.adminRow}>
-                    <button type="button" className={styles.adminButton} onClick={handleRefresh}>
-                        Hent badetemperatur nå
-                    </button>
-                    {refreshStatus !== 'idle' && (
-                        <span className={styles.adminMessage} data-status={refreshStatus}>
-                            {refreshMessage}
-                        </span>
+            <div className={styles.content}>
+                <div className={styles.temperatureRow}>
+                    <span className={styles.temperatureValue}>
+                        {hasData ? `${formatTemperature(temperature)} °C` : '-- °C'}
+                    </span>
+                    <span className={styles.temperatureHint}>
+                        {hasData ? 'Nærmeste måling' : 'Venter på måling'}
+                    </span>
+                </div>
+
+                <div className={styles.metaRow}>
+                    <div className={styles.metaItem}>
+                        <span className={styles.metaLabel}>Siste måling</span>
+                        <span className={styles.metaValue}>{timestamp ?? 'Ikke tilgjengelig'}</span>
+                    </div>
+                    {hasLocation && (
+                        <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Målt ved</span>
+                            <span className={styles.metaValue}>{locationName}</span>
+                        </div>
+                    )}
+                    {hasDistance && (
+                        <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Avstand</span>
+                            <span className={styles.metaValue}>
+                                {`ca. ${formatDistance(distanceKm)} km unna`}
+                            </span>
+                        </div>
                     )}
                 </div>
-            )}
 
-            <p className={styles.sourceLabel}>{sourceLabel}</p>
-        </div>
+                {!hasData && (
+                    <p className={styles.emptyState}>
+                        Ingen registrerte badetemperaturer innen 50 km akkurat nå.
+                    </p>
+                )}
+
+                {isAdmin && saunaId && (
+                    <div className={styles.adminRow}>
+                        <button type="button" className={styles.adminButton} onClick={handleRefresh}>
+                            Hent badetemperatur nå
+                        </button>
+                        {refreshStatus !== 'idle' && (
+                            <span className={styles.adminMessage} data-status={refreshStatus}>
+                                {refreshMessage}
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                <p className={styles.sourceLabel}>{sourceLabel}</p>
+            </div>
+        </details>
     );
 }

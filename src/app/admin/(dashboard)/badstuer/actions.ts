@@ -72,6 +72,20 @@ export async function saveSauna(_: SaveSaunaResult | void, formData: FormData): 
         hasDropinAvailability: formData.get('hasDropinAvailability') === 'on',
         hoursMessage: formData.get('hoursMessage') as string,
 
+    // Pricing
+    priceCurrency: (formData.get('priceCurrency') as string) || 'NOK',
+    priceDropinMember: parseOptionalFloat(formData.get('priceDropinMember')),
+    priceDropinRegular: parseOptionalFloat(formData.get('priceDropinRegular')),
+    pricePrivatMember: parseOptionalFloat(formData.get('pricePrivatMember')),
+    pricePrivatRegular: parseOptionalFloat(formData.get('pricePrivatRegular')),
+    priceNote: formData.get('priceNote') as string,
+
+    // Practical info
+    parkingInfo: formData.get('parkingInfo') as string,
+    lockerInfo: formData.get('lockerInfo') as string,
+    accessibilityInfo: formData.get('accessibilityInfo') as string,
+    coldPlungeInfo: formData.get('coldPlungeInfo') as string,
+
         // SEO
         seoTitle: formData.get('seoTitle') as string,
         seoDescription: formData.get('seoDescription') as string,

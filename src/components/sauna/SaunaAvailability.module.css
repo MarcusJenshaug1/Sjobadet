@@ -18,6 +18,34 @@
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+.errorInline {
+    margin: 0.75rem 0 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.errorLink {
+    font-weight: 600;
+    color: #c2410c;
+    text-decoration: none;
+    background: #ffedd5;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid #fdba74;
+    white-space: nowrap;
+}
+
+.errorLink:hover {
+    background: #fed7aa;
+}
         flex-wrap: wrap;
         gap: 0.75rem;
     }

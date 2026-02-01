@@ -1,6 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import styles from './SaunaDetail.module.css';
-import { MapPin, Users, Check, AlertTriangle, Gift, CreditCard } from 'lucide-react';
+import { MapPin, Check, AlertTriangle, Gift, CreditCard, Clock, Users, Car, Bath, Accessibility, Droplet } from 'lucide-react';
 import { Metadata } from 'next';
 import { getSaunaBySlug, getActiveSaunas, getGlobalSettings, SaunaDetail, ActiveSauna } from '@/lib/sauna-service';
 import { notFound } from 'next/navigation';
@@ -9,9 +9,10 @@ import Image from 'next/image';
 import prisma from '@/lib/prisma';
 import nextDynamic from 'next/dynamic';
 import { getSession } from '@/lib/auth';
-import { getOverrideForDate } from '@/lib/sauna-utils';
+import { getOverrideForDate, getTodayOpeningHours, formatSmartOpeningHours } from '@/lib/sauna-utils';
 import { getWaterTemperatureForSauna, type WaterTemperatureData } from '@/lib/water-temperature-service';
 import { WaterTemperatureCard } from '@/components/sauna/WaterTemperatureCard';
+import { ShareButton } from '@/components/sauna/ShareButton';
 
 // Lazy load non-critical components
 const Footer = nextDynamic(() => import('@/components/layout/Footer').then(mod => mod.Footer));
@@ -113,7 +114,10 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
     const facilities = sauna ? parseJSON(sauna.facilities) : [];
     const gallery = sauna ? parseJSON(sauna.gallery) : [];
     const phone = settings['contact_phone'] || '+47 401 55 365';
+    const shareUrlBase = settings['site_url'] || '';
+    const shareUrl = `${shareUrlBase}/home/${slug}`.replace(/(^\/\/)|(?<!:)\/\//g, '/');
     const todayOverride = sauna ? getOverrideForDate(sauna.openingHourOverrides) : null;
+    const todayHours = sauna?.openingHours ? getTodayOpeningHours(sauna.openingHours) : null;
     const overrideLabel = todayOverride
         ? todayOverride.active === false
             ? 'Stengt i dag (avvikende åpningstid)'
@@ -121,6 +125,69 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                 ? `Avvikende åpningstid i dag: ${todayOverride.opens}–${todayOverride.closes}`
                 : 'Avvikende åpningstid i dag'
         : null;
+    const todayHoursLabel = (() => {
+        if (todayOverride) {
+            if (todayOverride.active === false) return 'Stengt i dag';
+            if (todayOverride.opens && todayOverride.closes) return `${todayOverride.opens}–${todayOverride.closes}`;
+            return 'Avvikende åpningstid';
+        }
+        if (sauna?.flexibleHours && sauna?.hoursMessage) return sauna.hoursMessage;
+        if (todayHours?.active && todayHours.opens && todayHours.closes) return `${todayHours.opens}–${todayHours.closes}`;
+        return 'Kontakt oss for åpningstider';
+    })();
+    const weeklyHours = sauna?.openingHours?.filter((h) => h.type === 'weekly') || [];
+    const weekdayLabels = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'];
+    const weeklySchedule = weekdayLabels.map((label, index) => {
+        const hour = weeklyHours.find((h) => h.weekday === index);
+        if (!hour || !hour.active || !hour.opens || !hour.closes) {
+            return { label, value: 'Stengt' };
+        }
+        return { label, value: `${hour.opens}–${hour.closes}` };
+    });
+    const openingSummary = formatSmartOpeningHours(weeklyHours);
+    const currency = sauna?.priceCurrency || 'NOK';
+    const formatPriceValue = (value?: number | null) =>
+        typeof value === 'number' ? `${value.toLocaleString('no-NO')} ${currency}` : null;
+    const hasPriceInfo =
+        sauna?.priceDropinMember != null ||
+        sauna?.priceDropinRegular != null ||
+        sauna?.pricePrivatMember != null ||
+        sauna?.pricePrivatRegular != null ||
+        sauna?.priceNote;
+    const priceValues = [
+        sauna?.priceDropinMember,
+        sauna?.priceDropinRegular,
+        sauna?.pricePrivatMember,
+        sauna?.pricePrivatRegular,
+    ].filter((value): value is number => typeof value === 'number');
+    const minPrice = priceValues.length > 0 ? Math.min(...priceValues) : null;
+    const pricePreview = minPrice != null ? `Fra ${minPrice.toLocaleString('no-NO')} ${currency}` : 'Ingen priser';
+    const practicalInfoItems = [
+        { label: 'Dagens åpningstid', value: `Åpningstid: ${todayHoursLabel}`, icon: Clock },
+        { label: 'Kapasitet drop-in', value: `Drop-in: ${sauna?.capacityDropin ?? 0} personer`, icon: Users },
+        { label: 'Kapasitet privat', value: `Privat: ${sauna?.capacityPrivat ?? 0} personer`, icon: Users },
+        { label: 'Adresse', value: sauna?.address ? sauna.address.split(',')[0] : null, icon: MapPin },
+        { label: 'Parkering', value: sauna?.parkingInfo, icon: Car },
+        { label: 'Garderobe / dusj', value: sauna?.lockerInfo, icon: Bath },
+        { label: 'Tilgjengelighet', value: sauna?.accessibilityInfo, icon: Accessibility },
+        { label: 'Kald-stup / hav', value: sauna?.coldPlungeInfo, icon: Droplet },
+    ].filter((item) => item.value);
+    const priceCards = [
+        {
+            title: 'Drop-in',
+            memberLabel: 'Medlemskap',
+            member: formatPriceValue(sauna?.priceDropinMember),
+            regularLabel: 'Uten medlemskap',
+            regular: formatPriceValue(sauna?.priceDropinRegular),
+        },
+        {
+            title: 'Privat',
+            memberLabel: 'Medlemskap',
+            member: formatPriceValue(sauna?.pricePrivatMember),
+            regularLabel: 'Uten medlemskap',
+            regular: formatPriceValue(sauna?.pricePrivatRegular),
+        },
+    ].filter((card) => card.member || card.regular);
     const showAvailability = !isMaintenanceMode && (((sauna as any)?.hasDropinAvailability ?? true) || !!sauna?.bookingUrlDropin);
 
     return (
@@ -327,45 +394,79 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                 )}
 
                                 {/* Praktisk Info */}
-                                <div className={styles.sidebarCard}>
-                                    <h3 className={styles.sidebarTitle}>Praktisk info</h3>
-
-                                    <div className={styles.infoItem}>
-                                        <Users size={20} className={styles.infoIcon} />
-                                        <div>
-                                            <span className={styles.infoLabel}>Kapasitet drop-in</span>
-                                            <span className={styles.infoValue}>{sauna?.capacityDropin ?? 0} personer</span>
-                                        </div>
+                                {(practicalInfoItems.length > 0 || facilities.length > 0) && (
+                                    <div className={styles.sidebarCard}>
+                                        <h3 className={styles.sidebarTitle}>Praktisk & fasiliteter</h3>
+                                        {practicalInfoItems.length > 0 && (
+                                            <div style={{ display: 'grid', gap: '0.75rem', marginBottom: facilities.length > 0 ? '1rem' : 0 }}>
+                                                {practicalInfoItems.map((item) => {
+                                                    const Icon = item.icon;
+                                                    return (
+                                                        <div key={item.label} className={styles.infoItem}>
+                                                            <Icon size={18} className={styles.infoIcon} />
+                                                            <span className={styles.infoValue}>{item.value}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                        {facilities.length > 0 ? (
+                                            <div>
+                                                <div style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', marginBottom: '0.5rem', fontWeight: 700 }}>
+                                                    Fasiliteter
+                                                </div>
+                                                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                                    {facilities.map((facility: string, index: number) => (
+                                                        <div key={index} className={styles.facilityItem}>
+                                                            <Check size={16} />
+                                                            <span>{facility}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span style={{ color: '#94a3b8' }}>Ingen fasiliteter oppført</span>
+                                        )}
                                     </div>
+                                )}
 
-                                    <div className={styles.infoItem}>
-                                        <Users size={20} className={styles.infoIcon} />
-                                        <div>
-                                            <span className={styles.infoLabel}>Kapasitet privat</span>
-                                            <span className={styles.infoValue}>{sauna?.capacityPrivat ?? 0} personer</span>
+                                {/* Priser */}
+                                {hasPriceInfo && priceCards.length > 0 && (
+                                    <details className={`${styles.sidebarCard} ${styles.collapsibleCard}`}>
+                                        <summary className={styles.collapsibleSummary}>
+                                            <span className={styles.collapsibleTitle}>Priser</span>
+                                            <span className={styles.collapsibleHint}>{pricePreview}</span>
+                                        </summary>
+                                        <div className={styles.collapsibleContent}>
+                                            <div style={{ display: 'grid', gap: '0.75rem' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem' }}>
+                                                    {priceCards.map((card) => (
+                                                        <div key={card.title} style={{ padding: '0.9rem 1rem', background: '#f8fafc', borderRadius: '0.9rem', border: '1px solid #e2e8f0' }}>
+                                                            <div style={{ fontWeight: 700, marginBottom: '0.65rem', color: '#0f172a' }}>{card.title}</div>
+                                                            <div style={{ display: 'grid', gap: '0.55rem' }}>
+                                                                {card.member && (
+                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', fontSize: '0.9rem' }}>
+                                                                        <span style={{ color: '#64748b' }}>{card.memberLabel}</span>
+                                                                        <span style={{ fontWeight: 700 }}>{card.member}</span>
+                                                                    </div>
+                                                                )}
+                                                                {card.regular && (
+                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', fontSize: '0.9rem' }}>
+                                                                        <span style={{ color: '#64748b' }}>{card.regularLabel}</span>
+                                                                        <span style={{ fontWeight: 700 }}>{card.regular}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {sauna?.priceNote && (
+                                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{sauna.priceNote}</div>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-
-                                    <div className={styles.infoItem}>
-                                        <MapPin size={20} className={styles.infoIcon} />
-                                        <div>
-                                            <span className={styles.infoLabel}>Adresse</span>
-                                            <span className={styles.infoValue}>{sauna?.address?.split(',')[0] || 'Ikke oppgitt'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Facilities */}
-                                <div className={styles.sidebarCard}>
-                                    <h3 className={styles.sidebarTitle}>Fasiliteter</h3>
-                                    {facilities.map((facility: string, index: number) => (
-                                        <div key={index} className={styles.facilityItem}>
-                                            <Check size={18} />
-                                            <span>{facility}</span>
-                                        </div>
-                                    ))}
-                                    {facilities.length === 0 && <span style={{ color: '#94a3b8' }}>Ingen fasiliteter oppført</span>}
-                                </div>
+                                    </details>
+                                )}
 
                                 <WaterTemperatureCard data={waterTemperature} saunaId={sauna.id} isAdmin={isAdmin} />
 
@@ -375,6 +476,15 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                         <CreditCard size={18} style={{ marginRight: '0.5rem' }} />
                                         Se medlemskap
                                     </Link>
+                                    <Link href="/info/regler" className={styles.actionButton}>
+                                        <Check size={18} style={{ marginRight: '0.5rem' }} />
+                                        Se badsturegler
+                                    </Link>
+                                    <ShareButton
+                                        url={shareUrl}
+                                        title={sauna?.name || 'Sjøbadet Badstue'}
+                                        className={styles.actionButton}
+                                    />
                                     <a
                                         href="https://minside.periode.no/gift-card/s4t6WWP6bYfM4myt4mcd"
                                         target="_blank"

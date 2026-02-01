@@ -48,6 +48,16 @@ interface AdminSauna extends Omit<ActiveSauna, 'openingHours'> {
     }>;
     description?: string | null;
     facilities?: string | null;
+    priceCurrency?: string | null;
+    priceDropinMember?: number | null;
+    priceDropinRegular?: number | null;
+    pricePrivatMember?: number | null;
+    pricePrivatRegular?: number | null;
+    priceNote?: string | null;
+    parkingInfo?: string | null;
+    lockerInfo?: string | null;
+    accessibilityInfo?: string | null;
+    coldPlungeInfo?: string | null;
 }
 
 const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false })
@@ -82,6 +92,8 @@ export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
         images: true,
         seo: false,
         booking: true,
+        pricing: true,
+        practical: true,
         address: true,
         hours: true,
         status: true
@@ -368,6 +380,52 @@ export default function SaunaForm({ sauna }: { sauna?: AdminSauna }) {
                                 <div className={styles.fieldGroup}>
                                     <LabelInput label="Booking URL (Privat)" name="bookingUrlPrivat" defaultValue={sauna?.bookingUrlPrivat || undefined} placeholder="https://..." />
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 4b. Pricing */}
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeader} onClick={() => toggleSection('pricing')}>
+                            <span>Prisinfo</span>
+                            <ChevronDown style={{ transform: sections.pricing ? 'rotate(180deg)' : 'rotate(0)' }} />
+                        </div>
+                        <div className={`${styles.sectionBody} ${!sections.pricing && styles.sectionBodyHidden}`}>
+                            <div className={styles.fieldGroup}>
+                                <LabelInput label="Valuta" name="priceCurrency" defaultValue={sauna?.priceCurrency || 'NOK'} placeholder="NOK" />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                <LabelInput label="Drop-in pris (medlemskap)" name="priceDropinMember" type="number" step="0.01" defaultValue={sauna?.priceDropinMember ?? undefined} />
+                                <LabelInput label="Drop-in pris (uten medlemskap)" name="priceDropinRegular" type="number" step="0.01" defaultValue={sauna?.priceDropinRegular ?? undefined} />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.25rem' }}>
+                                <LabelInput label="Privat pris (medlemskap)" name="pricePrivatMember" type="number" step="0.01" defaultValue={sauna?.pricePrivatMember ?? undefined} />
+                                <LabelInput label="Privat pris (uten medlemskap)" name="pricePrivatRegular" type="number" step="0.01" defaultValue={sauna?.pricePrivatRegular ?? undefined} />
+                            </div>
+                            <div className={styles.fieldGroup} style={{ marginTop: '1.25rem' }}>
+                                <LabelInput label="Prisnotat" name="priceNote" defaultValue={sauna?.priceNote || undefined} placeholder="F.eks. per person / per time" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 4c. Practical Info */}
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeader} onClick={() => toggleSection('practical')}>
+                            <span>Praktisk info</span>
+                            <ChevronDown style={{ transform: sections.practical ? 'rotate(180deg)' : 'rotate(0)' }} />
+                        </div>
+                        <div className={`${styles.sectionBody} ${!sections.practical && styles.sectionBodyHidden}`}>
+                            <div className={styles.fieldGroup}>
+                                <LabelInput label="Parkeringsinfo" name="parkingInfo" defaultValue={sauna?.parkingInfo || undefined} placeholder="F.eks. Gateparkering i nærheten" />
+                            </div>
+                            <div className={styles.fieldGroup}>
+                                <LabelInput label="Garderobe / dusj" name="lockerInfo" defaultValue={sauna?.lockerInfo || undefined} placeholder="F.eks. Garderobe og dusj på stedet" />
+                            </div>
+                            <div className={styles.fieldGroup}>
+                                <LabelInput label="Tilgjengelighet (rullestol)" name="accessibilityInfo" defaultValue={sauna?.accessibilityInfo || undefined} placeholder="F.eks. Tilrettelagt rampe" />
+                            </div>
+                            <div className={styles.fieldGroup}>
+                                <LabelInput label="Kald-stup / hav / badebrygge" name="coldPlungeInfo" defaultValue={sauna?.coldPlungeInfo || undefined} placeholder="F.eks. Badestige og brygge" />
                             </div>
                         </div>
                     </div>

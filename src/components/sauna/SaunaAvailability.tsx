@@ -361,6 +361,17 @@ export default function SaunaAvailability({
                 </div>
             </div>
 
+            {error && (
+                <div className={styles.errorInline}>
+                    <span>Vi klarte ikke oppdatere ledighet akkurat nå.</span>
+                    {bookingUrlDropin && (
+                        <a href={bookingUrlDropin} target="_blank" rel="noopener noreferrer" className={styles.errorLink}>
+                            Åpne booking
+                        </a>
+                    )}
+                </div>
+            )}
+
             {!nextSlot ? (
                 <div className={styles.nextSlot}>
                     <span className={styles.nextText}>Ingen ledige timer neste 7 dager</span>

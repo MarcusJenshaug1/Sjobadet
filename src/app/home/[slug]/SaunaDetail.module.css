@@ -254,8 +254,8 @@
 
 .infoItem {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 0.6rem;
+    margin-bottom: 0.45rem;
     align-items: flex-start;
 }
 
@@ -269,12 +269,12 @@
     font-size: 0.8rem;
     color: #64748b;
     display: block;
-    margin-bottom: 0.1rem;
+    margin-bottom: 0.05rem;
 }
 
 .infoValue {
     font-size: 0.95rem;
-    font-weight: 500;
+    font-weight: 600;
     color: #1e293b;
 }
 
@@ -318,4 +318,44 @@
     overflow: hidden;
     height: 300px;
     background-color: #e2e8f0;
+}
+
+.collapsibleCard {
+    padding: 1.5rem;
+}
+
+.collapsibleSummary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+    list-style: none;
+}
+
+.collapsibleSummary::after {
+    content: '›';
+    font-size: 1.1rem;
+    color: #0f766e;
+    transform: translateY(-1px);
+}
+
+.collapsibleSummary::-webkit-details-marker {
+    display: none;
+}
+
+.collapsibleTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.collapsibleHint {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.collapsibleContent {
+    margin-top: 1rem;
 }
