@@ -103,7 +103,8 @@ export default function SaunaAvailability({
                 if (isMountedRef.current) setLoading(true);
             } else {
                 const now = new Date();
-                const currentTime = now.getHours() * 60 + now.getMinutes();
+                const nowOslo = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
+                const currentTime = nowOslo.getHours() * 60 + nowOslo.getMinutes();
 
                 const getDateKey = (offsetDays = 0) => {
                     const target = new Date(now);
@@ -139,12 +140,13 @@ export default function SaunaAvailability({
 
                     const getSlotsForDay = (day: string) => json.days?.[day] || [];
 
+                    const leadTimeMinutes = 15;
                     const hasUpcomingAvailabilityToday = (slots: ScrapedSlot[]) => {
                         return slots.some((slot) => {
                             if (slot.availableSpots <= 0) return false;
-                            const endMinutes = parseMinutes(slot.to || slot.from);
-                            if (endMinutes === null) return true;
-                            return endMinutes > currentTime;
+                            const startMinutes = parseMinutes(slot.from);
+                            if (startMinutes === null) return true;
+                            return startMinutes > currentTime + leadTimeMinutes;
                         });
                     };
 
@@ -271,8 +273,9 @@ export default function SaunaAvailability({
         }
 
         // "Vis bare ledige" - filter by availability and apply lead time for today
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
+    const now = new Date();
+    const nowOslo = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
+    const currentTime = nowOslo.getHours() * 60 + nowOslo.getMinutes();
 
         return slots.filter((s: ScrapedSlot) => {
             // Must have available spots

@@ -89,7 +89,8 @@ export function getRelativeDayLabel(date: string | Date, now: Date = new Date(),
 export function getNextAvailableSlot(
     days: AvailabilityDays | null | undefined,
     now: Date = new Date(),
-    timeZone: string = 'Europe/Oslo'
+    timeZone: string = 'Europe/Oslo',
+    leadTimeMinutes: number = 15
 ): { date: string; slot: AvailabilitySlot } | null {
     if (!days) return null;
 
@@ -117,8 +118,8 @@ export function getNextAvailableSlot(
             if (startMinutes === null) continue;
 
             if (day === todayKey) {
-                // For today, only consider slots that haven't started yet
-                if (startMinutes <= nowMinutes) continue;
+                // For today, only consider slots that haven't started yet (with lead time)
+                if (startMinutes <= nowMinutes + leadTimeMinutes) continue;
             }
 
             return { date: day, slot };
