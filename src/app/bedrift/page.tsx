@@ -16,6 +16,7 @@ export default async function CorporatePage() {
     const settings = await getGlobalSettings();
     const phone = settings['contact_phone'] || '+47 401 55 365';
     const email = settings['contact_email'] || 'booking@sjobadet.com';
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent('Bedriftsmedlemskap')}`;
 
     return (
         <>
@@ -49,21 +50,14 @@ export default async function CorporatePage() {
                             <strong>E-post:</strong> <a href={`mailto:${email}`}>{email}</a>
                         </p>
 
-                        <form action={`mailto:${email}`} method="post" encType="text/plain" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Navn</label>
-                                <input type="text" name="name" required style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>E-post</label>
-                                <input type="email" name="email" required style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Melding</label>
-                                <textarea name="message" rows={4} required style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }}></textarea>
-                            </div>
-                            <Button type="submit">Send forespørsel</Button>
-                        </form>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            <p style={{ margin: 0, color: '#64748b' }}>
+                                Klikk for å åpne e-posten din med ferdig emne.
+                            </p>
+                            <Button href={mailtoLink} external>
+                                Send forespørsel på e-post
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </main>

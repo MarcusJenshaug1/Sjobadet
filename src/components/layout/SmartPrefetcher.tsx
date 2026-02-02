@@ -16,10 +16,21 @@ interface NetworkInformation {
 export function SmartPrefetcher() {
     const router = useOptionalRouter();
     const [prerenderUrls, setPrerenderUrls] = useState<string[]>([]);
-    const enablePrefetch = process.env.NEXT_PUBLIC_ENABLE_SMART_PREFETCH === 'true';
+    const enablePrefetch =
+        process.env.NEXT_PUBLIC_ENABLE_SMART_PREFETCH === 'true' &&
+        process.env.NODE_ENV === 'production';
+    const [canInject, setCanInject] = useState(false);
 
     useEffect(() => {
-        if (!enablePrefetch) {
+        if (!enablePrefetch) return;
+        const existing = document.querySelector('script[data-speculation-rules="smart-prefetch"]');
+        if (!existing) {
+            setCanInject(true);
+        }
+    }, [enablePrefetch]);
+
+    useEffect(() => {
+        if (!enablePrefetch || !canInject) {
             return;
         }
         // Guardrails: Don't prefetch if on slow connection or data saver is on
@@ -64,7 +75,9 @@ export function SmartPrefetcher() {
 
                         // Set URLs for Speculation Rules injection
                         // We use state to trigger this late in the lifecycle
-                        setPrerenderUrls(urls);
+                        if (!document.querySelector('script[data-speculation-rules="smart-prefetch"]')) {
+                            setPrerenderUrls(urls);
+                        }
                     }
                 } catch {
                     // Ignore prefetch errors
@@ -77,24 +90,30 @@ export function SmartPrefetcher() {
         const timeout = setTimeout(runPrefetch, 4000);
 
         return () => clearTimeout(timeout);
-    }, [enablePrefetch, router]);
+    }, [canInject, enablePrefetch, router]);
 
-    // Inject Speculation Rules with conservative settings
-    if (!enablePrefetch || prerenderUrls.length === 0) return null;
+    useEffect(() => {
+        if (!enablePrefetch || !canInject || prerenderUrls.length === 0) {
+            return;
+        }
 
-    return (
-        <script
-            type="speculationrules"
-            dangerouslySetInnerHTML={{
-                __html: JSON.stringify({
-                    prerender: [{
-                        source: "list",
-                        urls: prerenderUrls,
-                        // Conservative means it won't start until idle/hover or certain triggers
-                        eagerness: "conservative"
-                    }]
-                })
-            }}
-        />
-    );
+        const existing = document.querySelector('script[data-speculation-rules="smart-prefetch"]');
+        if (existing) return;
+
+        const script = document.createElement('script');
+        script.type = 'speculationrules';
+        script.dataset.speculationRules = 'smart-prefetch';
+        script.textContent = JSON.stringify({
+            prerender: [{
+                source: 'list',
+                urls: prerenderUrls,
+                // Conservative means it won't start until idle/hover or certain triggers
+                eagerness: 'conservative'
+            }]
+        });
+
+        document.head.appendChild(script);
+    }, [canInject, enablePrefetch, prerenderUrls]);
+
+    return null;
 }
