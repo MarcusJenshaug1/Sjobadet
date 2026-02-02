@@ -16,8 +16,12 @@ interface NetworkInformation {
 export function SmartPrefetcher() {
     const router = useOptionalRouter();
     const [prerenderUrls, setPrerenderUrls] = useState<string[]>([]);
+    const enablePrefetch = process.env.NEXT_PUBLIC_ENABLE_SMART_PREFETCH === 'true';
 
     useEffect(() => {
+        if (!enablePrefetch) {
+            return;
+        }
         // Guardrails: Don't prefetch if on slow connection or data saver is on
         const nav = navigator as unknown as { connection?: NetworkInformation };
         const connection = nav.connection;
@@ -73,10 +77,10 @@ export function SmartPrefetcher() {
         const timeout = setTimeout(runPrefetch, 4000);
 
         return () => clearTimeout(timeout);
-    }, [router]);
+    }, [enablePrefetch, router]);
 
     // Inject Speculation Rules with conservative settings
-    if (prerenderUrls.length === 0) return null;
+    if (!enablePrefetch || prerenderUrls.length === 0) return null;
 
     return (
         <script
