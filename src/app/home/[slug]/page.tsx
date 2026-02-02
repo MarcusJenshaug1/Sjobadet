@@ -9,7 +9,7 @@ import Image from 'next/image';
 import prisma from '@/lib/prisma';
 import nextDynamic from 'next/dynamic';
 import { getSession } from '@/lib/auth';
-import { getOverrideForDate, getTodayOpeningHours, formatSmartOpeningHours } from '@/lib/sauna-utils';
+import { getOverrideForDate, getTodayOpeningHours } from '@/lib/sauna-utils';
 import { getWaterTemperatureForSauna, type WaterTemperatureData } from '@/lib/water-temperature-service';
 import { WaterTemperatureCard } from '@/components/sauna/WaterTemperatureCard';
 import { ShareButton } from '@/components/sauna/ShareButton';
@@ -136,32 +136,7 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
         return 'Kontakt oss for åpningstider';
     })();
     const weeklyHours = sauna?.openingHours?.filter((h) => h.type === 'weekly') || [];
-    const weekdayLabels = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'];
-    const weeklySchedule = weekdayLabels.map((label, index) => {
-        const hour = weeklyHours.find((h) => h.weekday === index);
-        if (!hour || !hour.active || !hour.opens || !hour.closes) {
-            return { label, value: 'Stengt' };
-        }
-        return { label, value: `${hour.opens}–${hour.closes}` };
-    });
-    const openingSummary = formatSmartOpeningHours(weeklyHours);
     const currency = sauna?.priceCurrency || 'NOK';
-    const formatPriceValue = (value?: number | null) =>
-        typeof value === 'number' ? `${value.toLocaleString('no-NO')} ${currency}` : null;
-    const hasPriceInfo =
-        sauna?.priceDropinMember != null ||
-        sauna?.priceDropinRegular != null ||
-        sauna?.pricePrivatMember != null ||
-        sauna?.pricePrivatRegular != null ||
-        sauna?.priceNote;
-    const priceValues = [
-        sauna?.priceDropinMember,
-        sauna?.priceDropinRegular,
-        sauna?.pricePrivatMember,
-        sauna?.pricePrivatRegular,
-    ].filter((value): value is number => typeof value === 'number');
-    const minPrice = priceValues.length > 0 ? Math.min(...priceValues) : null;
-    const pricePreview = minPrice != null ? `Fra ${minPrice.toLocaleString('no-NO')} ${currency}` : 'Ingen priser';
     const practicalInfoItems = [
         { label: 'Dagens åpningstid', value: `Åpningstid: ${todayHoursLabel}`, icon: Clock },
         { label: 'Kapasitet drop-in', value: `Drop-in: ${sauna?.capacityDropin ?? 0} personer`, icon: Users },
@@ -172,23 +147,8 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
         { label: 'Tilgjengelighet', value: sauna?.accessibilityInfo, icon: Accessibility },
         { label: 'Kald-stup / hav', value: sauna?.coldPlungeInfo, icon: Droplet },
     ].filter((item) => item.value);
-    const priceCards = [
-        {
-            title: 'Drop-in',
-            memberLabel: 'Medlemskap',
-            member: formatPriceValue(sauna?.priceDropinMember),
-            regularLabel: 'Uten medlemskap',
-            regular: formatPriceValue(sauna?.priceDropinRegular),
-        },
-        {
-            title: 'Privat',
-            memberLabel: 'Medlemskap',
-            member: formatPriceValue(sauna?.pricePrivatMember),
-            regularLabel: 'Uten medlemskap',
-            regular: formatPriceValue(sauna?.pricePrivatRegular),
-        },
-    ].filter((card) => card.member || card.regular);
-    const showAvailability = !isMaintenanceMode && (((sauna as any)?.hasDropinAvailability ?? true) || !!sauna?.bookingUrlDropin);
+    const hasDropinAvailability = (sauna as SaunaDetail | null)?.hasDropinAvailability ?? true;
+    const showAvailability = !isMaintenanceMode && (hasDropinAvailability || !!sauna?.bookingUrlDropin);
 
     return (
         <>
@@ -431,42 +391,6 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                 )}
 
                                 {/* Priser */}
-                                {hasPriceInfo && priceCards.length > 0 && (
-                                    <details className={`${styles.sidebarCard} ${styles.collapsibleCard}`}>
-                                        <summary className={styles.collapsibleSummary}>
-                                            <span className={styles.collapsibleTitle}>Priser</span>
-                                            <span className={styles.collapsibleHint}>{pricePreview}</span>
-                                        </summary>
-                                        <div className={styles.collapsibleContent}>
-                                            <div style={{ display: 'grid', gap: '0.75rem' }}>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem' }}>
-                                                    {priceCards.map((card) => (
-                                                        <div key={card.title} style={{ padding: '0.9rem 1rem', background: '#f8fafc', borderRadius: '0.9rem', border: '1px solid #e2e8f0' }}>
-                                                            <div style={{ fontWeight: 700, marginBottom: '0.65rem', color: '#0f172a' }}>{card.title}</div>
-                                                            <div style={{ display: 'grid', gap: '0.55rem' }}>
-                                                                {card.member && (
-                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', fontSize: '0.9rem' }}>
-                                                                        <span style={{ color: '#64748b' }}>{card.memberLabel}</span>
-                                                                        <span style={{ fontWeight: 700 }}>{card.member}</span>
-                                                                    </div>
-                                                                )}
-                                                                {card.regular && (
-                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', fontSize: '0.9rem' }}>
-                                                                        <span style={{ color: '#64748b' }}>{card.regularLabel}</span>
-                                                                        <span style={{ fontWeight: 700 }}>{card.regular}</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                {sauna?.priceNote && (
-                                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{sauna.priceNote}</div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </details>
-                                )}
 
                                 <WaterTemperatureCard data={waterTemperature} saunaId={sauna.id} isAdmin={isAdmin} />
 
