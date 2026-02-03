@@ -10,7 +10,8 @@ type WaterTemperatureCardProps = {
     isAdmin?: boolean;
 };
 
-function formatTemperature(value: number) {
+function formatTemperature(value: number | undefined | null) {
+    if (value === null || value === undefined) return '--';
     return new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 1 }).format(value);
 }
 
@@ -33,9 +34,11 @@ export function WaterTemperatureCard({ data, saunaId, isAdmin = false }: WaterTe
     const temperature = data?.temperature;
     const locationName = data?.locationName;
     const distanceKm = data?.distanceKm ?? null;
+
     const hasData = typeof temperature === 'number' && !!timestamp;
     const hasLocation = !!locationName;
     const hasDistance = typeof distanceKm === 'number';
+
     const inferredSource = data?.source ?? ((hasLocation || hasDistance) ? 'yr' : null);
     const sourceLabel = inferredSource === 'open-meteo'
         ? 'Sjøtemperatur (modell) levert av Open-Meteo'
@@ -87,6 +90,7 @@ export function WaterTemperatureCard({ data, saunaId, isAdmin = false }: WaterTe
             </summary>
 
             <div className={styles.content}>
+
                 <div className={styles.temperatureRow}>
                     <span className={styles.temperatureValue}>
                         {hasData ? `${formatTemperature(temperature)} °C` : '-- °C'}
@@ -95,6 +99,7 @@ export function WaterTemperatureCard({ data, saunaId, isAdmin = false }: WaterTe
                         {hasData ? 'Nærmeste måling' : 'Venter på måling'}
                     </span>
                 </div>
+
 
                 <div className={styles.metaRow}>
                     <div className={styles.metaItem}>
@@ -105,14 +110,6 @@ export function WaterTemperatureCard({ data, saunaId, isAdmin = false }: WaterTe
                         <div className={styles.metaItem}>
                             <span className={styles.metaLabel}>Målt ved</span>
                             <span className={styles.metaValue}>{locationName}</span>
-                        </div>
-                    )}
-                    {hasDistance && (
-                        <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Avstand</span>
-                            <span className={styles.metaValue}>
-                                {`ca. ${formatDistance(distanceKm)} km unna`}
-                            </span>
                         </div>
                     )}
                 </div>
@@ -126,7 +123,7 @@ export function WaterTemperatureCard({ data, saunaId, isAdmin = false }: WaterTe
                 {isAdmin && saunaId && (
                     <div className={styles.adminRow}>
                         <button type="button" className={styles.adminButton} onClick={handleRefresh}>
-                            Hent badetemperatur nå
+                            Hent data nå
                         </button>
                         {refreshStatus !== 'idle' && (
                             <span className={styles.adminMessage} data-status={refreshStatus}>

@@ -1,6 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import styles from './SaunaDetail.module.css';
-import { MapPin, Check, AlertTriangle, Gift, CreditCard, Clock, Users, Car, Bath, Accessibility, Droplet } from 'lucide-react';
+import { MapPin, Check, AlertTriangle, Gift, CreditCard, Clock, Users, Car, Bath, Accessibility, Droplet, ShowerHead, Music, Wifi, Armchair } from 'lucide-react';
 import { Metadata } from 'next';
 import { getSaunaBySlug, getActiveSaunas, getGlobalSettings, SaunaDetail, ActiveSauna } from '@/lib/sauna-service';
 import { notFound } from 'next/navigation';
@@ -25,6 +25,18 @@ const SaunaMap = nextDynamic(() => import('@/components/sauna/SaunaMap').then(mo
 // Enable public caching (CDN) with a 5-minute revalidation period
 export const revalidate = 300;
 export const dynamic = 'force-static';
+
+const getFacilityIcon = (facility: string) => {
+    const lower = facility.toLowerCase();
+    if (lower.includes('dusj') || lower.includes('shower')) return ShowerHead;
+    if (lower.includes('musikk') || lower.includes('høyttaler') || lower.includes('music')) return Music;
+    if (lower.includes('wifi') || lower.includes('nett')) return Wifi;
+    if (lower.includes('parkering')) return Car;
+    if (lower.includes('toalett') || lower.includes('wc')) return Bath;
+    if (lower.includes('skifterom') || lower.includes('garderobe')) return Armchair;
+    if (lower.includes('rullestol') || lower.includes('hc')) return Accessibility;
+    return Check;
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
@@ -89,8 +101,8 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
         settings = globalSettings;
         isMaintenanceMode = maintenanceSetting?.value === 'true';
 
-        if (saunaData?.latitude != null && saunaData?.longitude != null) {
-            waterTemperature = await getWaterTemperatureForSauna(saunaData);
+        if (sauna?.latitude != null && sauna?.longitude != null) {
+            waterTemperature = await getWaterTemperatureForSauna(saunaData as any);
         }
     } catch (error) {
         console.error('Failed to fetch sauna detail:', error);
@@ -376,12 +388,15 @@ export default async function SaunaDetailPage({ params }: { params: Promise<{ sl
                                                     Fasiliteter
                                                 </div>
                                                 <div style={{ display: 'grid', gap: '0.5rem' }}>
-                                                    {facilities.map((facility: string, index: number) => (
-                                                        <div key={index} className={styles.facilityItem}>
-                                                            <Check size={16} />
-                                                            <span>{facility}</span>
-                                                        </div>
-                                                    ))}
+                                                    {facilities.map((facility: string, index: number) => {
+                                                        const Icon = getFacilityIcon(facility);
+                                                        return (
+                                                            <div key={index} className={styles.facilityItem}>
+                                                                <Icon size={16} style={{ minWidth: '16px' }} />
+                                                                <span>{facility}</span>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         ) : (

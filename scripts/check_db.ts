@@ -1,6 +1,7 @@
+import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -8,7 +9,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 async function checkData() {
     const { data, error } = await supabase
         .from('Sauna')
-        .select('id, name, availabilityData, lastScrapedAt')
+        .select('id, name, availabilityData, lastScrapedAt, airTempValue, windSpeed')
         .eq('id', 'b40050a6-86f9-484e-8e3e-d5565b08691c')
         .single();
 
